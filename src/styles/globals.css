@@ -1,5 +1,6 @@
 /* Fonts must be first (before tailwind) so @import order is valid */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@100;200;300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 /* ========== Color palette ========== */
@@ -65,6 +66,7 @@
   --font-sans: "Inter", system-ui, sans-serif;
   --font-serif: "Noto Serif", Georgia, serif;
   --font-mono: var(--font-geist-mono);
+  --font-thai: "IBM Plex Sans Thai", "Inter", system-ui, sans-serif;
 
   /* Green */
   --color-green-100: var(--green-100);
