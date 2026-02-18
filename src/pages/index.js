@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import Button from "@/components/ui/buttons/buttons";
+import Navbar from "@/components/layout/navbar";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -13,8 +14,9 @@ const geistMono = Geist_Mono({
 export default function Home() {
   return (
     <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans `}
+      className={`${geistSans.className} ${geistMono.className} flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans w-full`}
     >
+      <Navbar />
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="headline-1">Hello World1</h1>
@@ -44,7 +46,7 @@ export default function Home() {
           <Button
             buttonText="register"
             buttonStyle="primary"
-            style={{ width: "400px" }}
+            style={{ width: "200px" }}
           />
         </div>
         <div className="">
