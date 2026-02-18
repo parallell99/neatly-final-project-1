@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
-
+import Button from "@/components/ui/buttons/buttons";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -13,9 +13,53 @@ const geistMono = Geist_Mono({
 
 export default function Home() {
   return (
+    
     <div
       className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
     >
+      <div className="flex flex-col gap-4">
+      <div>
+        <h1 className="headline-1">Hello World1</h1>
+      </div>
+        <div>
+          <h1 className="headline-2">Hello World2</h1>
+        </div>
+        <div>
+          <h1 className="headline-3">Hello World3</h1>
+        </div>
+        <div>
+          <h1 className="headline-4">Hello World4</h1>
+        </div>
+        <div>
+          <h1 className="headline-5">Hello World5</h1>
+        </div> 
+        <div>
+          <h1 className="body-1">Hello World6</h1>
+        </div>
+        <div>
+          <h1 className="body-2">Hello World7</h1>
+        </div>
+        <div>
+          <h1 className="body-3">Hello World8</h1>
+        </div>
+        <div className="">
+          <Button buttonText="register" buttonStyle="primary" style={{ width: '400px' }} />
+          
+        </div>
+        <div className="">
+          <Button buttonText="Book Now" buttonStyle="primary"  />
+          
+        </div>
+        
+        <div>
+          <Button buttonText="Book Now" buttonStyle="secondary" />
+        </div>
+        <div>
+          <Button buttonText="Ghost ->" buttonStyle="ghost" />
+        </div>
+        
+        </div>
+        
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
         <Image
           className="dark:invert"

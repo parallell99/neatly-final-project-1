@@ -1,15 +1,261 @@
+/* Fonts must be first (before tailwind) so @import order is valid */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/* ========== Color palette ========== */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Green */
+  --green-100: #F1F5F3;
+  --green-200: #E6EBE9;
+  --green-300: #D5DFDA;
+  --green-400: #ABC0B4;
+  --green-500: #81A08F;
+  --green-600: #5D7B6A;
+  --green-700: #465C50;
+  --green-800: #2F3E35;
+  --green-900: #171F1B;
+
+  /* Orange */
+  --orange-100: #FAEDE8;
+  --orange-200: #F9DACE;
+  --orange-300: #F3B59C;
+  --orange-400: #ED906B; 
+  --orange-500: #E76B39;
+  --orange-600: #C14817;
+  --orange-700: #803010;
+  --orange-800: #631F04;
+  --orange-900: #401808;
+
+  /* Gray */
+  --gray-100: #F6F7FC;
+  --gray-200: #F1F2F6;
+  --gray-300: #E4E6ED;
+  --gray-400: #D6D9E4;
+  --gray-500: #C8CCDB;
+  --gray-600: #9AA1B9;
+  --gray-700: #646D89;
+  --gray-800: #424C6B;
+  --gray-900: #2A2E3F;
+
+  /* Utility */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-red: #B61515;
+  --color-bg: #F7F7FB;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Noto Serif", Georgia, serif;
   --font-mono: var(--font-geist-mono);
+
+  /* Green */
+  --color-green-100: var(--green-100);
+  --color-green-200: var(--green-200);
+  --color-green-300: var(--green-300);
+  --color-green-400: var(--green-400);
+  --color-green-500: var(--green-500);
+  --color-green-600: var(--green-600);
+  --color-green-700: var(--green-700);
+  --color-green-800: var(--green-800);
+  --color-green-900: var(--green-900);
+
+  /* Orange */
+  --color-orange-100: var(--orange-100);
+  --color-orange-200: var(--orange-200);
+  --color-orange-300: var(--orange-300);
+  --color-orange-400: var(--orange-400);
+  --color-orange-500: var(--orange-500);
+  --color-orange-600: var(--orange-600);
+  --color-orange-700: var(--orange-700);
+  --color-orange-800: var(--orange-800);
+  --color-orange-900: var(--orange-900);
+
+  /* Gray */
+  --color-gray-100: var(--gray-100);
+  --color-gray-200: var(--gray-200);
+  --color-gray-300: var(--gray-300);
+  --color-gray-400: var(--gray-400);
+  --color-gray-500: var(--gray-500);
+  --color-gray-600: var(--gray-600);
+  --color-gray-700: var(--gray-700);
+  --color-gray-800: var(--gray-800);
+  --color-gray-900: var(--gray-900);
+
+  /* Utility */
+  --color-white: var(--color-white);
+  --color-black: var(--color-black);
+  --color-red: var(--color-red);
+  --color-bg: var(--color-bg);
+}
+
+/* ========== Typography ========== */
+:root {
+  --font-serif: "Noto Serif", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+/* Headlines – serif */
+.headline-1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.headline-2 {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.headline-3 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.headline-4 {
+  font-family: var(--font-sans);
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.headline-5 {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Body – sans-serif */
+.body-1 {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.body-2 {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.55;
+}
+
+.body-3 {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* ========== Buttons ========== */
+:root {
+  --btn-primary: var(--orange-600);
+  --btn-primary-hover: var(--orange-500);
+  --btn-primary-active: var(--orange-700);
+  --btn-disabled-bg: var(--gray-300);
+  --btn-disabled-text: var(--gray-600);
+  --btn-disabled-border: var(--gray-400);
+}
+
+/* Base button */
+.btn {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  border-radius: 0.5rem;
+  padding: 12px 40px;
+  gap: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+/* Primary – solid fill */
+.btn-primary {
+  background-color: var(--btn-primary);
+  color: var(--color-white);
+  border-color: var(--btn-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  background-color: var(--btn-primary-active);
+  border-color: var(--btn-primary-active);
+}
+
+.btn-primary:disabled {
+  background-color: var(--btn-disabled-bg);
+  color: var(--btn-disabled-text);
+  border-color: var(--btn-disabled-bg);
+}
+
+/* Secondary – outline */
+.btn-secondary {
+  background-color: var(--color-white);
+  color: var(--btn-primary);
+  border-color: var(--btn-primary);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  color: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
+}
+
+.btn-secondary:active:not(:disabled) {
+  color: var(--btn-primary-active);
+  border-color: var(--btn-primary-active);
+}
+
+.btn-secondary:disabled {
+  background-color: var(--color-white);
+  color: var(--btn-disabled-text);
+  border-color: var(--btn-disabled-border);
+}
+
+/* Ghost – text + icon only */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--btn-primary);
+  border-color: transparent;
+  padding: 12px 0;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--btn-primary-hover);
+}
+
+.btn-ghost:active:not(:disabled) {
+  color: var(--btn-primary-active);
+}
+
+.btn-ghost:disabled {
+  color: var(--btn-disabled-text);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +268,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
