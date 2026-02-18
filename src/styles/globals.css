@@ -298,80 +298,80 @@
 
 /* Vacant - dark green text on very light gray */
 .status-vacant {
-  background-color: var(--status-gray-bg);
-  color: var(--status-green-text);
+  background-color: #F5F5F5;
+  color: #2E7D32;
 }
 
 /* Occupied - dark blue text on light blue */
 .status-occupied {
-  background-color: var(--status-blue-bg);
-  color: var(--status-blue-text);
+  background-color: #E3F2FD;
+  color: #1565C0;
 }
 
 /* Assign Clean - dark green text on light teal/mint green */
 .status-assign-clean {
-  background-color: var(--status-green-bg);
-  color: var(--status-green-text);
+  background-color: #E8F5E9;
+  color: #2E7D32;
 }
 
 /* Assign Dirty - dark red text on light pink-red */
 .status-assign-dirty {
-  background-color: var(--status-red-bg);
-  color: var(--status-red-text);
+  background-color: #FFEBEE;
+  color: #C62828;
 }
 
 /* Vacant Clean - dark green text on light teal/mint green */
 .status-vacant-clean {
-  background-color: var(--status-green-bg);
-  color: var(--status-green-text);
+  background-color: #E8F5E9;
+  color: #2E7D32;
 }
 
 /* Vacant Clean Inspected - dark yellow-brown/gold text on light yellow/gold */
 .status-vacant-clean-inspected {
-  background-color: var(--status-yellow-bg);
-  color: var(--status-yellow-text);
+  background-color: #FFF9C4;
+  color: #F57F17;
 }
 
 /* Vacant Clean Pick Up - dark green text on light teal/mint green */
 .status-vacant-clean-pick-up {
-  background-color: var(--status-green-bg);
-  color: var(--status-green-text);
+  background-color: #E8F5E9;
+  color: #2E7D32;
 }
 
 /* Occupied Clean - dark blue text on light blue */
 .status-occupied-clean {
-  background-color: var(--status-blue-bg);
-  color: var(--status-blue-text);
+  background-color: #E3F2FD;
+  color: #1565C0;
 }
 
 /* Occupied Clean Inspected - dark yellow-brown/gold text on light yellow/gold */
 .status-occupied-clean-inspected {
-  background-color: var(--status-yellow-bg);
-  color: var(--status-yellow-text);
+  background-color: #FFF9C4;
+  color: #F57F17;
 }
 
 /* Occupied Dirty - dark red text on light pink-red */
 .status-occupied-dirty {
-  background-color: var(--status-red-bg);
-  color: var(--status-red-text);
+  background-color: #FFEBEE;
+  color: #C62828;
 }
 
 /* Out of Order - medium gray text on very light gray */
 .status-out-of-order {
-  background-color: var(--status-gray-bg);
-  color: var(--status-gray-text);
+  background-color: #F5F5F5;
+  color: #616161;
 }
 
 /* Out of Service - medium gray text on very light gray */
 .status-out-of-service {
-  background-color: var(--status-gray-bg);
-  color: var(--status-gray-text);
+  background-color: #F5F5F5;
+  color: #616161;
 }
 
 /* Out of Inventory - medium gray text on very light gray */
 .status-out-of-inventory {
-  background-color: var(--status-gray-bg);
-  color: var(--status-gray-text);
+  background-color: #F5F5F5;
+  color: #616161;
 }
 
 @media (prefers-color-scheme: dark) {
