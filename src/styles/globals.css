@@ -45,6 +45,18 @@
   --color-black: #000000;
   --color-red: #B61515;
   --color-bg: #F7F7FB;
+
+  /* Status colors */
+  --status-blue-bg: #E3F2FD;
+  --status-blue-text: #1565C0;
+  --status-green-bg: #E8F5E9;
+  --status-green-text: #2E7D32;
+  --status-red-bg: #FFEBEE;
+  --status-red-text: #C62828;
+  --status-yellow-bg: #FFF9C4;
+  --status-yellow-text: #F57F17;
+  --status-gray-bg: #F5F5F5;
+  --status-gray-text: #616161;
 }
 
 @theme inline {
@@ -92,6 +104,18 @@
   --color-black: var(--color-black);
   --color-red: var(--color-red);
   --color-bg: var(--color-bg);
+
+  /* Status colors */
+  --color-status-blue-bg: var(--status-blue-bg);
+  --color-status-blue-text: var(--status-blue-text);
+  --color-status-green-bg: var(--status-green-bg);
+  --color-status-green-text: var(--status-green-text);
+  --color-status-red-bg: var(--status-red-bg);
+  --color-status-red-text: var(--status-red-text);
+  --color-status-yellow-bg: var(--status-yellow-bg);
+  --color-status-yellow-text: var(--status-yellow-text);
+  --color-status-gray-bg: var(--status-gray-bg);
+  --color-status-gray-text: var(--status-gray-text);
 }
 
 /* ========== Typography ========== */
@@ -256,6 +280,98 @@
 
 .btn-ghost:disabled {
   color: var(--btn-disabled-text);
+}
+
+/* ========== Status Labels ========== */
+.status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 0.375rem;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  text-transform: capitalize;
+}
+
+/* Vacant - dark green text on very light gray */
+.status-vacant {
+  background-color: var(--status-gray-bg);
+  color: var(--status-green-text);
+}
+
+/* Occupied - dark blue text on light blue */
+.status-occupied {
+  background-color: var(--status-blue-bg);
+  color: var(--status-blue-text);
+}
+
+/* Assign Clean - dark green text on light teal/mint green */
+.status-assign-clean {
+  background-color: var(--status-green-bg);
+  color: var(--status-green-text);
+}
+
+/* Assign Dirty - dark red text on light pink-red */
+.status-assign-dirty {
+  background-color: var(--status-red-bg);
+  color: var(--status-red-text);
+}
+
+/* Vacant Clean - dark green text on light teal/mint green */
+.status-vacant-clean {
+  background-color: var(--status-green-bg);
+  color: var(--status-green-text);
+}
+
+/* Vacant Clean Inspected - dark yellow-brown/gold text on light yellow/gold */
+.status-vacant-clean-inspected {
+  background-color: var(--status-yellow-bg);
+  color: var(--status-yellow-text);
+}
+
+/* Vacant Clean Pick Up - dark green text on light teal/mint green */
+.status-vacant-clean-pick-up {
+  background-color: var(--status-green-bg);
+  color: var(--status-green-text);
+}
+
+/* Occupied Clean - dark blue text on light blue */
+.status-occupied-clean {
+  background-color: var(--status-blue-bg);
+  color: var(--status-blue-text);
+}
+
+/* Occupied Clean Inspected - dark yellow-brown/gold text on light yellow/gold */
+.status-occupied-clean-inspected {
+  background-color: var(--status-yellow-bg);
+  color: var(--status-yellow-text);
+}
+
+/* Occupied Dirty - dark red text on light pink-red */
+.status-occupied-dirty {
+  background-color: var(--status-red-bg);
+  color: var(--status-red-text);
+}
+
+/* Out of Order - medium gray text on very light gray */
+.status-out-of-order {
+  background-color: var(--status-gray-bg);
+  color: var(--status-gray-text);
+}
+
+/* Out of Service - medium gray text on very light gray */
+.status-out-of-service {
+  background-color: var(--status-gray-bg);
+  color: var(--status-gray-text);
+}
+
+/* Out of Inventory - medium gray text on very light gray */
+.status-out-of-inventory {
+  background-color: var(--status-gray-bg);
+  color: var(--status-gray-text);
 }
 
 @media (prefers-color-scheme: dark) {

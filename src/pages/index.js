@@ -13,14 +13,13 @@ const geistMono = Geist_Mono({
 
 export default function Home() {
   return (
-    
     <div
       className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
     >
       <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="headline-1">Hello World1</h1>
-      </div>
+        <div>
+          <h1 className="headline-1">Hello World1</h1>
+        </div>
         <div>
           <h1 className="headline-2">Hello World2</h1>
         </div>
@@ -32,7 +31,7 @@ export default function Home() {
         </div>
         <div>
           <h1 className="headline-5">Hello World5</h1>
-        </div> 
+        </div>
         <div>
           <h1 className="body-1">Hello World6</h1>
         </div>
@@ -43,23 +42,64 @@ export default function Home() {
           <h1 className="body-3">Hello World8</h1>
         </div>
         <div className="">
-          <Button buttonText="register" buttonStyle="primary" style={{ width: '400px' }} />
-          
+          <Button
+            buttonText="register"
+            buttonStyle="primary"
+            style={{ width: "400px" }}
+          />
         </div>
         <div className="">
-          <Button buttonText="Book Now" buttonStyle="primary"  />
-          
+          <Button buttonText="Book Now" buttonStyle="primary" />
         </div>
-        
+
         <div>
           <Button buttonText="Book Now" buttonStyle="secondary" />
         </div>
         <div>
           <Button buttonText="Ghost ->" buttonStyle="ghost" />
         </div>
-        
+
+        <div className="status-vacant p-4 rounded ">
+          <span className="body-2 ">vacant status sample box.</span>
         </div>
-        
+        <div className="status-occupied p-4 rounded ">
+          <span className="body-2 ">occupied status sample box.</span>
+        </div>
+        <div className="status-assign-clean p-4 rounded ">
+          <span className="body-2 ">assign clean status sample box.</span>
+        </div>
+        <div className="status-assign-dirty p-4 rounded ">
+          <span className="body-2 ">assign dirty status sample box.</span>
+        </div>
+        <div className="status-vacant-clean p-4 rounded ">
+          <span className="body-2 ">vacant clean status sample box.</span>
+        </div>
+        <div className="status-vacant-clean-inspected p-4 rounded ">
+          <span className="body-2 ">vacant clean inspected status sample box.</span>
+        </div>
+        <div className="status-vacant-clean-pick-up p-4 rounded ">
+          <span className="body-2 ">vacant clean pick up status sample box.</span>
+        </div>
+        <div className="status-occupied-clean p-4 rounded ">
+          <span className="body-2 ">occupied clean status sample box.</span>
+        </div>
+        <div className="status-occupied-clean-inspected p-4 rounded ">
+          <span className="body-2 ">occupied clean inspected status sample box.</span>
+        </div>
+        <div className="status-occupied-dirty p-4 rounded ">
+          <span className="body-2 ">occupied dirty status sample box.</span>
+        </div>
+        <div className="status-out-of-order p-4 rounded ">
+          <span className="body-2 ">out of order status sample box.</span>
+        </div>
+        <div className="status-out-of-service p-4 rounded ">
+          <span className="body-2 ">out of service status sample box.</span>
+        </div>
+        <div className="status-out-of-inventory p-4 rounded ">
+          <span className="body-2 ">out of inventory status sample box.</span>
+        </div>
+      </div>
+
       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
         <Image
           className="dark:invert"
