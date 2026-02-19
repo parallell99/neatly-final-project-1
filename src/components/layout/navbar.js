@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import logoNav from "@/assets/logo/logo-nav.svg";
+import logoNav from "@/assets/logo/logo-nav.svg?url";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function Navbar() {
       <nav ref={navRef} className="top-0 w-full pt-3 lg:h-[100px] bg-white flex items-center justify-between px-4 pb-3 border-b border-gray-200 lg:px-[160px] max-w-[1440px] mx-auto z-50">
         {/* Logo */}
         <div className="flex items-center">
-          <img src={logoNav.src} alt="Neatly" className="w-30 lg:w-40" />
+          <img src={logoNav} alt="Neatly" className="w-30 lg:w-40" />
         </div>
 
         {/* Desktop Navigation - แสดงเฉพาะบน desktop */}

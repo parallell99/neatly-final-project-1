@@ -1,8 +1,8 @@
-import logoFoot from "@/assets/logo/logo-foot.svg";
-import phoneIcon from "@/assets/icons/bx_phone-call.svg";
-import mailIcon from "@/assets/icons/mail.svg";
-import locationIcon from "@/assets/icons/location.svg";
-import socialIcon from "@/assets/icons/social.svg";
+import logoFoot from "@/assets/logo/logo-foot.svg?url";
+import phoneIcon from "@/assets/icons/bx_phone-call.svg?url";
+import mailIcon from "@/assets/icons/mail.svg?url";
+import locationIcon from "@/assets/icons/location.svg?url";
+import socialIcon from "@/assets/icons/social.svg?url";
 
 export default function Footer() {
   return (
@@ -12,7 +12,7 @@ export default function Footer() {
         {/* Logo & Description Section */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <img src={logoFoot.src} alt="NEATLY" className="w-40 mb-5" />
+            <img src={logoFoot} alt="NEATLY" className="w-40 mb-5" />
           </div>
           <h2 className="headline-5 mb-2">Neatly Hotel</h2>
           <p className="body-2">
@@ -27,7 +27,7 @@ export default function Footer() {
             {/* Phone */}
             <div className="flex items-start gap-3">
               <img 
-                src={phoneIcon.src} 
+                src={phoneIcon} 
                 alt="Phone" 
                 className="w-5 h-5 mt-0.5 flex-shrink-0 brightness-0 invert" 
               />
@@ -39,7 +39,7 @@ export default function Footer() {
             {/* Email */}
             <div className="flex items-start gap-3">
               <img 
-                src={mailIcon.src} 
+                src={mailIcon} 
                 alt="Email" 
                 className="w-5 h-5 mt-0.5 flex-shrink-0 brightness-0 invert" 
               />
@@ -51,7 +51,7 @@ export default function Footer() {
             {/* Address */}
             <div className="flex items-start gap-3">
               <img 
-                src={locationIcon.src} 
+                src={locationIcon} 
                 alt="Location" 
                 className="w-5 h-5 mt-0.5 flex-shrink-0 brightness-0 invert" 
               />
@@ -71,7 +71,7 @@ export default function Footer() {
           {/* Social Media Icons */}
           <div className="flex items-center gap-4">
             <img 
-              src={socialIcon.src} 
+              src={socialIcon} 
               alt="Social Media" 
               className="h-6 brightness-0 invert" 
             />
