@@ -1,10 +1,13 @@
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
 import Button from "@/components/ui/buttons/buttons";
+import Chatbot from "@/components/layout/chatbot/ChatbotButton"
+
 export default function ChatbotAdmin() {
   return (
     <>
       <div className="flex">
         <SideBarAdmin />
+        <Chatbot />
         <div className="flex flex-col flex-1">
           <span className="headline-5 h-[80px] flex items-center pl-[60px]">Chatbot Setup</span>
           <div className="bg-gray-100 flex-1 p-[60px]">
@@ -31,6 +34,8 @@ export default function ChatbotAdmin() {
                     <input className="bg-white h-[48px] border border-gray-400 rounded-[8px] p-3" placeholder="Select reply format"></input>
                   </div>
                 </div>
+
+                {/* save and cancel */}
                 <div className="flex gap-6">
                   <Button buttonText="Save" buttonStyle="primary" className="w-[100px]" />
                   <button className="font-semibold text-gray-700">Cancel</button>

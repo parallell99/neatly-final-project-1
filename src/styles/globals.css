@@ -122,7 +122,7 @@
 
 /* ========== Typography ========== */
 :root {
-  --font-serif: "Noto Serif", Georgia, serif;
+  --font-serif: "Noto Serif Display", Georgia, serif;
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
