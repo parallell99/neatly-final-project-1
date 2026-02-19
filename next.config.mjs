@@ -2,16 +2,29 @@
 const nextConfig = {
   reactCompiler: true,
   reactStrictMode: true,
+  
+  turbopack: {
+    // เพิ่มบรรทัดนี้เพื่อระบุ root directory
+    root: process.cwd(),
+    
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
+      },
+    },
+  },
+  
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
       oneOf: [
         {
-          resourceQuery: /url/, // import logo from './logo.svg?url' → ได้ .src
+          resourceQuery: /url/,
           type: 'asset/resource',
         },
         {
-          use: ['@svgr/webpack'], // import Logo from './logo.svg' → ได้ Component
+          use: ['@svgr/webpack'],
         },
       ],
     });
