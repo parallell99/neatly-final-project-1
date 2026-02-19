@@ -73,7 +73,7 @@ export default function HeroSlide() {
   );
 
   return (
-    <section className="w-full max-h-[752px] py-16 px-4 bg-green-200 flex items-center justify-center">
+    <section className="w-full h-[752px] py-16 px-4 bg-green-200 flex items-center justify-center">
       <div className="max-w-[1440px] mx-auto w-full relative flex items-center justify-center">
         {/* Desktop: ลูกศรอยู่ตำแหน่งคงที่ซ้าย-ขวาของกล่องกลาง ไม่ขยับตามเนื้อหา */}
         <div className="hidden lg:block w-full max-w-5xl mx-auto relative">
