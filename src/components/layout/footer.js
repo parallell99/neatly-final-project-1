@@ -1,5 +1,5 @@
 import LogoFoot from "@/assets/logo/logo-foot.svg";
-import PhoneIcon from "@/assets/icons/bx_phone-call.svg";
+import PhoneIcon from "@/assets/icons/phone.svg";
 import MailIcon from "@/assets/icons/mail.svg";
 import LocationIcon from "@/assets/icons/location.svg";
 import SocialIcon from "@/assets/icons/social.svg";
@@ -26,7 +26,7 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             {/* Phone */}
             <div className="flex items-start gap-3">
-              <PhoneIcon className="text-green-500 "/>
+              <PhoneIcon className="text-green-500 w-5 h-5 "/>
               <span className="text-base font-normal text-white/90 font-thai">
                 +66 99 999 9999
               </span>
@@ -34,7 +34,7 @@ export default function Footer() {
 
             {/* Email */}
             <div className="flex items-start gap-3">
-            <MailIcon className="text-green-500 "/>
+            <MailIcon className="text-green-500 w-5 h-5"/>
               <span className="text-base font-normal text-white/90 font-thai">
                 contact@neatlyhotel.com
               </span>
@@ -42,7 +42,7 @@ export default function Footer() {
 
             {/* Address */}
             <div className="flex items-start gap-3 text-black">
-              <LocationIcon className="text-green-500 "/>
+              <LocationIcon className="text-green-500 w-5 h-5"/>
               <span className="text-base font-normal text-white/90 font-thai">
                 188 Phaya Thai Rd, Thung Phaya Thai, Ratchathewi, Bangkok 10400
               </span>
