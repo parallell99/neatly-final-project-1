@@ -1,6 +1,6 @@
 import ChatbotLogo from "@/assets/icons/chatbot_inside_logo.svg"
 import CirLogo from "@/assets/icons/circlelogo-chatbot.svg"
-import StarLogo from "@/assets/icons/starLogo-chatbot.svg"
+import StarLogo from "@/assets/icons/starlogo-chatbot.svg"
 import SendLogo from "@/assets/icons/send.svg"
 import { chatbotTopics } from "@/utils/dataChatbotTest"
 
