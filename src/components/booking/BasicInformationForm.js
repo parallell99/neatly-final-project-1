@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { CalendarDays } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import Button from "@/components/ui/buttons/buttons";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -13,10 +13,19 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/booking/select";
+import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
+import { Calendar } from "@/components/ui/booking/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/booking/popover";
+import { format } from "date-fns";
 
-export default function BasicInformationForm() {
-  const [startDate, setStartDate] = useState(new Date());
+
+export default function BasicInformationForm({ onNext }) {
+  const [date, setDate] = useState(new Date());
 
   return (
     <div>
@@ -94,26 +103,42 @@ export default function BasicInformationForm() {
         </div>
 
         {/* Date of Birth */}
-        <div>
-          <label
-            htmlFor="dateOfBirth"
-            className="block text-4 font-400 text-[#2A2E3F] mb-2"
-          >
+        <div className="w-full space-y-2 flex flex-col">
+          <label htmlFor="dateOfBirth" className="font-400 text-[#2A2E3F] mb-2">
             Date of Birth
           </label>
-          <DatePicker className="w-[343px] lg:w-[660px] px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white" selected={startDate} onChange={(date) => setStartDate(date)} />
-          <div className="relative">
-            <div className="absolute right-4 top-[-25] -translate-y-1/2">
-            <CalendarDays className="w-6 h-6 text-gray-600" />
-            </div>
-          </div>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <ButtonCalendar
+                variant="outline"
+                className={cn(
+                  "w-full h-[50px] justify-start text-left font-normal border-gray-400",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Pick a date</span>}
+              </ButtonCalendar>
+            </PopoverTrigger>
+
+            <PopoverContent className="w-auto p-0 bg-white shadow-md border">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
+
 
         {/* Country */}
         <div>
           <label
             htmlFor="country"
-            className="block text-4 font-400 text-[#2A2E3F] mb-2"
+            className="block font-400 text-[#2A2E3F] mb-2"
           >
             Country
           </label>
@@ -134,10 +159,10 @@ export default function BasicInformationForm() {
 
       {/* Navigation Buttons */}
       {/* Desktop */}
-      <div className="hidden lg:flex items-center justify-between mt-8 pt-6 border-t border-[#E4E6ED]">
+      <div className="hidden lg:flex items-center justify-between mt-8 pt-6">
         <button
           type="button"
-          className="text-[#E76B39] font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0"
+          className="text-[#E76B39] font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
         >
           Back
         </button>
@@ -146,6 +171,7 @@ export default function BasicInformationForm() {
           buttonStyle="primary"
           buttonText="Next"
           type="button"
+          onClick={onNext}
         />
       </div>
 
@@ -156,7 +182,7 @@ export default function BasicInformationForm() {
       <div className="lg:hidden flex items-center justify-between mt-6 ml-2">
         <button
           type="button"
-          className="text-orange-500 font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0"
+          className="text-orange-500 font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
         >
           Back
         </button>
@@ -166,6 +192,7 @@ export default function BasicInformationForm() {
           buttonText="Next"
           type="button"
           className="w-[101px] h-[48px]"
+          onClick={onNext}
         />
       </div>
     </div>

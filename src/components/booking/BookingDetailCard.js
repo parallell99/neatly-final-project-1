@@ -1,20 +1,30 @@
 "use client";
 
-import csBookingIcon from "@/assets/icons/cs_booking.svg";
+import CsBookingIcon from "@/assets/icons/cs_booking.svg";
 
-export default function BookingDetailCard() {
+const ROOM_PRICE = 2500;
+
+export default function BookingDetailCard({
+  extras = [],
+  promotionCode = "",
+  promotionDiscount = 0,
+}) {
+  const extrasTotal = extras.reduce((sum, e) => sum + e.price, 0);
+  const subtotal = ROOM_PRICE + extrasTotal;
+  const total = Math.max(0, subtotal - promotionDiscount);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="bg-green-600 rounded-xl text-white pb-2 lg:w-[358px]">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 p-4 bg-green-800 rounded-t-lg">
           <div className="w-full flex items-center gap-2">
-            <img
-              src={csBookingIcon.src}
-              alt="Booking detail"
+            <CsBookingIcon
               width={24}
               height={24}
-              className="shrink-0 brightness-0 invert"
+              className="text-green-500"
+              role="img"
+              aria-label="Booking detail"
             />
             <h3 className="headline-5 text-white">Booking Detail</h3>
           </div>
@@ -45,9 +55,9 @@ export default function BookingDetailCard() {
           </p>
         </div>
 
-        {/* Room Details */}
-        <div className="pt-6 mt-4 mx-4 lg:mt-10">
-          <div className="flex items-center justify-between mb-8">
+        {/* Room Details + Extras */}
+        <div className="pt-6 mt-4 mx-4 lg:mt-10 space-y-4">
+          <div className="flex items-center justify-between pb-6">
             <span className="font-sans text-base text-green-300">
               Superior Garden View Room
             </span>
@@ -55,14 +65,37 @@ export default function BookingDetailCard() {
               2,500.00
             </span>
           </div>
+          {extras.map((item) => (
+            <div
+              key={item.label}
+              className="flex items-center justify-between relative pb-6"
+            >
+              <span className="font-sans text-base text-green-300">
+                {item.label}
+              </span>
+              <span className="font-sans text-base font-semibold">
+                {item.price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          ))}
+          {promotionCode && promotionDiscount > 0 && (
+            <div className="flex items-center justify-between pb-6">
+              <span className="font-sans text-base text-green-300">
+                Promotion Code
+              </span>
+              <span className="font-sans text-base font-semibold text-white">
+                -{promotionDiscount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Total */}
-        <div className="border-t border-green-500 pt-6 mb-6 mx-4">
+        <div className="border-t border-green-500 pt-6 mb-4 mx-4">
           <div className="flex items-center justify-between">
             <span className="font-sans text-base font-light">Total</span>
-            <span className="font-sans text-xl font-semibold">
-              THB 2,500.00
+            <span className="font-sans text-xl font-semibold text-white">
+              THB {total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
             </span>
           </div>
         </div>
