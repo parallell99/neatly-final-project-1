@@ -125,7 +125,7 @@ export default function HeroRoomService() {
               Neatly Hotel
             </h2>
 
-            <div className="space-y-4 text-gray-700 body-1 max-w-3xl lg:ml-[-140px] lg:mt-[120px]">
+            <div className="space-y-4 text-gray-700 body-1 max-w-3xl lg:ml-[-80px] lg:mt-[140px]">
               <p>
                 Set in Bangkok, Thailand. Neatly Hotel offers 5-star accommodation
                 with an outdoor pool, kids' club, sports facilities and a fitness
