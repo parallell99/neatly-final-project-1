@@ -2,6 +2,7 @@ import ChatbotLogo from "@/assets/icons/chatbot_inside_logo.svg"
 import CirLogo from "@/assets/icons/circlelogo-chatbot.svg"
 import StarLogo from "@/assets/icons/starLogo-chatbot.svg"
 import SendLogo from "@/assets/icons/send.svg"
+import { chatbotTopics } from "@/utils/dataChatbotTest"
 
 export default function ChatbotWindow({ onClose }) {
   return (
@@ -29,6 +30,17 @@ export default function ChatbotWindow({ onClose }) {
           <StarLogo className="absolute left-0 lg:hidden"/>
           <StarLogo className="absolute right-5 bottom-[15%] lg:hidden"/>
           <StarLogo className="absolute left-4 bottom-[15%] scale-200"/>
+        </section>
+        {/* menu suggestions bar */}
+        <section className="flex gap-2 px-4 py-2 overflow-x-auto">
+          {chatbotTopics.map((item, index) => (
+            <button
+              key={index}
+              className="whitespace-nowrap px-3 py-1.5 rounded-full border border-orange-500 text-orange-500 body-2 hover:bg-orange-50 cursor-pointer"
+            >
+              {item.topic}
+            </button>
+          ))}
         </section>
         {/* write message */}
         <section className="flex items-center p-4 gap-2 shadow-[0px_-8px_12px_6px_#0000000D] relative z-10">
