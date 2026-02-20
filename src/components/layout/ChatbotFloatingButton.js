@@ -1,6 +1,6 @@
 "use client";
 
-import ChatbotIcon from "@/assets/icons/chatbot_inside_logo.svg?url";
+import ChatbotIcon from "@/assets/icons/chatbot_inside_logo.svg";
 
 export default function ChatbotFloatingButton({ onClick }) {
   const handleClick = () => {
@@ -18,7 +18,7 @@ export default function ChatbotFloatingButton({ onClick }) {
       onClick={handleClick}
     >
       <img 
-        src={ChatbotIcon} 
+        src={ChatbotIcon?.src || ChatbotIcon || ''} 
         alt="Chatbot" 
         className="w-8 h-8 lg:w-12 lg:h-12"
       />

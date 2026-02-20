@@ -1,12 +1,12 @@
 "use client";
 
-import SpaIcon from "@/assets/icons/bx_spa.svg?url";
-import WifiIcon from "@/assets/icons/ant-design_wifi-outlined.svg?url";
-import SaunaIcon from "@/assets/icons/ep_hot-water.svg?url";
-import CarIcon from "@/assets/icons/carbon_car.svg?url";
-import SofaIcon from "@/assets/icons/iconoir_two-seater-sofa.svg?url";
-import PhoneIcon from "@/assets/icons/bx_phone-call.svg?url";
-import DumpbelIcon from "@/assets/icons/dumpbel.svg?url";
+import SpaIcon from "@/assets/icons/bx_spa.svg";
+import WifiIcon from "@/assets/icons/ant-design_wifi-outlined.svg";
+import SaunaIcon from "@/assets/icons/ep_hot-water.svg";
+import CarIcon from "@/assets/icons/carbon_car.svg";
+import SofaIcon from "@/assets/icons/iconoir_two-seater-sofa.svg";
+import PhoneIcon from "@/assets/icons/bx_phone-call.svg";
+import DumpbelIcon from "@/assets/icons/dumpbel.svg";
 
 const services = [
   { icon: SpaIcon, label: "Spa" },
@@ -44,7 +44,7 @@ export default function HeroServeice() {
                 }`}
               >
                 <div className="w-15 h-12 flex items-center justify-center text-white">
-                  <img src={IconComponent} className="w-12 h-12 brightness-0 invert" alt="" aria-hidden />
+                  <img src={IconComponent?.src || IconComponent || ''} className="w-12 h-12 brightness-0 invert" alt="" aria-hidden />
                 </div>
                 <span className="body-1 text-white">
                   {service.label}
