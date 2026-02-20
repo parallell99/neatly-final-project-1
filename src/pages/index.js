@@ -3,7 +3,8 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import HeroSlide from "@/components/layout/heroSlide";
 import HeroRoomSuit from "@/components/layout/heroRoomSuit";
-import HeroRoomService from "@/components/layout/heroRoomService";
+import HeroAbout from "@/components/layout/heroAbout";
+import HeroServeice from "@/components/layout/heroServeice";
 import { useAuth } from "@/contexts/authentication";
 
 import HeroSearch from "@/components/layout/herosearch";
@@ -27,7 +28,8 @@ export default function Home() {
       <Navbar />
       
       <HeroSearch />
-      <HeroRoomService />
+      <HeroAbout />
+      <HeroServeice />
       <HeroRoomSuit />
       <HeroSlide />
       <Footer />

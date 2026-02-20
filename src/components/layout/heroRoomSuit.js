@@ -75,7 +75,7 @@ function RoomCard({ room, className = "", fill = false }) {
 
 export default function HeroRoomSuit() {
   return (
-    <section className="w-full bg-white mb-10 lg:mb-30">
+    <section id="rooms" className="w-full bg-white mb-10 lg:mb-30">
       {/* Header */}
       <div className="max-w-[1440px] mx-auto py-12 lg:py-16 px-4 text-center">
         <h2 className="font-serif headline-3 text-green-800">

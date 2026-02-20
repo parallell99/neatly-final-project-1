@@ -116,7 +116,7 @@ export default function HeroRoomService() {
   };
 
   return (
-    <section className="w-full bg-white">
+    <section id="about" className="w-full bg-white">
       <div className="max-w-[1440px] mx-auto px-4 lg:px-[160px]">
         {/* Hotel Overview Section */}
         <div className="py-12 lg:py-16">
@@ -191,41 +191,7 @@ export default function HeroRoomService() {
         </button>
       </div>
 
-      <div className="w-full">
-        {/* Service & Facilities Section */}
-        <div className="bg-green-700 py-12 lg:py-16 px-6 lg:px-12 lg:h-[500px] mb-10">
-          <h3 className="font-serif headline-3 text-white text-center mb-10 mt-17">
-            Service & Facilities
-          </h3>
-
-          <div className="flex flex-wrap justify-center gap-8 lg:flex-nowrap lg:justify-between lg:items-center lg:max-w-[1200px] lg:mx-auto">
-            {services.map((service, index) => {
-              const IconComponent = service.icon;
-              const isLastItem = index === services.length - 1;
-              const isOddCount = services.length % 2 !== 0;
-              const shouldCenter = isLastItem && isOddCount;
-              
-              return (
-                <div
-                  key={index}
-                  className={`flex flex-col items-center gap-8 text-center ${
-                    shouldCenter
-                      ? "w-full md:w-auto lg:w-auto"
-                      : "w-[calc(50%-1rem)] md:w-[calc(33.333%-1.5rem)] lg:w-auto"
-                  }`}
-                >
-                  <div className="w-15 h-12 flex items-center justify-center text-white">
-                    <img src={IconComponent} className="w-12 h-12 brightness-0 invert" alt="" aria-hidden />
-                  </div>
-                  <span className="body-1 text-white">
-                    {service.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      
     </section>
   );
 }

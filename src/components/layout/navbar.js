@@ -21,6 +21,20 @@ export default function Navbar() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navbarHeight = navRef.current?.offsetHeight || 0;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   // คำนวณความสูงของ navbar
   useEffect(() => {
     if (navRef.current) {
@@ -51,10 +65,34 @@ export default function Navbar() {
         {/* Desktop Navigation - แสดงเฉพาะบน desktop */}
         <div className="hidden lg:flex items-center gap-10 flex-1 justify-between ml-10">
           <div className="flex items-center gap-8">
-            <a href="#" className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors">
+            <a 
+              href="#about" 
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection('about');
+              }}
+              className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+            >
               About Neatly
             </a>
-            <a href="#" className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors">
+            <a 
+              href="#service" 
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection('service');
+              }}
+              className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+            >
+              Service & Facilities
+            </a>
+            <a 
+              href="#rooms" 
+              onClick={(e) => {
+                e.preventDefault();
+                scrollToSection('rooms');
+              }}
+              className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+            >
               Rooms & Suites
             </a>
           </div>
@@ -186,17 +224,36 @@ export default function Navbar() {
           <div className="flex flex-col px-8 gap-6 py-4">
             {!isAuthenticated ? (
               <>
-                <Link 
-                  href="/service" 
-                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors"
-                  onClick={toggleMenu}
+                <a 
+                  href="#about" 
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection('about');
+                    toggleMenu();
+                  }}
                 >
                   About Neatly
-                </Link>
+                </a>
                 <a 
-                  href="#" 
-                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors"
-                  onClick={toggleMenu}
+                  href="#service" 
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection('service');
+                    toggleMenu();
+                  }}
+                >
+                  Service & Facilities
+                </a>
+                <a 
+                  href="#rooms" 
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection('rooms');
+                    toggleMenu();
+                  }}
                 >
                   Rooms & Suites
                 </a>
