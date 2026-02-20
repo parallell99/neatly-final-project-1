@@ -205,53 +205,61 @@ const ROOM_DATA = {
   }
 };
 
-const roomImages = [
-  { src: RoomImg1?.src ?? RoomImg1, alt: "Room Image" },
-  { src: RoomImg2?.src ?? RoomImg2, alt: "Room Image" },
-  { src: RoomImg3?.src ?? RoomImg3, alt: "Room Image" },
-  { src: RoomImg4?.src ?? RoomImg4, alt: "Room Image" },
-];
-
-// Other rooms data for carousel
-const OTHER_ROOMS = [
-  {
-    name: "Deluxe",
-    slug: "deluxe",
-    image: deluxeImg?.src ?? deluxeImg,
-  },
-  {
-    name: "Superior",
-    slug: "superior",
-    image: superiorImg?.src ?? superiorImg,
-  },
-  {
-    name: "Suite",
-    slug: "suite",
-    image: suiteImg?.src ?? suiteImg,
-  },
-  {
-    name: "Superior Garden View",
-    slug: "superior-garden-view",
-    image: superiorGardenViewImg?.src ?? superiorGardenViewImg,
-  },
-  {
-    name: "Premier Sea View",
-    slug: "premier-sea-view",
-    image: premierSeaViewImg?.src ?? premierSeaViewImg,
-  },
-  {
-    name: "Supreme",
-    slug: "supreme",
-    image: supremeImg?.src ?? supremeImg,
-  },
-];
-
 export default function RoomDetail({ roomId }) {
   const roomData = ROOM_DATA[roomId];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [otherRoomsIndex, setOtherRoomsIndex] = useState(0);
   const [mobileRoomsIndex, setMobileRoomsIndex] = useState(0);
   const [shuffledRooms, setShuffledRooms] = useState([]);
+
+  // Room images array - moved inside component to avoid SSR issues
+  // Ensure all image sources are strings
+  const getImageSrc = (img) => {
+    if (!img) return '';
+    if (typeof img === 'string') return img;
+    return img?.src ?? String(img);
+  };
+
+  const roomImages = [
+    { src: getImageSrc(RoomImg1), alt: "Room Image" },
+    { src: getImageSrc(RoomImg2), alt: "Room Image" },
+    { src: getImageSrc(RoomImg3), alt: "Room Image" },
+    { src: getImageSrc(RoomImg4), alt: "Room Image" },
+  ];
+
+  // Other rooms data for carousel - moved inside component to avoid SSR issues
+  const OTHER_ROOMS = [
+    {
+      name: "Deluxe",
+      slug: "deluxe",
+      image: getImageSrc(deluxeImg),
+    },
+    {
+      name: "Superior",
+      slug: "superior",
+      image: getImageSrc(superiorImg),
+    },
+    {
+      name: "Suite",
+      slug: "suite",
+      image: getImageSrc(suiteImg),
+    },
+    {
+      name: "Superior Garden View",
+      slug: "superior-garden-view",
+      image: getImageSrc(superiorGardenViewImg),
+    },
+    {
+      name: "Premier Sea View",
+      slug: "premier-sea-view",
+      image: getImageSrc(premierSeaViewImg),
+    },
+    {
+      name: "Supreme",
+      slug: "supreme",
+      image: getImageSrc(supremeImg),
+    },
+  ];
 
   // Filter out current room from other rooms
   const otherRooms = OTHER_ROOMS.filter(room => room.slug !== roomId);
@@ -328,10 +336,14 @@ export default function RoomDetail({ roomId }) {
   };
 
   // Update image alt text with room-specific alt
-  const imagesWithAlt = roomImages.map(img => ({
-    ...img,
-    alt: roomData.imageAlt
-  }));
+  // Ensure src is always a string
+  const imagesWithAlt = roomImages.map(img => {
+    const src = typeof img.src === 'string' ? img.src : String(img.src || '');
+    return {
+      src,
+      alt: roomData.imageAlt || "Room Image"
+    };
+  });
 
   return (
     <>

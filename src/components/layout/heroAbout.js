@@ -60,7 +60,7 @@ const COLUMN_WIDTH_DESKTOP = 400;
 const GAP_MOBILE = 16;
 const GAP_DESKTOP = 24;
 
-export default function HeroRoomService() {
+export default function HeroAbout() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isDesktop, setIsDesktop] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(1440);

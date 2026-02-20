@@ -5,7 +5,6 @@ import HeroSlide from "@/components/layout/heroSlide";
 import HeroRoomSuit from "@/components/layout/heroRoomSuit";
 import HeroAbout from "@/components/layout/heroAbout";
 import HeroServeice from "@/components/layout/heroServeice";
-import { useAuth } from "@/contexts/authentication";
 
 import HeroSearch from "@/components/layout/herosearch";
 const geistSans = Geist({
@@ -19,8 +18,6 @@ const geistMono = Geist_Mono({
 });
 
 export default function Home() {
-  const { isAuthenticated, user, userRole, getUserLoading } = useAuth();
-
   return (
     <div
       className={`${geistSans.className} ${geistMono.className} flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans w-full`}
@@ -35,4 +32,11 @@ export default function Home() {
       <Footer />
     </div>
   );
+}
+
+// Force server-side rendering to prevent prerendering issues with client components
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
 }

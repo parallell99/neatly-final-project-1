@@ -1,9 +1,16 @@
-"use client";
-
 import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
-import RoomDetail from "@/components/layout/RoomDetail/RoomDetail";
+
+// Dynamically import RoomDetail to avoid SSR issues with image imports
+const RoomDetail = dynamic(
+  () => import("@/components/layout/RoomDetail/RoomDetail"),
+  { 
+    ssr: false,
+    loading: () => null
+  }
+);
 
 export default function RoomDetailPage() {
   const router = useRouter();
@@ -47,8 +54,15 @@ export default function RoomDetailPage() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Navbar />
-      <RoomDetail roomId={slug} />
+      {slug && <RoomDetail roomId={slug} />}
       <Footer />
     </div>
   );
+}
+
+// Force server-side rendering to prevent prerendering issues
+export async function getServerSideProps() {
+  return {
+    props: {},
+  };
 }
