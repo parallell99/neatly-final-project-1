@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export default function Home() {
   const { isAuthenticated, user, userRole, getUserLoading } = useAuth();
- console.log(user)
+
   return (
     <div
       className={`${geistSans.className} ${geistMono.className} flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans w-full`}
