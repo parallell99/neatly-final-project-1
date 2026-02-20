@@ -9,7 +9,7 @@ import { useRegisterForm } from "@/hooks/useRegisterForm";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import Button from "@/components/ui/buttons/buttons";
 import { thaiProvinces } from "@/data/thaiProvinces";
-import ExclamationCircle from "@/assets/icons/exclamation-circle.svg";
+import ExclamationCircle from "@/assets/icons/exclamation-circle.svg?url";
 import axios from "axios";
 import {
   Select,
@@ -219,7 +219,7 @@ export default function Register() {
                 </Select>
                 {errors.province && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center">
-                    <ExclamationCircle />
+                    <img src={ExclamationCircle} className="w-5 h-5" alt="" aria-hidden />
                   </span>
                 )}
               </div>
