@@ -42,9 +42,12 @@ const rooms = [
 ];
 
 function RoomCard({ room, className = "", fill = false }) {
+  const cardHeight = fill ? "h-full" : "min-h-[280px] md:min-h-[360px]";
+  
   return (
-    <article
-      className={`relative overflow-hidden group ${fill ? "h-full w-full min-h-0" : "w-full min-h-[280px] md:min-h-[360px]"} ${className}`}
+    <Link
+      href={`/rooms/${room.slug}`}
+      className={`relative overflow-hidden group block ${fill ? "h-full w-full min-h-0" : `w-full ${cardHeight}`} ${className}`}
     >
       <div className="absolute inset-0">
         <img
@@ -57,19 +60,16 @@ function RoomCard({ room, className = "", fill = false }) {
           aria-hidden
         />
       </div>
-      <div className={`relative z-10 flex flex-col justify-end p-6 md:p-8 lg:p-10 ${fill ? "h-full min-h-0" : "h-full min-h-[280px] md:min-h-[360px]"}`}>
+      <div className={`relative z-10 flex flex-col justify-end p-6 md:p-8 lg:p-10 ${fill ? "h-full min-h-0" : `h-full ${cardHeight}`}`}>
         <h3 className="font-serif text-white text-2xl md:text-3xl mb-2">
           {room.name}
         </h3>
-        <Link
-          href={`/rooms/${room.slug}`}
-          className="font-sans text-white text-sm md:text-base inline-flex items-center gap-2 hover:underline focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent rounded"
-        >
+        <span className="font-sans text-white text-sm md:text-base inline-flex items-center gap-2 hover:underline focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent rounded">
           Explore Room
           <span aria-hidden>→</span>
-        </Link>
+        </span>
       </div>
-    </article>
+    </Link>
   );
 }
 

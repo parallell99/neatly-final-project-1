@@ -151,7 +151,7 @@ export default function HeroRoomService() {
       <div className="relative mb-12 lg:mb-16 w-full overflow-hidden">
         <div className="overflow-hidden w-full">
           <div
-            className="flex gap-3 lg:gap-6 transition-transform duration-500 ease-out"
+            className="flex gap-3 lg:gap-3 transition-transform duration-500 ease-out"
             style={{
               transform: getTransform(),
             }}
