@@ -501,6 +501,7 @@ export default function RoomDetail({ roomId }) {
         </div>
 
         {/* Content Section */}
+       
         <div className="max-w-[1440px] mx-auto px-2 lg:px-[160px] py-8 lg:py-12">
           {/* Room Title */}
           <h1 className="font-serif headline-3 text-gray-900 mb-10 lg:mb-6">
@@ -513,60 +514,69 @@ export default function RoomDetail({ roomId }) {
             })}
           </h1>
 
-          {/* Room Description */}
-          <p className="font-sans body-1 text-gray-600 mb-10 lg:mb-8">
-            {roomData.description}
-          </p>
+          {/* Desktop: Two-column layout */}
+          <div className="lg:flex lg:items-start lg:justify-between lg:gap-8 mb-8 lg:mb-12 pb-8 lg:pb-12 border-b border-gray-200">
+            {/* Left Column: Description and Statistics */}
+            <div className="lg:flex-1 mb-6 lg:mb-0">
+              {/* Room Description */}
+              <p className="font-sans body-1 text-gray-900  mb-10 lg:mb-12 lg:mt-2 lg:pr-80">
+                {roomData.description}
+              </p>
 
-          {/* Key Statistics */}
-          <div className="flex items-center gap-4 mb-6 lg:mb-8 text-gray-600 font-sans body-1">
-            <span>{roomData.statistics.person}</span>
-            <span className="text-gray-300">|</span>
-            <span>{roomData.statistics.bed}</span>
-            <span className="text-gray-300">|</span>
-            <span>{roomData.statistics.size}</span>
-          </div>
-
-          {/* Pricing and Booking Section */}
-          <div className="flex items-center justify-center gap-8 lg:flex-row lg:items-center lg:justify-between  mb-8 lg:mb-12 pb-8 lg:pb-12 border-b border-gray-200">
-            <div className="flex flex-col">
-              <span className="font-sans body-1 text-gray-400 line-through mb-1">
-                {roomData.pricing.original}
-              </span>
-              <span className="font-sans headline-5 lg:text-3xl font-semibold text-gray-900">
-                {roomData.pricing.current}
-              </span>
+              {/* Key Statistics */}
+              <div className="flex items-center gap-4 text-gray-900 font-sans body-1">
+                <span>{roomData.statistics.person}</span>
+                <span className="text-gray-300">|</span>
+                <span>{roomData.statistics.bed}</span>
+                <span className="text-gray-300">|</span>
+                <span>{roomData.statistics.size}</span>
+              </div>
             </div>
-            <Button 
-              type="button"
-              buttonStyle="primary"
-              buttonText="Book Now"
-              className=" h-[48px] lg:w-auto lg:px-8"
-              onClick={() => {
-                // Navigate to booking page
-                window.location.href = "/booking";
-              }}
-            />
+
+            {/* Right Column: Pricing and Booking */}
+            <div className="flex items-center justify-center gap-8 lg:flex-col lg:items-start lg:justify-start lg:gap-0">
+              <div className="flex flex-col mb-0 lg:mb-6">
+                <span className="font-sans body-1 text-gray-700 line-through mb-1">
+                  {roomData.pricing.original}
+                </span>
+                <span className="font-sans headline-5 lg:text-3xl font-semibold text-gray-900">
+                  {roomData.pricing.current}
+                </span>
+              </div>
+              <Button 
+                type="button"
+                buttonStyle="primary"
+                buttonText="Book Now"
+                className="h-[48px] lg:w-auto lg:px-8"
+                onClick={() => {
+                  // Navigate to booking page
+                  window.location.href = "/booking";
+                }}
+              />
+            </div>
           </div>
 
           {/* Room Amenities Section */}
           <div>
-            <h2 className="font-sans text-xl lg:text-2xl font-semibold text-gray-900 mb-6">
+            <h2 className="font-sans headline-5 lg:text-2xl font-semibold text-gray-900 mb-6">
               Room Amenities
             </h2>
-            <ul className="space-y-3">
+            <div className="px-4 lg:px-3">
+            <ul className="space-y-2 body-1 lg:grid lg:grid-cols-2 ">
               {roomData.amenities.map((amenity, index) => (
                 <li 
                   key={index}
-                  className="flex items-start gap-3 font-sans body-1 text-gray-600"
+                  className="flex items-start gap-3 font-sans body-1 text-gray-700"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-gray-600 mt-2 shrink-0"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-700 mt-2 shrink-0"></span>
                   <span>{amenity}</span>
                 </li>
               ))}
             </ul>
+            </div>
           </div>
         </div>
+
 
         {/* Other Rooms Section */}
         <div className="w-full bg-green-200 py-12 lg:py-16">
