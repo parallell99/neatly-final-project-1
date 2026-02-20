@@ -25,24 +25,7 @@ export default function Home() {
       className={`${geistSans.className} ${geistMono.className} flex flex-col min-h-screen items-center justify-center bg-zinc-50 font-sans w-full`}
     >
       <Navbar />
-      {getUserLoading ? (
-        <p className="text-gray-500 text-sm">กำลังโหลด...</p>
-      ) : (
-        <section
-          className="w-full max-w-[1440px] mx-auto px-4 py-2 text-center"
-          aria-label="Auth status"
-        >
-          <p className="text-gray-700">
-            isAuthenticated: <strong>{isAuthenticated ? "true" : "false"}</strong>
-            {user && (
-              <>
-                {" · "}
-                user: {user.username ?? user.first_name} · role: {userRole ?? "—"}
-              </>
-            )}
-          </p>
-        </section>
-      )}
+      
       <HeroSearch />
       <HeroRoomService />
       <HeroRoomSuit />

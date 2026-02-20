@@ -125,7 +125,7 @@ function AuthProvider({ children }) {
       loading: false,
       error: null,
     }));
-    router.push("/login");
+    router.push("/");
   };
 
   const value = {
