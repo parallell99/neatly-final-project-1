@@ -1,6 +1,6 @@
 "use client";
 
-import CsBookingIcon from "@/assets/icons/cs_booking.svg";
+import CsBookingIcon from "@/assets/icons/cs_booking.svg?url";
 
 const ROOM_PRICE = 2500;
 
@@ -19,12 +19,13 @@ export default function BookingDetailCard({
         {/* Header */}
         <div className="flex items-center justify-between mb-6 p-4 bg-green-800 rounded-t-lg">
           <div className="w-full flex items-center gap-2">
-            <CsBookingIcon
+            <img
+              src={CsBookingIcon}
               width={24}
               height={24}
               className="text-green-500"
-              role="img"
-              aria-label="Booking detail"
+              alt="Booking detail"
+              aria-hidden
             />
             <h3 className="headline-5 text-white">Booking Detail</h3>
           </div>

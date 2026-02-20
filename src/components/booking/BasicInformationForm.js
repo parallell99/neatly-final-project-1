@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/booking/select";
+} from "@/components/ui/select";
 import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
 import { Calendar } from "@/components/ui/booking/calendar";
 import {

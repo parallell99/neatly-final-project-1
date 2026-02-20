@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import SpaIcon from "@/assets/icons/bx_spa.svg";
-import WifiIcon from "@/assets/icons/ant-design_wifi-outlined.svg";
-import SaunaIcon from "@/assets/icons/ep_hot-water.svg";
-import CarIcon from "@/assets/icons/carbon_car.svg";
-import SofaIcon from "@/assets/icons/iconoir_two-seater-sofa.svg";
-import PhoneIcon from "@/assets/icons/bx_phone-call.svg";
-import DumpbelIcon from "@/assets/icons/dumpbel.svg";
+import SpaIcon from "@/assets/icons/bx_spa.svg?url";
+import WifiIcon from "@/assets/icons/ant-design_wifi-outlined.svg?url";
+import SaunaIcon from "@/assets/icons/ep_hot-water.svg?url";
+import CarIcon from "@/assets/icons/carbon_car.svg?url";
+import SofaIcon from "@/assets/icons/iconoir_two-seater-sofa.svg?url";
+import PhoneIcon from "@/assets/icons/bx_phone-call.svg?url";
+import DumpbelIcon from "@/assets/icons/dumpbel.svg?url";
 
 
 // รูปจาก src/assets/images/ สำหรับสไลด์ (ชื่อไฟล์: hotel-1.jpg, hotel-2.jpg, hotel-3.jpg หรือ 7.jpg, 8.jpg, 9.jpg)
@@ -215,7 +215,7 @@ export default function HeroRoomService() {
                   }`}
                 >
                   <div className="w-15 h-12 flex items-center justify-center text-white">
-                    <IconComponent className=" brightness-0 invert" />
+                    <img src={IconComponent} className="w-12 h-12 brightness-0 invert" alt="" aria-hidden />
                   </div>
                   <span className="body-1 text-white">
                     {service.label}

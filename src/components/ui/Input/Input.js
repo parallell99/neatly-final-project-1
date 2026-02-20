@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import ExclamationCircle from "@/assets/icons/exclamation-circle.svg";
-import Eye from "@/assets/icons/eye.svg";
-import EyeOff from "@/assets/icons/eye-off.svg";
+import ExclamationCircle from "@/assets/icons/exclamation-circle.svg?url";
+import Eye from "@/assets/icons/eye.svg?url";
+import EyeOff from "@/assets/icons/eye-off.svg?url";
 
 export default function Input({
   label,
@@ -58,7 +58,7 @@ export default function Input({
 
         {error && !disabled && (
           <span className={`absolute top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center ${isPassword ? "right-10" : "right-3"}`}>
-            <ExclamationCircle />
+            <img src={ExclamationCircle} className="w-5 h-5" alt="" aria-hidden />
           </span>
         )}
         {isPassword && !disabled && (
@@ -70,9 +70,9 @@ export default function Input({
           >
 
             {showPassword ? (
-              <EyeOff className="w-5 h-5" />
+              <img src={EyeOff} className="w-5 h-5" alt="" aria-hidden />
             ) : (
-              <Eye className="w-5 h-5" />
+              <img src={Eye} className="w-5 h-5" alt="" aria-hidden />
             )}
           </button>
         )}

@@ -1,7 +1,7 @@
 "use client";
 
 import Button from "@/components/ui/buttons/buttons";
-import ErrorIcon from "@/assets/icons/error.svg"
+import ErrorIcon from "@/assets/icons/error.svg?url"
 
 export default function PaymentFailed({ onBackToHome, onCheckBookingDetail }) {
   const handleBackToHome = () => {
@@ -24,7 +24,7 @@ export default function PaymentFailed({ onBackToHome, onCheckBookingDetail }) {
     <div className="flex flex-col items-center justify-center">
       <div className="w-full h-full flex flex-col items-center bg-orange-100 py-80 lg:w-[738px] lg:h-[349px] lg:justify-center lg:p-0 lg:my-20">
         {/* Error Icon */}
-          <ErrorIcon className="text-orange-600"/>
+          <img src={ErrorIcon} className="w-16 h-16 text-orange-600" alt="" aria-hidden />
 
         {/* Error Title */}
         <h1 className="headline-3 text-[#CE6F3E] my-6 text-center">

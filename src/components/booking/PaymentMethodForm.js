@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Button from "@/components/ui/buttons/buttons";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
-import CreditCardIcon from "@/assets/icons/credit.svg";
-import CashIcon from "@/assets/icons/cash.svg"
-import CashHandIcon from "@/assets/icons/cash-hand.svg"
+import CreditCardIcon from "@/assets/icons/credit.svg?url";
+import CashIcon from "@/assets/icons/cash.svg?url";
+import CashHandIcon from "@/assets/icons/cash-hand.svg?url";
 
 const inputBase =
   "w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white";
@@ -75,7 +75,7 @@ export default function PaymentMethodForm({
           aria-pressed={method === "credit-card"}
           aria-label="Pay with Credit Card"
         >
-          <CreditCardIcon />
+          <img src={CreditCardIcon} className="w-6 h-6" alt="" aria-hidden />
           Credit Card
         </button>
         <button
@@ -85,7 +85,7 @@ export default function PaymentMethodForm({
           aria-pressed={method === "cash"}
           aria-label="Pay with Cash"
         >
-          <CashIcon />
+          <img src={CashIcon} className="w-6 h-6" alt="" aria-hidden />
           Cash
         </button>
       </div>
@@ -195,7 +195,7 @@ export default function PaymentMethodForm({
             Cash
           </h3>
           <div className="flex felx-col justify-around items-center bg-[#F1F2F6] rounded-sm mb-6 px-6 py-6 lg:gap-5">
-            <CashHandIcon />
+            <img src={CashHandIcon} className="w-6 h-6" alt="" aria-hidden />
             <div className="w-[229px] lg:w-[500px]">
             <p className="font-sans text-base text-[#2A2E3F]">
               Pay at the hotel with cash or cheque. No payment is required until you check in
