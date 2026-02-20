@@ -18,7 +18,7 @@ const services = [
   { icon: PhoneIcon, label: "24 hours operation" },
 ];
 
-export default function HeroService() {
+export default function HeroServeice() {
   return (
     <div id="service" className="w-full">
       {/* Service & Facilities Section */}

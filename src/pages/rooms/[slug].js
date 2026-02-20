@@ -8,7 +8,7 @@ const RoomDetail = dynamic(
   () => import("@/components/layout/RoomDetail/RoomDetail"),
   { 
     ssr: false,
-    loading: () => null
+    loading: () => <div>Loading...</div>
   }
 );
 
@@ -60,7 +60,7 @@ export default function RoomDetailPage() {
   );
 }
 
-// Force server-side rendering to prevent prerendering issues
+// Prevent static generation/prerendering - render on each request
 export async function getServerSideProps() {
   return {
     props: {},

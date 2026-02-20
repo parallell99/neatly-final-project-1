@@ -33,10 +33,3 @@ export default function Home() {
     </div>
   );
 }
-
-// Force server-side rendering to prevent prerendering issues with client components
-export async function getServerSideProps() {
-  return {
-    props: {},
-  };
-}

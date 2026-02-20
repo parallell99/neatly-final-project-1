@@ -1,3 +1,5 @@
+"use client";
+
 const VARIANT_CLASS = {
   primary: "btn-primary",
   secondary: "btn-secondary",
