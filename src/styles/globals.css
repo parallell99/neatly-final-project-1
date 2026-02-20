@@ -2,6 +2,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@100;200;300;400;500;600;700&display=swap");
 @import "tailwindcss";
+@import "react-datepicker/dist/react-datepicker.css";
+@import "tw-animate-css";
 @import "./tw-animate.css";
 @import "shadcn/tailwind.css";
 
@@ -495,6 +497,38 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Custom DatePicker Styles */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+}
+
+.react-datepicker-popper {
+  z-index: 9999;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--orange-500);
+}
+
+.react-datepicker__day--selected:hover,
+.react-datepicker__day--keyboard-selected:hover {
+  background-color: var(--orange-600);
+}
+
+.react-datepicker__header {
+  background-color: var(--orange-500);
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: white;
 }
 
 .dark {
