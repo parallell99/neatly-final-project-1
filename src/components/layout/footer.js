@@ -1,8 +1,8 @@
-import LogoFoot from "@/assets/logo/logo-foot.svg";
-import PhoneIcon from "@/assets/icons/phone.svg";
-import MailIcon from "@/assets/icons/mail.svg";
-import LocationIcon from "@/assets/icons/location.svg";
-import SocialIcon from "@/assets/icons/social.svg";
+import LogoFoot from "@/assets/logo/logo-foot.svg?url";
+import PhoneIcon from "@/assets/icons/phone.svg?url";
+import MailIcon from "@/assets/icons/mail.svg?url";
+import LocationIcon from "@/assets/icons/location.svg?url";
+import SocialIcon from "@/assets/icons/social.svg?url";
 
 export default function Footer() {
   return (
@@ -12,7 +12,7 @@ export default function Footer() {
         {/* Logo & Description Section */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <LogoFoot className="w-40 mb-5"/>
+            <img src={LogoFoot} className="w-40 mb-5" alt="Neatly Hotel logo" />
           </div>
           <h2 className="headline-5 mb-2">Neatly Hotel</h2>
           <p className="body-2">
@@ -26,7 +26,7 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             {/* Phone */}
             <div className="flex items-start gap-3">
-              <PhoneIcon className="text-green-500 w-5 h-5 "/>
+              <img src={PhoneIcon} className="w-5 h-5 shrink-0" alt="" aria-hidden />
               <span className="text-base font-normal text-white/90 font-thai">
                 +66 99 999 9999
               </span>
@@ -34,7 +34,7 @@ export default function Footer() {
 
             {/* Email */}
             <div className="flex items-start gap-3">
-            <MailIcon className="text-green-500 w-5 h-5"/>
+            <img src={MailIcon} className="w-5 h-5 shrink-0" alt="" aria-hidden />
               <span className="text-base font-normal text-white/90 font-thai">
                 contact@neatlyhotel.com
               </span>
@@ -42,7 +42,7 @@ export default function Footer() {
 
             {/* Address */}
             <div className="flex items-start gap-3 text-black">
-              <LocationIcon className="text-green-500 w-5 h-5"/>
+              <img src={LocationIcon} className="w-5 h-5 shrink-0" alt="" aria-hidden />
               <span className="text-base font-normal text-white/90 font-thai">
                 188 Phaya Thai Rd, Thung Phaya Thai, Ratchathewi, Bangkok 10400
               </span>
@@ -58,7 +58,7 @@ export default function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Social Media Icons */}
           <div className="flex items-center gap-4">
-            <SocialIcon className="text-white "/>
+            <img src={SocialIcon} className="w-6 h-6 shrink-0" alt="" aria-hidden />
           </div>
 
           {/* Copyright */}

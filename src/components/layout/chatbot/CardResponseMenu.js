@@ -2,10 +2,10 @@ import { useState } from "react"
 import Button from "@/components/ui/buttons/buttons"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog"
-import BewareIcon from "@/assets/icons/beware.svg"
-import BinIcon from "@/assets/icons/bin.svg"
-import DragIcon from "@/assets/icons/drag.svg"
-import PencilEditIcon from "@/assets/icons/pencil-edit.svg"
+import BewareIcon from "@/assets/icons/beware.svg?url"
+import BinIcon from "@/assets/icons/bin.svg?url"
+import DragIcon from "@/assets/icons/drag.svg?url"
+import PencilEditIcon from "@/assets/icons/pencil-edit.svg?url"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { toast } from "sonner"
@@ -25,7 +25,7 @@ const ValidatedInput = ({ value, onChange, error, className = "", ...props }) =>
         className={`bg-white h-[48px] w-full border rounded-[8px] p-3 pr-10 outline-none ${error ? "border-red" : "border-gray-400"} ${className}`}
         {...props}
       />
-      {error && <BewareIcon className="absolute top-1/2 -translate-y-1/2 right-4" />}
+      {error && <img src={BewareIcon} className="absolute top-1/2 -translate-y-1/2 right-4 w-6 h-6" alt="" aria-hidden />}
     </div>
     {error && <ErrorMessage />}
   </div>
@@ -170,7 +170,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
   const confirmDelete = () => {
     setShowDeleteDialog(false)
     toast("Deleted successfully", {
-      icon: <BinIcon className="w-6 h-6 text-orange-700" style={{ color: "#c2410c" }} />,
+      icon: <img src={BinIcon} className="w-6 h-6" alt="" aria-hidden />,
       style: {
         background: "#F9DACE",
         color: "#803010",
@@ -226,7 +226,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
                     <SelectItem value="option-with-details" className="text-[16px]">Option with details</SelectItem>
                   </SelectContent>
                 </Select>
-                {replyFormatError && <BewareIcon className="absolute top-1/2 -translate-y-1/2 right-9 pointer-events-none" />}
+                {replyFormatError && <img src={BewareIcon} className="absolute top-1/2 -translate-y-1/2 right-9 w-6 h-6 pointer-events-none" alt="" aria-hidden />}
               </div>
               {replyFormatError && <ErrorMessage />}
             </div>
@@ -266,7 +266,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
                     </SelectContent>
                   </Select>
                 )}
-                {roomTypeError && <BewareIcon className="absolute top-1/2 -translate-y-1/2 right-4" />}
+                {roomTypeError && <img src={BewareIcon} className="absolute top-1/2 -translate-y-1/2 right-4 w-6 h-6" alt="" aria-hidden />}
               </div>
               {roomTypeError && <ErrorMessage />}
             </div>
@@ -351,9 +351,15 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
 
       {/* icon column */}
       <div className="flex flex-col items-center gap-3 pt-1">
-        <DragIcon {...listeners} className="cursor-grab active:cursor-grabbing" />
-        <PencilEditIcon className="cursor-pointer" onClick={() => setHasError(true)} />
-        <BinIcon className="cursor-pointer" onClick={handleDelete} />
+        <div {...listeners} className="cursor-grab active:cursor-grabbing">
+          <img src={DragIcon} className="w-6 h-6" alt="" aria-hidden />
+        </div>
+        <button type="button" onClick={() => setHasError(true)} className="cursor-pointer p-0 border-0 bg-transparent">
+          <img src={PencilEditIcon} className="w-6 h-6" alt="Edit" />
+        </button>
+        <button type="button" onClick={handleDelete} className="cursor-pointer p-0 border-0 bg-transparent">
+          <img src={BinIcon} className="w-6 h-6" alt="Delete" />
+        </button>
       </div>
 
       {/* delete confirm dialog */}

@@ -2,7 +2,7 @@ import { useState } from "react"
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
 import Chatbot from "@/components/layout/chatbot/ChatbotButton"
 import CardResponseMenu from "@/components/layout/chatbot/CardResponseMenu"
-import BewareIcon from "@/assets/icons/beware.svg"
+import BewareIcon from "@/assets/icons/beware.svg?url"
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable"
 import { Toaster } from "@/components/ui/sonner"
@@ -21,7 +21,7 @@ const ValidatedTextarea = ({ value, onChange, error, className = "", ...props })
         className={`bg-white w-full border rounded-[4px] p-3 pr-10 outline-none resize-none ${error ? "border-red" : "border-gray-400"} ${className}`}
         {...props}
       />
-      {error && <BewareIcon className="absolute top-3 right-3" />}
+      {error && <img src={BewareIcon} className="absolute top-3 right-3 w-6 h-6" alt="" aria-hidden />}
     </div>
     {error && <ErrorMessage />}
   </div>
