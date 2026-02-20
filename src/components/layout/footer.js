@@ -14,7 +14,7 @@ export default function Footer() {
         {/* Logo & Description Section */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-            <img src={LogoFoot} alt="Neatly Hotel Logo" className="w-40 mb-5" />
+            <img src={LogoFoot?.src || LogoFoot || ''} alt="Neatly Hotel Logo" className="w-40 mb-5" />
           </div>
           <h2 className="headline-5 mb-2">Neatly Hotel</h2>
           <p className="body-2">
