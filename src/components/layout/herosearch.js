@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import HotelBgImg from "@/assets/images/7.jpg";
 import Button from "@/components/ui/buttons/buttons";
 import RoomsGuestsSelector from "@/components/ui/RoomsGuestsSelector";
-import ChatbotFloatingButton from "@/components/layout/ChatbotFloatingButton";
+import ChatbotButton from "@/components/layout/chatbot/ChatbotButton";
 
 function formatDateDisplay(dateStr) {
   if (!dateStr) return "";
@@ -22,33 +22,22 @@ export default function HeroSearch() {
   const [numRooms, setNumRooms] = useState(1);
   const [numAdults, setNumAdults] = useState(2);
   const [numKids, setNumKids] = useState(0);
-  const [isDesktop, setIsDesktop] = useState(false);
 
   const checkInMin = getTodayString();
   const checkOutMin = checkIn || checkInMin;
 
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsDesktop(window.innerWidth >= 1024); // lg breakpoint
-    };
-    
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-    
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
   return (
     <>
-      <ChatbotFloatingButton />
+      <ChatbotButton />
 
       <section className="relative w-full min-h-[764px] lg:h-[900px] flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <img
-            src={HotelBgImg?.src || HotelBgImg || ''}
-            alt="Hotel background"
-            className="w-full h-full object-cover object-center scale-[3.2] lg:scale-100"
+          <div 
+            className="w-full h-full bg-no-repeat bg-center bg-[length:320%] lg:bg-cover"
+            style={{
+              backgroundImage: `url(${HotelBgImg})`,
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/10"></div>
         </div>
@@ -56,7 +45,7 @@ export default function HeroSearch() {
         {/* Content */}
         <div className="relative z-10 top-10 w-full max-w-[1200px] mx-auto px-4 lg:px-8">
           {/* Title */}
-          <h1 className={`font-serif ${isDesktop ? 'headline-1' : 'headline-3'} text-white text-center mb-8 lg:mb-12 leading-tight pb-10`}>
+          <h1 className="font-serif headline-3 text-white text-center mb-8 lg:mb-12 leading-tight pb-10">
             A Best Place <br className="lg:hidden"/> for  Your <br className="max-lg:hidden"/>
             Neatly Experience
           </h1>

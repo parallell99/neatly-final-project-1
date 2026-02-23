@@ -4,12 +4,19 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/authentication";
 import * as Popover from "@radix-ui/react-popover";
-import logoNav from "@/assets/logo/logo-nav.svg";
-import notiIcon from "@/assets/icons/noti.svg";
-import profileIcon from "@/assets/icons/people.svg";
-import paymentIcon from "@/assets/icons/credit.svg";
-import bookingIcon from "@/assets/icons/cs_booking.svg";
-import logoutIcon from "@/assets/icons/logout.svg";
+import logoNav from "@/assets/logo/logo-nav.svg?url";
+import notiIcon from "@/assets/icons/noti.svg?url";
+import profileIcon from "@/assets/icons/people.svg?url";
+import paymentIcon from "@/assets/icons/credit.svg?url";
+import bookingIcon from "@/assets/icons/cs_booking.svg?url";
+import logoutIcon from "@/assets/icons/logout.svg?url";
+
+// Helper function to get image source (handles both string and object)
+const getImageSrc = (img) => {
+  if (!img) return '';
+  if (typeof img === 'string') return img;
+  return img?.src ?? String(img);
+};
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -59,7 +66,7 @@ export default function Navbar() {
       <nav ref={navRef} className="top-0 w-full pt-3 lg:h-[100px] bg-white flex items-center justify-between px-4 pb-3 border-b border-gray-200 lg:px-[160px] max-w-[1440px] mx-auto z-50">
         {/* Logo */}
         <Link href="/" className="flex items-center">
-          <img src={logoNav?.src || logoNav || ''} alt="Neatly" className="w-30 lg:w-40" />
+          <img src={getImageSrc(logoNav)} alt="Neatly" className="w-30 lg:w-40" />
         </Link>
 
         {/* Desktop Navigation - แสดงเฉพาะบน desktop */}
@@ -146,21 +153,21 @@ export default function Navbar() {
                         href="/profile" 
                         className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                       >
-                        <img src={profileIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                        <img src={getImageSrc(profileIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                         Profile
                       </Link>
                       <Link 
                         href="/payment" 
                         className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                       >
-                        <img src={paymentIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                        <img src={getImageSrc(paymentIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                         Payment Method
                       </Link>
                       <Link 
                         href="/booking" 
                         className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                       >
-                        <img src={bookingIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                        <img src={getImageSrc(bookingIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                         Booking History
                       </Link>
                       <div className="border-t border-gray-200 my-1"></div>
@@ -168,7 +175,7 @@ export default function Navbar() {
                         onClick={logout}
                         className="flex items-center gap-3 px-4 py-2 text-left text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded hover:cursor-pointer"
                       >
-                        <img src={logoutIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                        <img src={getImageSrc(logoutIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                         Logout
                       </button>
                     </div>
@@ -192,7 +199,7 @@ export default function Navbar() {
               className="p-2 relative"
               aria-label="Notifications"
             >
-              <img src={notiIcon} alt="Notifications" className="w-6 h-6" />
+              <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
               {/* Notification Badge - สามารถเพิ่มจำนวนแจ้งเตือนได้ */}
               {/* <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span> */}
             </button>
@@ -294,7 +301,7 @@ export default function Navbar() {
                   className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                   onClick={toggleMenu}
                 >
-                  <img src={profileIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                  <img src={profileIcon?.src || profileIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                   Profile
                 </Link>
                 <Link 
@@ -302,7 +309,7 @@ export default function Navbar() {
                   className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                   onClick={toggleMenu}
                 >
-                  <img src={paymentIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                  <img src={paymentIcon?.src || paymentIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                   Payment Method
                 </Link>
                 <Link 
@@ -310,7 +317,7 @@ export default function Navbar() {
                   className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                   onClick={toggleMenu}
                 >
-                  <img src={bookingIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                  <img src={bookingIcon?.src || bookingIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                   Booking History
                 </Link>
 
@@ -325,7 +332,7 @@ export default function Navbar() {
                   }}
                   className="flex items-center gap-3 text-left text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                 >
-                  <img src={logoutIcon} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                  <img src={logoutIcon?.src || logoutIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                   Logout
                 </button>
               </>
