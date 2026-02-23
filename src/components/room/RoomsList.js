@@ -98,15 +98,15 @@ export default function RoomsList() {
   };
 
   return (
-    <section className="bg-[var(--color-bg)] min-h-screen">
+    <section className="bg-[var(--color-bg)] min-h-screen flex flex-col items-center">
 
       {/* Search */}
-      <div className="max-w-[1200px] mx-auto px-4 py-8">
+      <div className="w-full">
         <SearchSection />
       </div>
 
       {/* Room List */}
-      <div className="max-w-[1200px] mx-auto px-4 pb-20 space-y-8">
+      <div className="max-w-[1440px] pb-20 space-y-8">
         {rooms.map((room) => (
           <RoomCard
             key={room.id}

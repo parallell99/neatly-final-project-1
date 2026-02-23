@@ -1,83 +1,71 @@
-import { useState } from "react";
 import Image from "next/image";
-import RoomPopup from "./RoomPopup";
 
-export default function RoomCard({ room }) {
-  const [open, setOpen] = useState(false);
-
+export default function RoomCard({ room, onClick }) {
   return (
-<>
-      <div className="bg-white rounded-xl shadow-sm flex flex-col md:flex-row overflow-hidden">
+    <div className="grid grid-cols-1 md:grid-cols-[460px_1fr_280px] gap-10 py-12 px-6 border-b border-gray-200 items-start">
 
-        {/* Image */}
-        <div
-          className="relative w-full md:w-[380px] h-[220px] md:h-auto cursor-pointer"
-          onClick={() => setOpen(true)}
-        >
-          <Image
-            src={room.images?.[0] || room.image}
-            alt={room.title}
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 p-6 flex flex-col justify-between">
-
-          <div>
-            <h3
-              className="headline-4 mb-3 cursor-pointer hover:underline"
-              onClick={() => setOpen(true)}
-            >
-              {room.title}
-            </h3>
-
-            <div className="flex gap-4 body-3 text-[var(--color-gray-600)] mb-3">
-              <span>2 Guests</span>
-              <span>1 Double bed</span>
-              <span>32 sqm</span>
-            </div>
-
-            <p className="body-2 text-[var(--color-gray-700)]">
-              {room.description}
-            </p>
-          </div>
-
-          <div className="mt-6 flex justify-between items-center">
-            <div>
-              {room.oldPrice && (
-                <p className="body-3 line-through text-[var(--color-gray-500)]">
-                  {room.oldPrice}
-                </p>
-              )}
-              <p className="headline-5">{room.price}</p>
-              <p className="body-3 text-[var(--color-gray-600)]">
-                Per Night <br />
-                (Including Taxes & Fees)
-              </p>
-            </div>
-
-            <div className="flex gap-4">
-              <button className="btn btn-ghost">
-                Room Detail
-              </button>
-
-              <button className="btn btn-primary">
-                Book Now
-              </button>
-            </div>
-          </div>
-
-        </div>
+      {/* Image */}
+      <div
+        className="relative w-full h-[300px] cursor-pointer"
+        onClick={onClick}
+      >
+        <Image
+          src={room.images?.[0]}
+          alt={room.title}
+          fill
+          className="object-cover rounded-xl"
+        />
       </div>
 
-      {/* Modal */}
-      <RoomPopup
-        room={room}
-        open={open}
-        onOpenChange={setOpen}
-      />
-    </>
+      {/* Content Text */}
+      <div>
+        <h3
+          className="text-2xl font-semibold mb-4 cursor-pointer"
+          onClick={onClick}
+        >
+          {room.title}
+        </h3>
+
+        <div className="flex gap-3 text-sm text-gray-500 mb-4">
+          <span>{room.guests}</span>
+          <span>|</span>
+          <span>{room.bed}</span>
+          <span>|</span>
+          <span>{room.size}</span>
+        </div>
+
+        <p className="text-gray-600 text-sm leading-relaxed">
+          {room.description}
+        </p>
+      </div>
+
+      {/* Price Section */}
+      <div className="flex flex-col items-start md:items-end">
+        {room.oldPrice && (
+          <p className="text-sm line-through text-gray-400 mb-1">
+            {room.oldPrice}
+          </p>
+        )}
+
+        <p className="text-xl font-semibold">
+          {room.price}
+        </p>
+
+        <p className="text-xs text-gray-500 mb-6 text-left md:text-right leading-tight">
+          Per Night<br />
+          (Including Taxes & Fees)
+        </p>
+
+        <div className="flex items-center gap-6">
+          <button className="text-sm text-orange-600 hover:underline">
+            Room Detail
+          </button>
+
+          <button className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-md text-sm font-medium transition">
+            Book Now
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

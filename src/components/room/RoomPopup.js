@@ -1,82 +1,3 @@
-//1st version
-// "use client";
-
-// import Image from "next/image";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-// } from "@/components/ui/dialog";
-
-// export default function RoomPopup({ room, open, onOpenChange }) {
-//   if (!room) return null;
-
-//   return (
-//     <Dialog open={open} onOpenChange={onOpenChange}>
-//       <DialogContent className="max-w-4xl w-full">
-
-//         <DialogHeader>
-//           <DialogTitle className="headline-4">
-//             {room.title}
-//           </DialogTitle>
-//         </DialogHeader>
-
-//         <div className="relative w-full h-[350px] rounded-lg overflow-hidden">
-//           <Image
-//             src={room.image}
-//             alt={room.title}
-//             fill
-//             className="object-cover"
-//           />
-//         </div>
-
-//         <div className="mt-6">
-//           <div className="flex gap-4 body-3 text-[var(--color-gray-600)] mb-3">
-//             <span>2 Person</span>
-//             <span>1 Double bed</span>
-//             <span>32 sqm</span>
-//           </div>
-
-//           <p className="body-2 text-[var(--color-gray-700)]">
-//             {room.description}
-//           </p>
-//         </div>
-
-//         <hr className="my-2" />
-
-//         <div>
-//           <h4 className="headline-5 mb-4">Room Amenities</h4>
-
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 body-2 text-[var(--color-gray-700)]">
-//             <ul className="space-y-1 list-disc pl-5">
-//               <li>Safe in Room</li>
-//               <li>Air Conditioning</li>
-//               <li>High speed internet connection</li>
-//               <li>Hairdryer</li>
-//               <li>Shower</li>
-//               <li>Bathroom amenities</li>
-//               <li>Lamp</li>
-//             </ul>
-
-//             <ul className="space-y-1 list-disc pl-5">
-//               <li>Minibar</li>
-//               <li>Telephone</li>
-//               <li>Ironing board</li>
-//               <li>A floor only accessible via a guest room key</li>
-//               <li>Alarm clock</li>
-//               <li>Bathrobe</li>
-//             </ul>
-//           </div>
-//         </div>
-
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }
-
-
-//2nd version
 "use client";
 
 import { useState } from "react";
@@ -113,97 +34,83 @@ export default function RoomPopup({ room, open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="
-          w-[375px]
-          sm:w-full
-          md:max-w-[800px]
-          p-6
-        "
-      >
-        {/* Title */}
-        <DialogHeader>
-          <DialogTitle className="headline-4">
-            {room.title}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="w-full max-w-none h-screen rounded-none p-4 md:max-w-[800px] md:h-auto md:rounded-lg md:p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-0">
 
-        {/* Image Section */}
-        <div className="relative w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden">
-          <Image
-            src={images[currentIndex]}
-            alt={room.title}
-            fill
-            className="object-cover"
-          />
+          {/* Title */}
+          <DialogHeader>
+            <DialogTitle className="headline-4">
+              {room.title}
+            </DialogTitle>
+          </DialogHeader>
 
-          {images.length > 1 && (
-            <>
-              {/* Left */}
-              <button
-                onClick={prevImage}
-                className="
-                  absolute left-3 top-1/2 -translate-y-1/2
-                  bg-white/70 hover:bg-white
-                  rounded-full p-2 shadow
-                "
-              >
-                <LeftIcon className="w-5 h-5" />
-              </button>
+          {/* Image Section */}
+          <div className="relative w-full h-[250px] md:h-[400px] rounded-lg overflow-hidden">
+            <Image
+              src={images[currentIndex]}
+              alt={room.title}
+              fill
+              className="object-cover"
+            />
 
-              {/* Right */}
-              <button
-                onClick={nextImage}
-                className="
-                  absolute right-3 top-1/2 -translate-y-1/2
-                  bg-white/70 hover:bg-white
-                  rounded-full p-2 shadow
-                "
-              >
-                <RightIcon className="w-5 h-5" />
-              </button>
-            </>
-          )}
-        </div>
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white rounded-full p-2 shadow"
+                >
+                  <LeftIcon className="w-5 h-5" />
+                </button>
 
-        {/* Room Info */}
-        <div className="mt-6">
-        <div className="flex gap-4 body-3 text-[var(--color-gray-600)] mb-3">
-        <span>{room.guests || "2 Guests"}</span>
-        <span>{room.bed || "1 Double bed"}</span>
-        <span>{room.size || "36 sqm"}</span>
-        </div>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white rounded-full p-2 shadow"
+                >
+                  <RightIcon className="w-5 h-5" />
+                </button>
+              </>
+            )}
+          </div>
 
-        <p className="body-2 text-[var(--color-gray-700)]">
-            {room.description}
-        </p>
-        </div>
+          {/* Room Info */}
+          <div className="mt-6">
+            <div className="flex gap-4 body-3 text-[var(--color-gray-600)] mb-3">
+              <span>{room.guests || "2 Guests"}</span>
+              <span>{room.bed || "1 Double bed"}</span>
+              <span>{room.size || "36 sqm"}</span>
+            </div>
 
-        <hr className="my-2" />
+            <p className="body-2 text-[var(--color-gray-700)]">
+              {room.description}
+            </p>
+          </div>
 
-        {/* Amenities */}
-        <div>
-          <h4 className="headline-5 mb-4">Room Amenities</h4>
+          <hr className="my-4" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 body-2 text-[var(--color-gray-700)]">
-            <ul className="space-y-1 list-disc pl-5">
-              <li>Safe in Room</li>
-              <li>Air Conditioning</li>
-              <li>High speed internet connection</li>
-              <li>Hairdryer</li>
-              <li>Shower</li>
-              <li>Bathroom amenities</li>
-              <li>Lamp</li>
-            </ul>
+          {/* Amenities */}
+          <div>
+            <h4 className="headline-5 mb-4">Room Amenities</h4>
 
-            <ul className="space-y-1 list-disc pl-5">
-              <li>Minibar</li>
-              <li>Telephone</li>
-              <li>Ironing board</li>
-              <li>A floor only accessible via a guest room key</li>
-              <li>Alarm clock</li>
-              <li>Bathrobe</li>
-            </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 body-2 text-[var(--color-gray-700)]">
+              <ul className="space-y-1 list-disc pl-5">
+                <li>Safe in Room</li>
+                <li>Air Conditioning</li>
+                <li>High speed internet connection</li>
+                <li>Hairdryer</li>
+                <li>Shower</li>
+                <li>Bathroom amenities</li>
+                <li>Lamp</li>
+              </ul>
+
+              <ul className="space-y-1 list-disc pl-5">
+                <li>Minibar</li>
+                <li>Telephone</li>
+                <li>Ironing board</li>
+                <li>A floor only accessible via a guest room key</li>
+                <li>Alarm clock</li>
+                <li>Bathrobe</li>
+              </ul>
+            </div>
           </div>
         </div>
       </DialogContent>
