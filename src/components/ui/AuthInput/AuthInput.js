@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import ExclamationCircle from "@/assets/icons/exclamation-circle.svg?url";
-import Eye from "@/assets/icons/eye.svg?url";
-import EyeOff from "@/assets/icons/eye-off.svg?url";
+import { Eye, EyeOff, CircleAlert } from "lucide-react";
 
 export default function Input({
   label,
@@ -27,7 +25,7 @@ export default function Input({
       {label && (
         <label
           htmlFor={name}
-          className={`font-normal text-[16px] ${disabled ? "text-gray-400 cursor-not-allowed" : ""}`}
+          className={`font-normal text-[16px] text-gray-900 ${disabled ? "text-gray-400 cursor-not-allowed" : ""}`}
         >
           {label}
         </label>
@@ -44,7 +42,7 @@ export default function Input({
               ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
               : `focus:ring-1 focus:ring-orange-500 focus:border-transparent
                 ${error
-                ? "border-red"
+                ? "border-red bg-white"
                 : "border-gray-300 bg-white hover:border-gray-400"
               }
                 placeholder:text-gray-600
@@ -58,7 +56,7 @@ export default function Input({
 
         {error && !disabled && (
           <span className={`absolute top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center ${isPassword ? "right-10" : "right-3"}`}>
-            <img src={ExclamationCircle} className="w-5 h-5" alt="" aria-hidden />
+            <CircleAlert className="w-4 h-4 text-red" />
           </span>
         )}
         {isPassword && !disabled && (
@@ -69,10 +67,11 @@ export default function Input({
             aria-label={showPassword ? "Hide the password" : "Show the password"}
           >
 
+
             {showPassword ? (
-              <img src={EyeOff} className="w-5 h-5" alt="" aria-hidden />
+              <EyeOff className="w-5 h-5" />
             ) : (
-              <img src={Eye} className="w-5 h-5" alt="" aria-hidden />
+              <Eye className="w-5 h-5" />
             )}
           </button>
         )}
