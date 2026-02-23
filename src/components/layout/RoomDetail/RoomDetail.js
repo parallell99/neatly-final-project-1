@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/buttons/buttons";
-import ChatbotFloatingButton from "@/components/layout/ChatbotFloatingButton";
+import ChatbotButton from "@/components/layout/chatbot/ChatbotButton";
 import RoomImg1 from "@/assets/images/1.jpg";
 import RoomImg2 from "@/assets/images/2.jpg";
 import RoomImg3 from "@/assets/images/3.jpg";
@@ -347,7 +347,7 @@ export default function RoomDetail({ roomId }) {
 
   return (
     <>
-      <ChatbotFloatingButton />
+      <ChatbotButton />
 
       <div className="w-full bg-white">
         {/* Image Gallery Section */}

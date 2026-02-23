@@ -33,7 +33,7 @@ export default function HeroServeice() {
             const isLastItem = index === services.length - 1;
             const isOddCount = services.length % 2 !== 0;
             const shouldCenter = isLastItem && isOddCount;
-            
+
             return (
               <div
                 key={index}
@@ -44,7 +44,7 @@ export default function HeroServeice() {
                 }`}
               >
                 <div className="w-15 h-12 flex items-center justify-center text-white">
-                  <img src={IconComponent?.src || IconComponent || ''} className="w-12 h-12 brightness-0 invert" alt="" aria-hidden />
+                  <IconComponent className="w-12 h-12 brightness-0 invert" aria-hidden />
                 </div>
                 <span className="body-1 text-white">
                   {service.label}

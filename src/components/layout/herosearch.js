@@ -33,11 +33,12 @@ export default function HeroSearch() {
       <section className="relative w-full min-h-[764px] lg:h-[900px] flex items-center justify-center overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <div 
-            className="w-full h-full bg-no-repeat bg-center bg-[length:320%] lg:bg-cover"
+          <div
+            className="absolute inset-0 w-full h-full bg-no-repeat bg-center bg-[length:320%] lg:bg-cover"
             style={{
-              backgroundImage: `url(${HotelBgImg})`,
+              backgroundImage: `url(${HotelBgImg?.src ?? HotelBgImg})`,
             }}
+            aria-hidden
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/10"></div>
         </div>

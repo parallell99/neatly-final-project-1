@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/authentication";
 import * as Popover from "@radix-ui/react-popover";
-import logoNav from "@/assets/logo/logo-nav.svg?url";
+import LogoNav from "@/assets/logo/logo-nav.svg";
 import notiIcon from "@/assets/icons/noti.svg?url";
 import profileIcon from "@/assets/icons/people.svg?url";
 import paymentIcon from "@/assets/icons/credit.svg?url";
@@ -65,8 +65,8 @@ export default function Navbar() {
       {/* Main Navbar */}
       <nav ref={navRef} className="top-0 w-full pt-3 lg:h-[100px] bg-white flex items-center justify-between px-4 pb-3 border-b border-gray-200 lg:px-[160px] max-w-[1440px] mx-auto z-50">
         {/* Logo */}
-        <Link href="/" className="flex items-center">
-          <img src={getImageSrc(logoNav)} alt="Neatly" className="w-30 lg:w-40" />
+        <Link href="/" className="flex items-center" aria-label="Neatly">
+          <LogoNav className="w-30 lg:w-40" aria-hidden />
         </Link>
 
         {/* Desktop Navigation - แสดงเฉพาะบน desktop */}
