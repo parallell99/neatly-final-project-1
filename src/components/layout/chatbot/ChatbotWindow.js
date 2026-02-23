@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react"
-import ChatbotLogo from "@/assets/icons/chatbot_inside_logo.svg?url"
+import axios from "axios"
+import ChatbotLogo from "@/assets/icons/chatbot_inside_logo.svg"
 import CirLogo from "@/assets/icons/circlelogo-chatbot.svg?url"
 import StarLogo from "@/assets/icons/starlogo-chatbot.svg?url"
 import SendLogo from "@/assets/icons/send.svg?url"
@@ -23,10 +24,9 @@ export default function ChatbotWindow({ onClose }) {
   }, [messages, isTyping])
 
   useEffect(() => {
-    fetch("/api/chatbot/suggestions")
-      .then((res) => res.json())
-      .then((json) => {
-        const list = json?.data?.topics ?? []
+    axios.get("/api/chatbot/suggestions")
+      .then((res) => {
+        const list = res.data?.data?.topics ?? []
         const sorted = [...list].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
         setTopics(sorted)
       })
@@ -72,6 +72,35 @@ export default function ChatbotWindow({ onClose }) {
         setIsTyping(false)
       }, 1000)
     }
+    if (item.reply_format === "Room type" && item.reply_title) {
+      setIsTyping(true)
+      axios.get("/api/chatbot/all-room")
+        .then((res) => {
+          const allRooms = res.data?.data ?? []
+          const roomTypeNames = Array.isArray(item.roomTypes) ? item.roomTypes.map((n) => String(n).trim().toLowerCase()) : []
+          const rooms =
+            roomTypeNames.length > 0
+              ? allRooms.filter((r) => r?.room_type?.name && roomTypeNames.includes(String(r.room_type.name).trim().toLowerCase()))
+              : allRooms
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "bot",
+              type: "room_type",
+              reply_title: item.reply_title,
+              button_name: item.button_name ?? "View Details",
+              rooms,
+            },
+          ])
+        })
+        .catch(() => {
+          setMessages((prev) => [
+            ...prev,
+            { role: "bot", type: "room_type", reply_title: item.reply_title, button_name: item.button_name ?? "View Details", rooms: [] },
+          ])
+        })
+        .finally(() => setIsTyping(false))
+    }
   }
 
   function handleOptionSelect(optionText, details) {
@@ -94,7 +123,7 @@ export default function ChatbotWindow({ onClose }) {
         <section className="flex items-center pl-4 h-[60px] justify-between">
           <div className="flex items-center gap-2">
             <div className="w-[40px] h-[40px] bg-green-100 rounded-full flex justify-center items-center">
-              <img src={ChatbotLogo} className="w-[32px] h-[32px]" alt="" aria-hidden />
+              <ChatbotLogo className="w-[32px] h-[32px]" alt="" aria-hidden />
             </div>
             <span className="headline-5 text-gray-900">Neatly Assistant</span>
           </div>
@@ -108,7 +137,7 @@ export default function ChatbotWindow({ onClose }) {
           <img src={StarLogo} className="absolute left-0 lg:hidden w-auto h-auto" alt="" aria-hidden />
           <img src={StarLogo} className="absolute right-5 bottom-[15%] lg:hidden w-auto h-auto" alt="" aria-hidden />
           <img src={StarLogo} className="absolute left-4 bottom-[15%] scale-200 w-auto h-auto" alt="" aria-hidden />
-          <ChatbotResponse messages={messages} isTyping={isTyping} onOptionSelect={handleOptionSelect} />
+          <ChatbotResponse messages={messages} isTyping={isTyping} onOptionSelect={handleOptionSelect} onRoomViewDetails={(room) => { /* optional: navigate to room detail */ }} />
         </section>
         {/* menu suggestions bar */}
         <section className="flex gap-2 px-4 py-2 overflow-x-auto">

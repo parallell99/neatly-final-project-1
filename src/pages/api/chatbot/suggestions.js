@@ -23,9 +23,9 @@ async function handleGet(req, res) {
       topicsResult.rows.map(async (topic) => {
         if (topic.reply_format === "Room type") {
           const roomTypesResult = await connectionPool.query(
-            `SELECT room_types.room_type_name
+            `SELECT room_type_chatbot.room_type_name AS room_type_name
             FROM suggestion_topic_room_types
-            JOIN room_types ON suggestion_topic_room_types.room_type_id = room_types.room_type_id
+            JOIN room_type_chatbot ON suggestion_topic_room_types.room_type_id = room_type_chatbot.id
             WHERE suggestion_topic_room_types.suggestion_topics_id = $1`,
             [topic.suggestion_topics_id]
           );
@@ -101,7 +101,7 @@ async function handlePost(req, res) {
       if (topic.replyFormat === "Room type" && Array.isArray(topic.roomTypes)) {
         for (const roomName of topic.roomTypes) {
           const roomResult = await client.query(
-            "SELECT room_type_id FROM room_types WHERE room_type_name = $1",
+            "SELECT id AS room_type_id FROM room_type_chatbot WHERE room_type_name = $1",
             [roomName]
           );
           if (roomResult.rows.length > 0) {
