@@ -1,6 +1,7 @@
 import ChatbotCardOption from "@/components/layout/chatbot/ChatbotCardOption.js"
+import ChatbotCardRoomType from "@/components/layout/chatbot/ChatbotCardRoomType.js"
 
-export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelect }) {
+export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelect, onRoomViewDetails }) {
   return (
     <div className="flex flex-col gap-3 pb-4">
       {messages.length === 0 && !isTyping && (
@@ -23,6 +24,29 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
                     />
                   ))}
                 </div>
+              </div>
+            </div>
+          )
+        }
+        if (msg.role === "bot" && msg.type === "room_type") {
+          return (
+            <div key={i} className="flex flex-col gap-2 z-50">
+              <div className="flex justify-start">
+                <div className="max-w-[85%] min-w-0 rounded-[8px] px-4 py-3 bg-white text-gray-700 shadow-sm">
+                  {msg.reply_title && (
+                    <p className="body-1 break-words whitespace-pre-line">{msg.reply_title}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-1">
+                {(msg.rooms ?? []).map((room) => (
+                  <ChatbotCardRoomType
+                    key={room.id}
+                    room={room}
+                    buttonName={msg.button_name ?? "View Details"}
+                    onViewDetails={onRoomViewDetails}
+                  />
+                ))}
               </div>
             </div>
           )
