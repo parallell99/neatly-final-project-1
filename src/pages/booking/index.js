@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { useAuth } from "@/contexts/authentication";
 import Navbar from "@/components/layout/navbar";
 import BookingProgress from "@/components/booking/BookingProgress";
 import BasicInformationForm from "@/components/booking/BasicInformationForm";
@@ -13,7 +14,9 @@ import BookingDetailCard from "@/components/booking/BookingDetailCard";
 
 export default function BookingPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [orderId] = useState(() => `order-${Date.now()}`);
   const [extras, setExtras] = useState([]);
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
@@ -93,44 +96,46 @@ export default function BookingPage() {
 
       <div className="flex-1 flex items-center justify-center">
         <div className="max-w-[1440px] w-full lg:px-[165px] py-15">
-        <h1 className="headline-3-booking-title text-[44px] text-green-800 mb-6 mx-4 lg:mx-0 lg:text-[68px]">
-          Booking Room
-        </h1>
-        <BookingProgress currentStep={currentStep} />
+          <h1 className="headline-3-booking-title text-[44px] text-green-800 mb-6 mx-4 lg:mx-0 lg:text-[68px]">
+            Booking Room
+          </h1>
+          <BookingProgress currentStep={currentStep} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 mt-8">
-          <div className="bg-white rounded-lg px-4 py-6 lg:p-8">
-            {currentStep === 1 && (
-              <BasicInformationForm onNext={() => setCurrentStep(2)} />
-            )}
-            {currentStep === 2 && (
-              <SpecialRequestForm
-                onBack={() => setCurrentStep(1)}
-                onNext={() => setCurrentStep(3)}
-                onExtrasChange={setExtras}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 mt-8">
+            <div className="bg-white rounded-lg px-4 py-6 lg:p-8">
+              {currentStep === 1 && (
+                <BasicInformationForm onNext={() => setCurrentStep(2)} />
+              )}
+              {currentStep === 2 && (
+                <SpecialRequestForm
+                  onBack={() => setCurrentStep(1)}
+                  onNext={() => setCurrentStep(3)}
+                  onExtrasChange={setExtras}
+                  extras={extras}
+                />
+              )}
+              {currentStep === 3 && (
+                <PaymentMethodForm
+                  onBack={() => setCurrentStep(2)}
+                  onConfirm={handlePaymentConfirm}
+                  promotionCode={promotionCode}
+                  promotionDiscount={promotionDiscount}
+                  onPromotionChange={handlePromotionChange}
+                  extras={extras}
+                  user={user}
+                  orderId={orderId}
+                />
+              )}
+            </div>
+
+            <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
+              <BookingDetailCard
                 extras={extras}
-              />
-            )}
-            {currentStep === 3 && (
-              <PaymentMethodForm
-                onBack={() => setCurrentStep(2)}
-                onConfirm={handlePaymentConfirm}
                 promotionCode={promotionCode}
                 promotionDiscount={promotionDiscount}
-                onPromotionChange={handlePromotionChange}
-                extras={extras}
               />
-            )}
+            </div>
           </div>
-
-          <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
-            <BookingDetailCard
-              extras={extras}
-              promotionCode={promotionCode}
-              promotionDiscount={promotionDiscount}
-            />
-          </div>
-        </div>
         </div>
       </div>
     </div>
