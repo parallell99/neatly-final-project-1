@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { CalendarDays } from 'lucide-react';
+import { CircleAlert } from 'lucide-react';
 
 export default function DatePicker({
   label,
@@ -38,7 +40,7 @@ export default function DatePicker({
       {label && (
         <label 
           htmlFor={name} 
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-gray-900 mb-2"
         >
           {label}
         </label>
@@ -54,36 +56,31 @@ export default function DatePicker({
           showMonthDropdown
           dropdownMode="select"
           className={`
-            w-full px-4 py-3 border rounded-lg pr-10
-            focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
+            w-full px-3 py-3 border rounded-[4px] pr-[16px]
+            focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent
             transition-all duration-200
             ${error 
-              ? 'border-red-500 bg-red-50' 
+              ? 'border-red bg-white' 
               : 'border-gray-300 bg-white hover:border-gray-400'
             }
-            placeholder:text-gray-400
+            placeholder:text-gray-600
             text-gray-900
           `}
           {...props}
         />
+        
+        {error && (
+          <span className={`absolute right-10  top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center`}>
+            <CircleAlert className="w-4 h-4 text-red" />
+          </span>
+        )}
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <svg 
-            className="w-5 h-5 text-gray-400" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
-            />
-          </svg>
+        <CalendarDays className="w-4 h-4 text-gray-500" />
+          
         </div>
       </div>
       {error && (
-        <p className="mt-1 text-sm text-red-500">{error.message}</p>
+        <p className="mt-1 text-sm text-red">{error.message}</p>
       )}
     </div>
   );

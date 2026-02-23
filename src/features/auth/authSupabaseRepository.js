@@ -10,26 +10,14 @@ async function signUp(email, password, metadata = {}) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      data: metadata, // user_metadata
-    },
+    options: { data: metadata },
   });
 
   if (error) {
-    const err = new Error(error.message);
-    err.status = 400;
-    throw err;
+    throw error;
   }
 
-  if (!data?.user?.id) {
-    const err = new Error("Cannot create auth user");
-    err.status = 500;
-    throw err;
-  }
-
-  return {
-    userId: data.user.id,
-  };
+  return { user: data.user, session: data.session };
 }
 
 async function signIn(email, password) {
@@ -40,9 +28,7 @@ async function signIn(email, password) {
     });
 
   if (error) {
-    const err = new Error(error.message);
-    err.status = 401;
-    throw err;
+    throw new Error(error.message);
   }
 
   return data;
@@ -58,6 +44,13 @@ async function signOut() {
   }
 }
 
+async function getUserFromSupabase(token) {
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error) throw error;
+  return user;
+
+}
+
 // async function deleteUser(userId) {
 //   // ⚠ ต้องใช้ service role key เท่านั้น
 //   const { error } =
@@ -70,8 +63,9 @@ async function signOut() {
 //   }
 // }
 
-export const authProvider = {
+export const authSupabaseRepository = {
   signUp,
   signIn,
-  signOut
+  signOut,
+  getUserFromSupabase
 };

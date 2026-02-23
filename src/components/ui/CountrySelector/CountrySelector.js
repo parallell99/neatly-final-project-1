@@ -1,0 +1,94 @@
+"use client";
+
+import React from "react";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/CountrySelector/combobox";
+import { countries } from "@/utils/dataCountries";
+import ExclamationCircle from "@/assets/icons/exclamation-circle.svg";
+
+export default function CountrySelector({
+  label,
+  placeholder = "Select your country",
+  error,
+  name,
+  required = false,
+  disabled = false,
+  value,
+  onChange,
+  ...props
+}) {
+  // for react-hook-form support: set value back to '' (if undefined) and treat as controlled
+  const selectedCountry = value ?? "";
+
+  return (
+    <div className="flex flex-col w-full gap-[4px]">
+      {label && (
+        <label
+          htmlFor={name}
+          className={`font-normal text-[16px] text-gray-900 ${disabled ? "text-gray-400 cursor-not-allowed" : ""}`}
+        >
+          {label}
+        </label>
+      )}
+      <Combobox
+        value={selectedCountry}
+        onValueChange={onChange}
+        disabled={disabled}
+        items={countries}
+        {...props}
+      >
+        <ComboboxInput
+          id={name}
+          placeholder={placeholder}
+          className={`w-full border py-[24px] rounded-[4px] text-[16px] font-normal shadow-none hover-cursor-pointer !ring-0 !ring-transparent ${
+            disabled
+              ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+              : `${
+                  error
+                    ? "bg-white"
+                    : "border-gray-300 bg-white hover:border-gray-400"
+                } placeholder:text-gray-500 text-black`
+          }`}
+          autoComplete="off"
+          required={required}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${name}-error` : undefined}
+        />
+        
+        <ComboboxContent className={`mt-1 mb-1`}>
+          <ComboboxEmpty>
+            <div className="text-sm text-gray-500">
+              No countries found
+            </div>
+          </ComboboxEmpty>
+          <ComboboxList>
+            {(country) => (
+              <ComboboxItem
+                key={country}
+                value={country}
+                className={`w-full text-sm rounded-[4px] focus:outline-none 
+                    ${selectedCountry === country ? "bg-gray-300" : ""}`}
+              >
+                <span>{country}</span>
+                
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+      {error && (
+        <div className="flex items-center gap-2 mt-1">
+          <p id={`${name}-error`} className="text-[14px] text-red">
+            {error.message}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

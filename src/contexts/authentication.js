@@ -31,10 +31,11 @@ function AuthProvider({ children }) {
     try {
       setState((prev) => ({ ...prev, getUserLoading: true }));
 
-      const response = await axios.get("/api/auth/me", {
+      const response = await axios.get("/api/auth/user", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log(response)
       setState((prev) => ({
         ...prev,
         user: response.data,
@@ -68,14 +69,14 @@ function AuthProvider({ children }) {
 
       const response = await axios.post("/api/auth/login", { email, password });
 
-      const token = response.data?.data;
+      const token = response.data?.data.token;
       if (!token || typeof token !== "string") {
         setState((prev) => ({
           ...prev,
           loading: false,
           error: "Invalid login response: no token",
         }));
-        return { error: "Invalid login response: no token" };
+        return { error: "Invalid login response: no token" };  
       }
 
       localStorage.setItem("token", token);
