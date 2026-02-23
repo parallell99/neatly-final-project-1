@@ -584,3 +584,12 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes chatbot-typing {
+  0%, 60%, 100% { opacity: 0.35; transform: scale(0.9); }
+  30% { opacity: 1; transform: scale(1); }
+}
+
+.chatbot-typing-dot {
+  animation: chatbot-typing 0.6s ease-in-out infinite;
+}

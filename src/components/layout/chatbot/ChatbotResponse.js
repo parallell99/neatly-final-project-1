@@ -1,0 +1,58 @@
+import ChatbotCardOption from "@/components/layout/chatbot/ChatbotCardOption.js"
+
+export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelect }) {
+  return (
+    <div className="flex flex-col gap-3 pb-4">
+      {messages.length === 0 && !isTyping && (
+        <p className="text-gray-500">พิมพ์ข้อความเพื่อเริ่มคุย (ลองพิมพ์ &quot;สวัสดี&quot;)</p>
+      )}
+      {messages.map((msg, i) => {
+        if (msg.role === "bot" && msg.type === "option_with_details") {
+          return (
+            <div key={i} className="flex justify-start z-50">
+              <div className="max-w-[70%] min-w-0 rounded-[8px] px-4 py-3 bg-white text-gray-700 shadow-sm flex flex-col gap-2">
+                {msg.reply_title && (
+                  <p className="body-1 break-words whitespace-pre-line">{msg.reply_title}</p>
+                )}
+                <div className="flex flex-col gap-2">
+                  {(msg.options ?? []).map((opt, j) => (
+                    <ChatbotCardOption
+                      key={j}
+                      option={opt}
+                      onSelect={(option) => onOptionSelect?.(option?.option_text, option?.details)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )
+        }
+        return (
+          <div
+            key={i}
+            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} z-50`}
+          >
+            <div
+              className={`max-w-[62%] min-w-0 body-1 rounded-[8px] px-4 py-2 z-50 break-words whitespace-pre-line ${
+                msg.role === "user"
+                  ? "bg-orange-600 text-white"
+                  : "bg-white text-gray-700"
+              }`}
+            >
+              {msg.text}
+            </div>
+          </div>
+        )
+      })}
+      {isTyping && (
+        <div className="flex justify-start z-50">
+          <div className="rounded-[8px] px-4 py-3 bg-white text-gray-600 shadow-sm flex gap-1 items-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "0ms" }} />
+            <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "150ms" }} />
+            <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "300ms" }} />
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

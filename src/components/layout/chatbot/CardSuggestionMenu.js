@@ -1,5 +1,5 @@
 import { useState } from "react"
-import Button from "@/components/ui/buttons/buttons"
+import axios from "axios"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from "@/components/ui/alert-dialog"
 import BewareIcon from "@/assets/icons/beware.svg?url"
@@ -36,8 +36,13 @@ const FORMAT_MAP = {
   "Message": "message",
   "Option with details": "option-with-details",
 }
+const FORMAT_REVERSE = {
+  "room-type": "Room type",
+  "message": "Message",
+  "option-with-details": "Option with details",
+}
 
-export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange, initialData, isOverlay = false }) {
+export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange, initialData, isOverlay = false, isSaving = false }) {
   const isSaved = initialData
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: id ?? "" })
@@ -124,16 +129,17 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
     if (hasErrorCycle) return
     setHasError(false)
     onEditingChange?.(false)
-    onSave?.()
-    toast.success("Saved successfully", {
-      style: {
-        background: "#bbf7d0",
-        color: "#15803d",
-        border: "1px solid #86efac",
-        fontSize: "16px",
-        fontWeight: "600"
-      }
-    })
+
+    const topicPayload = {
+      topic: topic.trim(),
+      replyFormat: FORMAT_REVERSE[replyFormat],
+      replyTitle: replyFormat === "room-type" ? roomReplyTitle : (replyFormat === "option-with-details" ? optionReplyTitle : null),
+      replyMessage: replyFormat === "message" ? replyMessage : null,
+      buttonName: replyFormat === "room-type" ? buttonName : null,
+      roomTypes: replyFormat === "room-type" ? selectedRoomTypes : undefined,
+      options: replyFormat === "option-with-details" ? options : undefined,
+    }
+    onSave?.(topicPayload)
   }
 
   const handleCancel = () => {
@@ -167,7 +173,26 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
 
   const handleDelete = () => setShowDeleteDialog(true)
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
+    const topicId = initialData?.suggestion_topics_id
+    if (topicId != null) {
+      try {
+        await axios.delete("/api/chatbot/suggestions", { params: { id: topicId } })
+      } catch (err) {
+        setShowDeleteDialog(false)
+        const msg = err.response?.data?.error ?? "Failed to delete"
+        toast.error(msg, {
+          style: {
+            background: "#fee2e2",
+            color: "#b91c1c",
+            border: "1px solid #fca5a5",
+            fontSize: "16px",
+            fontWeight: "600"
+          }
+        })
+        return
+      }
+    }
     setShowDeleteDialog(false)
     toast("Deleted successfully", {
       icon: <img src={BinIcon} className="w-6 h-6" alt="" aria-hidden />,
@@ -198,7 +223,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
       ref={isOverlay ? undefined : setNodeRef}
       style={isOverlay ? undefined : { transform: CSS.Transform.toString(transform), transition }}
       {...(isOverlay ? {} : attributes)}
-      className={`bg-gray-100 p-6 flex gap-4 rounded-[8px] text-gray-900 hover:bg-gray-200 ${isOverlay ? "shadow-2xl cursor-grabbing opacity-80" : ""} ${hasError? "border":""}`}
+      className={`bg-gray-100 p-6 flex gap-4 rounded-[8px] text-gray-900 hover:bg-gray-200 ${isOverlay ? "shadow-2xl cursor-grabbing opacity-80" : ""} ${hasError ? "border" : ""}`}
     >
       {/* fields */}
       <div className="flex flex-col gap-6 flex-1">
@@ -341,24 +366,45 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
         )}
 
         {/* save and cancel */}
-        {hasError && (
+        {(hasError || isSaving) && (
           <div className="flex gap-6">
-            <Button buttonText="Save" buttonStyle="primary" className="w-[100px]" onClick={handleSave} />
-            <button className="body-1 font-semibold text-gray-600 px-4 py-2 rounded-[4px] hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer" onClick={handleCancel}>Cancel</button>
+            <button type="button" onClick={handleSave} disabled={isSaving} className="px-5 py-2.5 text-[16px] font-medium text-white bg-orange-500 rounded-[4px] hover:bg-orange-400 active:bg-orange-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-500">{isSaving ? "Saving..." : "Save"}</button>
+            <button className="body-1 font-semibold text-gray-600 px-4 py-2 rounded-[4px] hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleCancel} disabled={isSaving}>Cancel</button>
           </div>
         )}
       </div>
 
-      {/* icon column */}
       <div className="flex flex-col items-center gap-3 pt-1">
-        <div {...listeners} className="cursor-grab active:cursor-grabbing">
-          <img src={DragIcon} className="w-6 h-6" alt="" aria-hidden />
+        {/* Drag Icon */}
+        <div
+          {...listeners}
+          className="group cursor-grab active:cursor-grabbing p-1.5 rounded-md hover:bg-gray-100 transition-all duration-200 active:scale-95"
+        >
+          <img src={DragIcon} className="w-5 h-5 opacity-70 group-hover:opacity-100" alt="" aria-hidden />
         </div>
-        <button type="button" onClick={() => setHasError(true)} className="cursor-pointer p-0 border-0 bg-transparent">
-          <img src={PencilEditIcon} className="w-6 h-6" alt="Edit" />
+
+        {/* Edit Button */}
+        <button
+          type="button"
+          onClick={() => setHasError(true)}
+          className="cursor-pointer p-1.5 border-0 bg-transparent rounded-md hover:bg-blue-50 transition-all duration-200 active:scale-90"
+        >
+          <img src={PencilEditIcon} className="w-5 h-5" alt="Edit" />
         </button>
-        <button type="button" onClick={handleDelete} className="cursor-pointer p-0 border-0 bg-transparent">
-          <img src={BinIcon} className="w-6 h-6" alt="Delete" />
+
+        {/* Delete Button */}
+        <button
+          type="button"
+          onClick={handleDelete}
+          className="cursor-pointer p-1.5 border-0 bg-transparent rounded-md hover:bg-red-50 transition-all duration-200 group active:scale-90"
+        >
+          {/* If using an SVG/Icon library, you'd change text-red-600 here. 
+        With an image, we can use a CSS filter to tint it red on hover: */}
+          <img
+            src={BinIcon}
+            className="w-5 h-5 transition-all duration-200 group-hover:brightness-110 group-hover:sepia group-hover:hue-rotate-[320deg] group-hover:saturate-[5]"
+            alt="Delete"
+          />
         </button>
       </div>
 

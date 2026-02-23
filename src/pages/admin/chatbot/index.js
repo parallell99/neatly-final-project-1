@@ -1,12 +1,26 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
 import Chatbot from "@/components/layout/chatbot/ChatbotButton"
-import CardResponseMenu from "@/components/layout/chatbot/CardResponseMenu"
+import CardResponseMenu from "@/components/layout/chatbot/CardSuggestionMenu"
 import BewareIcon from "@/assets/icons/beware.svg?url"
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, arrayMove } from "@dnd-kit/sortable"
+import axios from "axios"
 import { Toaster } from "@/components/ui/sonner"
-import { defaultMessage, chatbotTopics } from "@/utils/dataChatbotTest"
+import { toast } from "sonner"
+
+function mapTopicFromApi(t) {
+  return {
+    suggestion_topics_id: t.suggestion_topics_id,
+    topic: t.topic,
+    replyFormat: t.reply_format,
+    replyTitle: t.reply_title ?? null,
+    replyMessage: t.reply_message ?? null,
+    buttonName: t.button_name ?? null,
+    roomTypes: t.roomTypes ?? [],
+    options: (t.options ?? []).map((o) => ({ option: o.option_text, details: o.details })),
+  }
+}
 
 const ErrorMessage = () => (
   <span className="body-2 font-normal! text-red">Please fill in this field</span>
@@ -29,13 +43,172 @@ const ValidatedTextarea = ({ value, onChange, error, className = "", ...props })
 
 
 export default function ChatbotAdmin() {
-  const [greetingMessage, setGreetingMessage] = useState(defaultMessage[0].message)
+  const [greetingMessage, setGreetingMessage] = useState("")
   const [greetingError, setGreetingError] = useState(false)
-  const [autoReply, setAutoReply] = useState(defaultMessage[1].message)
+  const [autoReply, setAutoReply] = useState("")
   const [autoReplyError, setAutoReplyError] = useState(false)
 
-  const [cards, setCards] = useState(chatbotTopics.map((data, i) => ({ id: i, data })))
+  const [savedGreetingMessage, setSavedGreetingMessage] = useState("")
+  const [savedAutoReply, setSavedAutoReply] = useState("")
+
+  const [cards, setCards] = useState([])
   const [editingCount, setEditingCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
+  const [savingGreeting, setSavingGreeting] = useState(false)
+  const [savingAutoReply, setSavingAutoReply] = useState(false)
+  const [savingCardId, setSavingCardId] = useState(null)
+
+  const hasGreetingChanges = greetingMessage !== savedGreetingMessage
+  const hasAutoReplyChanges = autoReply !== savedAutoReply
+
+  useEffect(() => {
+    let cancelled = false
+    axios
+      .get("/api/chatbot/suggestions")
+      .then((res) => {
+        if (cancelled) return
+        const { topics = [], greetingMessages = [] } = res.data?.data ?? {}
+        const greeting = greetingMessages.find((m) => m.type_text === "greeting_message")
+        const autoReplyMsg = greetingMessages.find((m) => m.type_text === "auto_reply_message")
+        setGreetingMessage(greeting?.message ?? "")
+        setSavedGreetingMessage(greeting?.message ?? "")
+        setAutoReply(autoReplyMsg?.message ?? "")
+        setSavedAutoReply(autoReplyMsg?.message ?? "")
+        setCards(topics.map((t) => ({ id: t.suggestion_topics_id, data: mapTopicFromApi(t) })))
+        setLoadError(null)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(err.response?.data?.error ?? "Failed to load")
+          toast.error("Failed to load chatbot data", {
+            style: {
+              background: "#fee2e2",
+              color: "#b91c1c",
+              border: "1px solid #fca5a5",
+              fontSize: "16px",
+              fontWeight: "600",
+            },
+          })
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  const handleSaveGreeting = async () => {
+    if (!greetingMessage.trim()) {
+      setGreetingError(true)
+      return
+    }
+    setSavingGreeting(true)
+    try {
+      await axios.post("/api/chatbot/greeting-message", { message: greetingMessage })
+      setSavedGreetingMessage(greetingMessage)
+      toast.success("Greeting message saved", {
+        style: {
+          background: "#bbf7d0",
+          color: "#15803d",
+          border: "1px solid #86efac",
+          fontSize: "16px",
+          fontWeight: "600"
+        }
+      })
+    } catch (err) {
+      const msg = err.response?.data?.error ?? "Failed to save greeting message"
+      toast.error(msg, {
+        style: {
+          background: "#fee2e2",
+          color: "#b91c1c",
+          border: "1px solid #fca5a5",
+          fontSize: "16px",
+          fontWeight: "600"
+        }
+      })
+    } finally {
+      setSavingGreeting(false)
+    }
+  }
+  const handleCancelGreeting = () => {
+    setGreetingMessage(savedGreetingMessage)
+    setGreetingError(false)
+  }
+
+  const handleSaveAutoReply = async () => {
+    if (!autoReply.trim()) {
+      setAutoReplyError(true)
+      return
+    }
+    setSavingAutoReply(true)
+    try {
+      await axios.post("/api/chatbot/auto-reply-message", { message: autoReply })
+      setSavedAutoReply(autoReply)
+      toast.success("Auto-reply message saved", {
+        style: {
+          background: "#bbf7d0",
+          color: "#15803d",
+          border: "1px solid #86efac",
+          fontSize: "16px",
+          fontWeight: "600"
+        }
+      })
+    } catch (err) {
+      const msg = err.response?.data?.error ?? "Failed to save auto-reply message"
+      toast.error(msg, {
+        style: {
+          background: "#fee2e2",
+          color: "#b91c1c",
+          border: "1px solid #fca5a5",
+          fontSize: "16px",
+          fontWeight: "600"
+        }
+      })
+    } finally {
+      setSavingAutoReply(false)
+    }
+  }
+  const handleCancelAutoReply = () => {
+    setAutoReply(savedAutoReply)
+    setAutoReplyError(false)
+  }
+
+  const handleSaveCard = async (cardId, topicPayload) => {
+    const topics = cards.map((c) => (c.id === cardId ? topicPayload : c.data)).filter(Boolean)
+    setSavingCardId(cardId)
+    try {
+      await axios.post("/api/chatbot/suggestions", {
+        greetingMessage,
+        autoReply,
+        topics,
+      })
+      setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, data: topicPayload } : c)))
+      setEditingCount(0)
+      toast.success("Saved successfully", {
+        style: {
+          background: "#bbf7d0",
+          color: "#15803d",
+          border: "1px solid #86efac",
+          fontSize: "16px",
+          fontWeight: "600"
+        }
+      })
+    } catch (err) {
+      const msg = err.response?.data?.error ?? "Failed to save"
+      toast.error(msg, {
+        style: {
+          background: "#fee2e2",
+          color: "#b91c1c",
+          border: "1px solid #fca5a5",
+          fontSize: "16px",
+          fontWeight: "600"
+        }
+      })
+    } finally {
+      setSavingCardId(null)
+    }
+  }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
   const [activeId, setActiveId] = useState(null)
@@ -59,7 +232,14 @@ export default function ChatbotAdmin() {
     setCards((prev) => {
       const oldIndex = prev.findIndex((c) => c.id === active.id)
       const newIndex = prev.findIndex((c) => c.id === over.id)
-      return arrayMove(prev, oldIndex, newIndex)
+      const reordered = arrayMove(prev, oldIndex, newIndex)
+      const positions = reordered.map((c, i) => ({ id: c.id, position: i }))
+      axios.post("/api/chatbot/reorder", { positions }).catch(() => {
+        toast.error("Failed to save order", {
+          style: { background: "#fee2e2", color: "#b91c1c", border: "1px solid #fca5a5", fontSize: "16px", fontWeight: "600" }
+        })
+      })
+      return reordered
     })
   }
 
@@ -73,24 +253,70 @@ export default function ChatbotAdmin() {
           <span className="headline-5 h-[80px] flex items-center pl-[60px]">Chatbot Setup</span>
           <div className="bg-gray-100 flex-1 p-[60px]">
             <div className="flex flex-col bg-white gap-[40px] px-[80px] pt-[40px] pb-[60px] border border-gray-300">
+              {isLoading ? (
+                <div className="py-12 text-center text-gray-500">Loading...</div>
+              ) : loadError ? (
+                <div className="py-12 text-center text-red-600">{loadError}</div>
+              ) : (
+                <>
               <span className="headline-5 text-gray-600">Default Chatbot Messsages</span>
               <div className="flex flex-col gap-2">
                 <span>Greeting message *</span>
                 <ValidatedTextarea
                   value={greetingMessage}
                   onChange={(e) => { setGreetingMessage(e.target.value); if (e.target.value.trim()) setGreetingError(false) }}
-                  error={greetingError}
+                  error={greetingError || !greetingMessage.trim()}
                   className="h-[96px]"
                 />
+                {hasGreetingChanges && (
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleSaveGreeting}
+                      disabled={!greetingMessage.trim() || savingGreeting}
+                      className="px-5 py-2.5 text-[16px] font-medium text-white bg-orange-500 rounded-[4px] hover:bg-orange-400 active:bg-orange-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-500"
+                    >
+                      {savingGreeting ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelGreeting}
+                      disabled={savingGreeting}
+                      className="body-1 font-semibold text-gray-600 px-4 py-2 rounded-[4px] hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <span>Auto-reply message *</span>
                 <ValidatedTextarea
                   value={autoReply}
                   onChange={(e) => { setAutoReply(e.target.value); if (e.target.value.trim()) setAutoReplyError(false) }}
-                  error={autoReplyError}
+                  error={autoReplyError || !autoReply.trim()}
                   className="h-[96px]"
                 />
+                {hasAutoReplyChanges && (
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleSaveAutoReply}
+                      disabled={!autoReply.trim() || savingAutoReply}
+                      className="px-5 py-2.5 text-[16px] font-medium text-white bg-orange-500 rounded-[4px] hover:bg-orange-400 active:bg-orange-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-500"
+                    >
+                      {savingAutoReply ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelAutoReply}
+                      disabled={savingAutoReply}
+                      className="body-1 font-semibold text-gray-600 px-4 py-2 rounded-[4px] hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
               {/* section Suggestion menu & Response */}
               <span className="h-[54px] headline-5 text-gray-600 flex items-end border-t border-gray-300">Suggestion menu & Response</span>
@@ -101,11 +327,12 @@ export default function ChatbotAdmin() {
                       key={card.id}
                       id={card.id}
                       initialData={card.data}
-                      onSave={() => {}}
+                      onSave={(topicPayload) => handleSaveCard(card.id, topicPayload)}
                       onCancel={(opts) => removeCard(card.id, opts)}
                       onEditingChange={(isEditing) => {
                         if (!isEditing) setEditingCount((c) => c - 1)
                       }}
+                      isSaving={savingCardId === card.id}
                     />
                   ))}
                 </SortableContext>
@@ -128,6 +355,8 @@ export default function ChatbotAdmin() {
                     + Add Suggestion menu
                   </button>
                 </div>
+              )}
+                </>
               )}
             </div>
           </div>
