@@ -1,6 +1,31 @@
 import ChatbotCardOption from "@/components/layout/chatbot/ChatbotCardOption.js"
 import ChatbotCardRoomType from "@/components/layout/chatbot/ChatbotCardRoomType.js"
 
+/** แปลงรูปแบบการ์ดจากแผน (cards) เป็นรูปแบบที่ ChatbotCardRoomType ใช้ (room) */
+function cardToRoom(card) {
+  if (!card) return null
+  return {
+    id: card.id ?? card.title,
+    image_main: card.image ?? card.imageUrl,
+    title: card.title,
+    price_per_night: card.price ?? card.originalPrice,
+    description: card.description,
+    link: card.link,
+  }
+}
+
+function TypingDots() {
+  return (
+    <div className="flex justify-start z-50">
+      <div className="rounded-[8px] px-4 py-3 bg-white text-gray-600 shadow-sm flex gap-1 items-center">
+        <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "0ms" }} />
+        <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "150ms" }} />
+        <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "300ms" }} />
+      </div>
+    </div>
+  )
+}
+
 export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelect, onRoomViewDetails }) {
   return (
     <div className="flex flex-col gap-3 pb-4">
@@ -8,6 +33,34 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
         <p className="text-gray-500">พิมพ์ข้อความเพื่อเริ่มคุย (ลองพิมพ์ &quot;สวัสดี&quot;)</p>
       )}
       {messages.map((msg, i) => {
+        if (msg.role === "bot" && msg.type === "loading") {
+          return <TypingDots key={i} />
+        }
+        if (msg.role === "bot" && msg.type === "cards") {
+          const cards = msg.cards ?? []
+          const rooms = cards.map(cardToRoom).filter(Boolean)
+          return (
+            <div key={i} className="flex flex-col gap-2 z-50">
+              <div className="flex justify-start">
+                <div className="max-w-[85%] min-w-0 rounded-[8px] px-4 py-3 bg-white text-gray-700 shadow-sm">
+                  {msg.text && (
+                    <p className="body-1 break-words whitespace-pre-line">{msg.text}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-1">
+                {rooms.map((room) => (
+                  <ChatbotCardRoomType
+                    key={room.id}
+                    room={room}
+                    buttonName={msg.button_name ?? "View Details"}
+                    onViewDetails={onRoomViewDetails}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        }
         if (msg.role === "bot" && msg.type === "option_with_details") {
           return (
             <div key={i} className="flex justify-start z-50">
@@ -68,15 +121,7 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
           </div>
         )
       })}
-      {isTyping && (
-        <div className="flex justify-start z-50">
-          <div className="rounded-[8px] px-4 py-3 bg-white text-gray-600 shadow-sm flex gap-1 items-center">
-            <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "0ms" }} />
-            <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "150ms" }} />
-            <span className="inline-block w-2 h-2 rounded-full bg-gray-700 chatbot-typing-dot" style={{ animationDelay: "300ms" }} />
-          </div>
-        </div>
-      )}
+      {isTyping && <TypingDots />}
     </div>
   )
 }

@@ -6,17 +6,14 @@ import StarLogo from "@/assets/icons/starlogo-chatbot.svg?url"
 import SendLogo from "@/assets/icons/send.svg?url"
 import { ChatbotResponse } from "@/components/layout/chatbot/ChatbotResponse.js"
 
-// ตัวอย่างคำที่ตั้งไว้ → คำตอบอัตโนมัติ
-const AUTO_REPLIES = {
-  สวัสดี: "สวัสดีจ้า",
-}
-
 export default function ChatbotWindow({ onClose }) {
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState("")
   const [topics, setTopics] = useState([])
   const [isTyping, setIsTyping] = useState(false)
   const chatScrollRef = useRef(null)
+  // เก็บ history ในรูปแบบที่ OpenRouter ต้องการ [{ role, content }]
+  const aiHistoryRef = useRef([])
 
   useEffect(() => {
     const el = chatScrollRef.current
@@ -33,18 +30,32 @@ export default function ChatbotWindow({ onClose }) {
       .catch(() => setTopics([]))
   }, [])
 
-  function handleSend() {
+  async function handleSend() {
     const text = inputValue.trim()
-    if (!text) return
+    if (!text || isTyping) return
     setInputValue("")
     setMessages((prev) => [...prev, { role: "user", text }])
-    const reply = AUTO_REPLIES[text]
-    if (reply) {
-      setIsTyping(true)
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "bot", text: reply }])
-        setIsTyping(false)
-      }, 1000)
+    setIsTyping(true)
+
+    try {
+      const res = await axios.post("/api/chatbot/ai", {
+        message: text,
+        history: aiHistoryRef.current,
+      })
+      const data = res.data
+
+      // อัปเดต history สำหรับรอบถัดไป
+      aiHistoryRef.current = [
+        ...aiHistoryRef.current,
+        { role: "user", content: text },
+        { role: "assistant", content: JSON.stringify(data) },
+      ]
+
+      setMessages((prev) => [...prev, { role: "bot", ...data }])
+    } catch {
+      setMessages((prev) => [...prev, { role: "bot", type: "message", text: "ขออภัย เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง" }])
+    } finally {
+      setIsTyping(false)
     }
   }
 
