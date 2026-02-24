@@ -4,7 +4,11 @@ import { AppError } from "@/utils/AppError";
 export async function fetchUserController(req, res) {
   const userId = req.user.id;
   const profile = await userService.getUserById(userId);
-  return res.status(200).json(profile);
+
+  return res.status(200).json({
+    ...profile,
+    email: req.user.email ?? profile.email ?? "",
+  });
 }
 
 export async function updateAvatarController(req, res) {

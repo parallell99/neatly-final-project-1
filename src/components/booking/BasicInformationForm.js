@@ -1,19 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
 import { CalendarIcon } from "lucide-react";
 import Button from "@/components/ui/buttons/buttons";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
 import { cn } from "@/lib/utils";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import CountrySelector from "@/components/ui/CountrySelector/CountrySelector";
 import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
 import { Calendar } from "@/components/ui/booking/calendar";
 import {
@@ -22,10 +15,34 @@ import {
   PopoverTrigger,
 } from "@/components/ui/booking/popover";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/authentication";
 
 
-export default function BasicInformationForm({ onNext }) {
+export default function BasicInformationForm({ orderId, onNext }) {
+  const { user } = useAuth();
   const [date, setDate] = useState(new Date());
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+
+    setFirstName(user.first_name ?? "");
+    setLastName(user.last_name ?? "");
+    setEmail(user.email ?? "");
+    setPhone(user.phone ?? "");
+    setCountry(user.country ?? "");
+
+    if (user.date_of_birth) {
+      const parsed = new Date(user.date_of_birth);
+      if (!Number.isNaN(parsed.getTime())) {
+        setDate(parsed);
+      }
+    }
+  }, [user]);
 
   return (
     <div>
@@ -46,7 +63,8 @@ export default function BasicInformationForm({ onNext }) {
             type="text"
             id="firstName"
             name="firstName"
-            defaultValue="Kate"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
@@ -63,7 +81,8 @@ export default function BasicInformationForm({ onNext }) {
             type="text"
             id="lastName"
             name="lastName"
-            defaultValue="Cho"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
@@ -80,7 +99,8 @@ export default function BasicInformationForm({ onNext }) {
             type="email"
             id="email"
             name="email"
-            defaultValue="kate.cho@gmail.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
@@ -97,7 +117,8 @@ export default function BasicInformationForm({ onNext }) {
             type="tel"
             id="phone"
             name="phone"
-            defaultValue="088 888 8888"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
@@ -135,26 +156,13 @@ export default function BasicInformationForm({ onNext }) {
 
 
         {/* Country */}
-        <div>
-          <label
-            htmlFor="country"
-            className="block font-400 text-[#2A2E3F] mb-2"
-          >
-            Country
-          </label>
-          <Select defaultValue="Thailand" name="country">
-            <SelectTrigger id="country" className="w-full">
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="Thailand">Thailand</SelectItem>
-                <SelectItem value="USA">USA</SelectItem>
-                <SelectItem value="UK">UK</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
+        <CountrySelector
+          label="Country"
+          name="country"
+          placeholder="Select country"
+          value={country}
+          onChange={setCountry}
+        />
       </div>
 
       {/* Navigation Buttons */}
@@ -177,7 +185,7 @@ export default function BasicInformationForm({ onNext }) {
 
       {/* Mobile */}
       <div className="lg:hidden">
-        <BookingDetailCard />
+        <BookingDetailCard orderId={orderId} />
       </div>
       <div className="lg:hidden flex items-center justify-between mt-6 ml-2">
         <button

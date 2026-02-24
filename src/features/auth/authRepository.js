@@ -13,6 +13,19 @@ async function findByUsername(username) {
     return rows[0] || null;
 }
 
+/**
+ * ค้นหา user โดย id
+ */
+async function findById(id) {
+    const query = `
+        SELECT id, username, first_name, last_name, phone, date_of_birth, 
+               country, profile_image_url, role, stripe_customer_id, created_at, updated_at
+        FROM users
+        WHERE id = $1
+    `;
+    const { rows } = await connectionPool.query(query, [id]);
+    return rows[0] || null;
+}
 
 /**
      * สร้าง user ใหม่

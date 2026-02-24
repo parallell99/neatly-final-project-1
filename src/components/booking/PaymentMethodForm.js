@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Button from "@/components/ui/buttons/buttons";
-import BookingDetailCard from "@/components/booking/BookingDetailCard";
 import CreditCardIcon from "@/assets/icons/credit.svg?url";
 import CashIcon from "@/assets/icons/cash.svg?url";
 import CashHandIcon from "@/assets/icons/cash-hand.svg?url";
+import CreditCardCheckout from "@/components/booking/CreditCardCheckout";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import axios from "axios";
 
 const inputBase =
   "w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white";
@@ -15,6 +18,9 @@ const tabBase =
 const tabActive = "border-[#E76B39] text-orange-500 bg-white";
 const tabInactive = "border-[#E4E6ED] text-gray-600 bg-white hover:border-gray-400";
 
+const ROOM_PRICE = 2500;
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
 export default function PaymentMethodForm({
   onBack,
   onConfirm,
@@ -22,13 +28,21 @@ export default function PaymentMethodForm({
   promotionDiscount = 0,
   onPromotionChange,
   extras = [],
+  user,
+  orderId,
 }) {
   const [method, setMethod] = useState("credit-card");
-  const [cardNumber, setCardNumber] = useState("888 9696 8 98 88");
-  const [cardOwner, setCardOwner] = useState("Kate Cho");
-  const [expiryDate, setExpiryDate] = useState("11/26");
-  const [cvc, setCvc] = useState("858");
   const [promoInput, setPromoInput] = useState(promotionCode || "NEATLYNEW400");
+  const [clientSecret, setClientSecret] = useState("");
+  const [savedCards, setSavedCards] = useState([]);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [useNewCard, setUseNewCard] = useState(false);
+
+  const hasCreatedPI = useRef(false);
+
+  const extrasTotal = extras.reduce((sum, e) => sum + (e.price ?? 0), 0);
+  const totalBaht = Math.max(0, ROOM_PRICE + extrasTotal - promotionDiscount);
+  const amountSatang = Math.round(totalBaht * 100);
 
   useEffect(() => {
     if (promoInput === "NEATLYNEW400" && promotionDiscount === 0) {
@@ -36,31 +50,115 @@ export default function PaymentMethodForm({
     }
   }, []);
 
-  const handleApplyPromo = () => {
-    if (promoInput.trim()) {
-      onPromotionChange?.({ code: promoInput.trim(), discount: 400 });
+  const handleCreatePaymentIntent = async () => {
+    if (clientSecret) return; // 🔥 กันยิงซ้ำ
+
+    try {
+      let stripeCustomerId = user?.stripe_customer_id ?? null;
+
+      const res = await fetch("/api/stripe/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          stripeCustomerId,
+        }),
+      });
+
+      const text = await res.text();
+      console.log("raw response:", text);
+
+      if (!res.ok) {
+        return;
+      }
+
+      const data = JSON.parse(text);
+
+
+      if (!res.ok) {
+        console.error(data.error);
+        return;
+      }
+
+      setClientSecret(data.clientSecret);
+    } catch (err) {
+      console.error("Create PI error:", err);
     }
   };
+  useEffect(() => {
+    if (method === "credit-card" && orderId && !hasCreatedPI.current) {
+      hasCreatedPI.current = true;
+      handleCreatePaymentIntent();
+    }
+  }, [method, orderId]);
 
-  const handleConfirm = async () => {
-    // Simulate payment processing
+  useEffect(() => {
+    if (method !== "credit-card") {
+      setClientSecret("");
+      hasCreatedPI.current = false;
+    }
+  }, [method]);
+
+  useEffect(() => {
+    if (!user?.stripe_customer_id) return;
+
+    axios
+      .get("/api/stripe/payment-methods", {
+        params: { stripeCustomerId: user.stripe_customer_id },
+      })
+      .then((res) => {
+        setSavedCards(res.data);
+        if (res.data.length > 0) {
+          setSelectedCardId(res.data[0].id);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching saved cards:", err);
+      });
+  }, [user]);
+
+  const handleCashConfirm = async () => {
     try {
-      // Simulate API call - randomly succeed or fail for demo
-      // In production, replace with actual payment API call
-      const paymentSuccess = Math.random() > 0.5; // 50% chance of success for demo
-      
-      if (paymentSuccess) {
-        const cardLastDigits = cardNumber.replace(/\s/g, "").slice(-3);
-        onConfirm?.({
-          success: true,
-          paymentMethod: method === "credit-card" ? "Credit Card" : "Cash",
-          cardLastDigits: method === "credit-card" ? cardLastDigits : "",
-        });
-      } else {
-        onConfirm?.({ success: false });
+      if (!user) {
+        alert("Please login");
+        return;
       }
-    } catch (error) {
-      onConfirm?.({ success: false, error: error.message });
+
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("/api/booking/update-payment-status", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          orderId,
+          status: "awaiting_payment",
+          paymentMethod: "cash",
+        }),
+      });
+
+      const text = await res.text();
+
+      console.log("STATUS:", res.status);
+      console.log("RAW RESPONSE:", text);
+
+      if (!res.ok) {
+        throw new Error(text);
+      }
+
+      const data = JSON.parse(text);
+
+      onConfirm?.({
+        success: true,
+        paymentMethod: "Cash",
+        order: data.order,
+      });
+
+    } catch (err) {
+      console.error("Cash confirm error:", err);
+      onConfirm?.({ success: false });
     }
   };
 
@@ -90,180 +188,108 @@ export default function PaymentMethodForm({
         </button>
       </div>
 
-      {method === "credit-card" && (
-        <>
-          <h3 className="font-sans text-[20px] font-semibold text-gray-600 mb-4">
-            Credit Card
-          </h3>
-          <div className="space-y-4 mb-10">
-            <div>
-              <label
-                htmlFor="cardNumber"
-                className="block font-sans text-base font-medium text-gray-900 mb-2"
-              >
-                Card Number
-              </label>
-              <input
-                id="cardNumber"
-                type="text"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)}
-                placeholder="888 9696 8 98 88"
-                className={inputBase}
-                aria-label="Card number"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="cardOwner"
-                className="block font-sans text-base font-medium text-gray-900 mb-2"
-              >
-                Card Owner
-              </label>
-              <input
-                id="cardOwner"
-                type="text"
-                value={cardOwner}
-                onChange={(e) => setCardOwner(e.target.value)}
-                placeholder="Card owner name"
-                className={inputBase}
-                aria-label="Card owner"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="expiryDate"
-                  className="block font-sans text-base font-medium text-[#2A2E3F] mb-2"
-                >
-                  Expiry Date
-                </label>
-                <input
-                  id="expiryDate"
-                  type="text"
-                  value={expiryDate}
-                  onChange={(e) => setExpiryDate(e.target.value)}
-                  placeholder="MM/YY"
-                  className={inputBase}
-                  aria-label="Expiry date"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="cvc"
-                  className="block font-sans text-base font-medium text-gray-900 mb-2"
-                >
-                  CVC/CVV
-                </label>
-                <input
-                  id="cvc"
-                  type="text"
-                  value={cvc}
-                  onChange={(e) => setCvc(e.target.value)}
-                  placeholder="CVC"
-                  className={inputBase}
-                  aria-label="CVC or CVV"
-                />
-              </div>
-            </div>
-            <div>
-              <label
-                htmlFor="promoCode"
-                className="block font-sans text-base font-medium text-gray-900 mb-2"
-              >
-                Promotion Code
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="promoCode"
-                  type="text"
-                  value={promoInput}
-                  onChange={(e) => setPromoInput(e.target.value)}
-                  placeholder="Enter promotion code"
-                  className={inputBase}
-                  aria-label="Promotion code"
-                />
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Promotion Code - shown for both Credit Card and Cash */}
+      <div className="mb-10 border-t border-gray-300 pt-6">
+        <label
+          htmlFor="promoCode"
+          className="block font-sans text-base font-medium text-gray-900 mb-2"
+        >
+          Promotion Code
+        </label>
+        <div className="flex gap-2">
+          <input
+            id="promoCode"
+            type="text"
+            value={promoInput}
+            onChange={(e) => setPromoInput(e.target.value)}
+            placeholder="Enter promotion code"
+            className={inputBase}
+            aria-label="Promotion code"
+          />
+        </div>
+      </div>
 
+      {method === "credit-card" && clientSecret && (
+        <Elements
+          stripe={stripePromise}
+          options={{ clientSecret }}
+        >
+          <CreditCardCheckout
+            orderId={orderId}
+            savedCards={savedCards}
+            setSavedCards={setSavedCards}
+            selectedCardId={selectedCardId}
+            useNewCard={useNewCard}
+            setUseNewCard={setUseNewCard}
+            setSelectedCardId={setSelectedCardId}
+            clientSecret={clientSecret}
+            onBack={onBack}
+            onConfirm={onConfirm}
+          />
+        </Elements>
+      )}
       {method === "cash" && (
         <div>
           <h3 className="font-sans text-[20px] font-semibold text-gray-600 mb-4">
             Cash
           </h3>
-          <div className="flex felx-col justify-around items-center bg-[#F1F2F6] rounded-sm mb-6 px-6 py-6 lg:gap-5">
-            <img src={CashHandIcon} className="w-6 h-6" alt="" aria-hidden />
+          <div className="flex felx-col justify-around items-center bg-[#F1F2F6] rounded-sm mb-6 px-6 py-6 lg:gap-1">
+            <img
+              src={CashHandIcon}
+              width={40}
+              height={40}
+              className="w-10 h-10 shrink-0 object-contain"
+              alt=""
+              aria-hidden
+            />
             <div className="w-[229px] lg:w-[500px]">
-            <p className="font-sans text-base text-[#2A2E3F]">
-              Pay at the hotel with cash or cheque. No payment is required until you check in
-            </p>
+              <p className="font-sans text-base text-[#2A2E3F]">
+                Pay at the hotel with cash or cheque. No payment is required until you check in
+              </p>
             </div>
           </div>
-          <div className="mb-10 border-t border-gray-300">
-              <label
-                htmlFor="promoCode"
-                className="block font-sans text-base text-gray-900 mt-4"
-              >
-                Promotion Code
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="promoCode"
-                  type="text"
-                  value={promoInput}
-                  onChange={(e) => setPromoInput(e.target.value)}
-                  placeholder="Enter promotion code"
-                  className={inputBase}
-                  aria-label="Promotion code"
-                />
-              </div>
-            </div>
         </div>
       )}
 
-      {/* Navigation - Desktop */}
+      {/* Navigation - Desktop (Confirm only for Cash) */}
       <div className="hidden lg:flex items-center justify-between mt-8 pt-6">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-[#E76B39] font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
-        >
-          Back
-        </button>
-        <Button
-          buttonStyle="primary"
-          buttonText="Confirm Booking"
-          type="button"
-          onClick={handleConfirm}
-        />
+        {method === "cash" && (
+          <>
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-[#E76B39] font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
+            >
+              Back
+            </button>
+            <Button
+              buttonStyle="primary"
+              buttonText="Confirm Booking"
+              type="button"
+              onClick={handleCashConfirm}
+            />
+          </>
+        )}
       </div>
 
-      {/* Mobile */}
-      <div className="lg:hidden">
-        <BookingDetailCard
-          extras={extras}
-          promotionCode={promotionCode}
-          promotionDiscount={promotionDiscount}
-        />
-      </div>
       <div className="lg:hidden flex items-center justify-between mt-6 ml-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-orange-500 font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
-        >
-          Back
-        </button>
-        <Button
-          buttonStyle="primary"
-          buttonText="Confirm Booking"
-          type="button"
-          onClick={handleConfirm}
-          className="w-[120px] h-[60px]"
-        />
+        {method === "cash" && (
+          <>
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-[#E76B39] font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
+            >
+              Back
+            </button>
+            <Button
+              buttonStyle="primary"
+              buttonText="Confirm Booking"
+              type="button"
+              onClick={handleCashConfirm}
+            />
+          </>
+        )}
       </div>
     </div>
   );

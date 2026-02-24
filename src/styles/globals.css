@@ -231,6 +231,12 @@
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
 /* Headlines – serif */
 .headline-1 {
   font-family: var(--font-serif);

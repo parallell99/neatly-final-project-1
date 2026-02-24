@@ -26,7 +26,7 @@ const inputBase =
 const checkboxClass =
   "size-5 rounded border-[#D6D9E4] text-[#E76B39] focus:ring-[#E76B39]";
 
-export default function SpecialRequestForm({ onBack, onNext, onExtrasChange, extras = [] }) {
+export default function SpecialRequestForm({ orderId, onBack, onNext, onExtrasChange, extras = [] }) {
   const [standard, setStandard] = useState({});
   const [special, setSpecial] = useState({ "airport-transfer": true });
   const [additionalRequest, setAdditionalRequest] = useState("");
@@ -141,7 +141,7 @@ export default function SpecialRequestForm({ onBack, onNext, onExtrasChange, ext
 
       {/* Mobile */}
       <div className="lg:hidden">
-        <BookingDetailCard extras={extras} />
+        <BookingDetailCard orderId={orderId} />
       </div>
       <div className="lg:hidden flex items-center justify-between mt-6 ml-2">
         <button
