@@ -106,6 +106,15 @@ export default function Navbar() {
 
           {/* Desktop Login/User */}
           <div className="flex items-center gap-6">
+            {/* Notification Bell - desktop */}
+            {isAuthenticated && user && (
+              <button
+                className="p-2 relative hover:opacity-80 transition-opacity"
+                aria-label="Notifications"
+              >
+                <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
+              </button>
+            )}
             {isAuthenticated && user ? (
               <Popover.Root>
                 <Popover.Trigger asChild>

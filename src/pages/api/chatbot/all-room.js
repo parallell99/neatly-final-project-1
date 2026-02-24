@@ -98,8 +98,8 @@ async function handleGet(req, res) {
       location: room.location,
       image_main: room.image_main,
       created_at: room.created_at,
-      room_guest_adult: room.room_guest_adult ?? null,
-      room_guest_kid: room.room_guest_kid ?? null,
+      room_guest_adult: room.room_guest_adult != null ? Number(room.room_guest_adult) : null,
+      room_guest_kid: room.room_guest_kid != null ? Number(room.room_guest_kid) : null,
       room_type: {
         id: room.room_type_id,
         name: room.room_type_name,

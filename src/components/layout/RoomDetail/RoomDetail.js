@@ -375,6 +375,8 @@ export default function RoomDetail({ roomId }) {
               name: r.name,
               description: r.description,
               roomNumber: r.roomNumber,
+              guestAdult: r.guestAdult,
+              guestKid: r.guestKid,
               bed: r.bed,
               location: r.location,
               priceOriginal: null,
