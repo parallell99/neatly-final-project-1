@@ -8,11 +8,19 @@ export default async function handler(req, res) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  // ใช้ anon client เพื่อ verify user
-  const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
-  );
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return res.status(500).json({
+      message:
+        "Supabase env vars missing. Set SUPABASE_URL/SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_URL/NEXT_PUBLIC_SUPABASE_ANON_KEY).",
+    });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   const {
     data: { user },
@@ -23,15 +31,24 @@ export default async function handler(req, res) {
     return res.status(401).json({ message: "Invalid user" });
   }
 
-  // 🔥 insert order พร้อม email snapshot
+  const { roomId, totalPrice, paymentMethod } = req.body;
+
+  // 🎯 กำหนด status ตาม payment method
+  let orderStatus = "pending";
+
+  if (paymentMethod === "cash") {
+    orderStatus = "awaiting_payment";
+  }
+
+  // ✅ insert order พร้อม status ที่ถูกต้องตั้งแต่แรก
   const { data: order, error } = await supabaseAdmin
     .from("orders")
     .insert({
       user_id: user.id,
-      room_id: req.body.roomId,
-      total_price: req.body.totalPrice,
-      email: user.email,   // ✅ snapshot ตอนจอง
-      status: "pending",
+      room_id: roomId,
+      total_price: totalPrice,
+      email: user.email,
+      status: orderStatus,
     })
     .select()
     .single();

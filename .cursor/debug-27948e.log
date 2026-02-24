@@ -1,0 +1,39 @@
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771919914763}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771919914764}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771919914853}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771919914854}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771919915251}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771919915252}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920220304}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920220502}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920220862}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920346557}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920346649}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920347019}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920365891}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920365892}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920365903}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920365903}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920366217}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920366280}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920373446}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920373454}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920373737}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920383893}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920383894}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920383901}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920383901}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920384181}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920384193}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920433090}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920433093}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920433418}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920475293}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920475297}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920475587}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920519081}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"A","location":"src/pages/payment-method/index.js:77","message":"Calling create-setup-intent","data":{"hasUser":true},"timestamp":1771920519081}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920519093}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"D","location":"src/pages/api/stripe/create-setup-intent.js:4","message":"Handler entered","data":{"method":"POST"},"timestamp":1771920519093}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920519375}
+{"sessionId":"27948e","runId":"pre-fix","hypothesisId":"B","location":"src/pages/payment-method/index.js:81","message":"Received create-setup-intent response","data":{"status":200},"timestamp":1771920519454}

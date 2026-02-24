@@ -117,12 +117,49 @@ export default function PaymentMethodForm({
       });
   }, [user]);
 
-  const handleCashConfirm = () => {
-    onConfirm?.({
-      success: true,
-      paymentMethod: "Cash",
-      cardLastDigits: "",
-    });
+  const handleCashConfirm = async () => {
+    try {
+      if (!user) {
+        alert("Please login");
+        return;
+      }
+
+      const token = localStorage.getItem("token");
+
+      const res = await fetch("/api/booking/update-payment-status", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          orderId,
+          status: "awaiting_payment",
+          paymentMethod: "cash",
+        }),
+      });
+
+      const text = await res.text();
+
+      console.log("STATUS:", res.status);
+      console.log("RAW RESPONSE:", text);
+
+      if (!res.ok) {
+        throw new Error(text);
+      }
+
+      const data = JSON.parse(text);
+
+      onConfirm?.({
+        success: true,
+        paymentMethod: "Cash",
+        order: data.order,
+      });
+
+    } catch (err) {
+      console.error("Cash confirm error:", err);
+      onConfirm?.({ success: false });
+    }
   };
 
   return (

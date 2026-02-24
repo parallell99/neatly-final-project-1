@@ -236,7 +236,7 @@ export default function PaymentSuccess({
       </div>
 
       {/* Bottom Navigation (White Background) - Fixed at bottom */}
-      <div className="w-full bg-white rounded-lg p-6 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center lg:w-[500px] lg:mb-8 lg:mt-110">
+      <div className="w-full bg-white rounded-lg p-6 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center lg:w-[550px] lg:mb-8 lg:mt-95 lg:gap-10">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-3 lg:gap-4">
             <button
