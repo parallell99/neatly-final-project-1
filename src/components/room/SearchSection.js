@@ -12,7 +12,13 @@ import {
 } from "@/components/ui/popover";
 import RoomsGuestsSelector from "@/components/ui/RoomsGuestsSelector";
 
-export default function SearchSection({ onOrdersChange, onLoadingChange }) {
+function parseDateStr(str) {
+  if (!str) return undefined;
+  const d = new Date(str + "T12:00:00");
+  return isNaN(d.getTime()) ? undefined : d;
+}
+
+export default function SearchSection({ initialSearch, onOrdersChange, onLoadingChange }) {
   const [date, setDate] = useState({
     from: undefined,
     to: undefined,
@@ -27,15 +33,49 @@ export default function SearchSection({ onOrdersChange, onLoadingChange }) {
   const [checkInMonth, setCheckInMonth] = useState(new Date());
   const [checkOutMonth, setCheckOutMonth] = useState(new Date());
 
-  const [numRooms, setNumRooms] = useState(1);
-  const [numAdults, setNumAdults] = useState(2);
-  const [numKids, setNumKids] = useState(0);
+  const [numRooms, setNumRooms] = useState(initialSearch?.numRooms ?? 1);
+  const [numAdults, setNumAdults] = useState(initialSearch?.numAdults ?? 2);
+  const [numKids, setNumKids] = useState(initialSearch?.numKids ?? 0);
 
   const [showBar, setShowBar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  // Apply initialSearch from URL (e.g. from HeroSearch) and fetch orders
+  useEffect(() => {
+    if (!initialSearch?.checkIn || !initialSearch?.checkOut) return;
+    const from = parseDateStr(initialSearch.checkIn);
+    const to = parseDateStr(initialSearch.checkOut);
+    if (!from || !to) return;
+    setDate({ from, to });
+    setCheckInMonth(from);
+    setCheckOutMonth(to);
+    setNumRooms(initialSearch.numRooms ?? 1);
+    setNumAdults(initialSearch.numAdults ?? 2);
+    setNumKids(initialSearch.numKids ?? 0);
+
+    const fetchOrders = async () => {
+      try {
+        setSearchLoading(true);
+        onLoadingChange?.(true);
+        setError(null);
+        const response = await axios.get("/api/availablerooms/order", {
+          params: { checkIn: initialSearch.checkIn, checkOut: initialSearch.checkOut },
+        });
+        const data = response.data.data;
+        if (onOrdersChange) onOrdersChange(data);
+      } catch (err) {
+        console.error("GET ORDERS ERROR:", err);
+        setError(err.response?.data?.error || "Failed to load orders");
+      } finally {
+        setSearchLoading(false);
+        onLoadingChange?.(false);
+      }
+    };
+    fetchOrders();
+  }, [initialSearch?.checkIn, initialSearch?.checkOut]);
 
   // Scroll hide/show
   useEffect(() => {

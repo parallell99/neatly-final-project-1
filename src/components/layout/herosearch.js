@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/router";
 import HotelBgImg from "@/assets/images/7.jpg";
 import Button from "@/components/ui/buttons/buttons";
 import RoomsGuestsSelector from "@/components/ui/RoomsGuestsSelector";
@@ -17,6 +18,7 @@ function getTodayString() {
 }
 
 export default function HeroSearch() {
+  const router = useRouter();
   const [checkIn, setCheckIn] = useState(getTodayString);
   const [checkOut, setCheckOut] = useState(getTodayString);
   const [numRooms, setNumRooms] = useState(1);
@@ -25,6 +27,17 @@ export default function HeroSearch() {
 
   const checkInMin = getTodayString();
   const checkOutMin = checkIn || checkInMin;
+
+  const handleSearch = () => {
+    const params = new URLSearchParams({
+      checkIn,
+      checkOut,
+      rooms: String(numRooms),
+      adults: String(numAdults),
+      kids: String(numKids),
+    });
+    router.push(`/room?${params.toString()}`);
+  };
 
   return (
     <>
@@ -116,6 +129,7 @@ export default function HeroSearch() {
                 buttonStyle="primary"
                 buttonText="Search"
                 className="w-full lg:w-auto lg:shrink-0 lg:px-8"
+                onClick={handleSearch}
               />
             </div>
           </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Button from "@/components/ui/buttons/buttons";
 import ChatbotButton from "@/components/layout/chatbot/ChatbotButton";
 import OtherRoomsSection from "@/components/layout/RoomDetail/OtherRoomsSection";
+import { useAuth } from "@/contexts/authentication";
 import RoomImg1 from "@/assets/images/1.jpg";
 import RoomImg2 from "@/assets/images/2.jpg";
 import RoomImg3 from "@/assets/images/3.jpg";
@@ -46,6 +47,7 @@ function mapApiRoomToRoomData(apiRoom) {
 }
 
 export default function RoomDetail({ roomId }) {
+  const { isAuthenticated } = useAuth();
   const [roomData, setRoomData] = useState(null);
   const [otherRoomsList, setOtherRoomsList] = useState([]);
   const [sameTypeRoomsList, setSameTypeRoomsList] = useState([]);
@@ -504,7 +506,14 @@ export default function RoomDetail({ roomId }) {
                     buttonStyle="primary"
                     buttonText="Book Now"
                     className="h-[48px] lg:w-auto lg:px-8"
-                    onClick={() => { window.location.href = `/booking${block.slug ? `?room=${block.slug}` : ""}`; }}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        window.location.href = "/login";
+                        return;
+                      }
+                      const query = block.slug ? `?room=${block.slug}` : "";
+                      window.location.href = `/room${query}`;
+                    }}
                   />
                 </div>
 

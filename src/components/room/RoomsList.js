@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import axios from "axios";
 import SearchSection from "./SearchSection";
 import RoomCard from "./RoomCard";
@@ -8,14 +9,28 @@ import RoomPopup from "./RoomPopup";
 import RoomCardSkeleton from "./RoomCardSkeleton";
 
 export default function RoomsList() {
+  const router = useRouter();
+  const { checkIn, checkOut, rooms, adults, kids } = router.query;
+
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [open, setOpen] = useState(false);
-  const [rooms, setRooms] = useState([]);
+  const [roomsList, setRoomsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [orders, setOrders] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+
+  const initialSearch =
+    checkIn && checkOut
+      ? {
+          checkIn: String(checkIn),
+          checkOut: String(checkOut),
+          numRooms: rooms ? Number(rooms) : 1,
+          numAdults: adults ? Number(adults) : 2,
+          numKids: kids ? Number(kids) : 0,
+        }
+      : null;
 
   useEffect(() => {
     fetchRooms();
@@ -34,7 +49,7 @@ export default function RoomsList() {
       // เพราะ API return { data: rooms }
       console.log(response.data.data);
 
-      setRooms(response.data.data);
+      setRoomsList(response.data.data);
     } catch (err) {
       console.error("Fetch rooms error:", err);
       setError("Failed to load rooms");
@@ -50,7 +65,7 @@ export default function RoomsList() {
   };
 
   const bookedRoomIds = new Set(orders.map((order) => order.room_id));
-  const availableRooms = rooms.filter((room) => !bookedRoomIds.has(room.id));
+  const availableRooms = roomsList.filter((room) => !bookedRoomIds.has(room.id));
   const isListLoading = loading || searchLoading;
   return (
     <section className="bg-bg min-h-screen flex flex-col items-center">
@@ -58,6 +73,7 @@ export default function RoomsList() {
       {/* Search */}
       
         <SearchSection
+          initialSearch={initialSearch}
           onOrdersChange={setOrders}
           onLoadingChange={setSearchLoading}
         />
