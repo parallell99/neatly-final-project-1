@@ -20,4 +20,12 @@ async function updateAvatar(userId, avatarUrl) {
   }
 }
 
-export const userService = { getUserById, updateAvatar };
+async function updateProfile(userId, data) {
+  const updated = await userRepository.updateProfile(userId, data);
+  if (!updated) {
+    throw new AppError("Failed to update profile", 400);
+  }
+  return updated;
+}
+
+export const userService = { getUserById, updateAvatar, updateProfile };

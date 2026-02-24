@@ -15,7 +15,41 @@ import premierSeaViewImg from "@/assets/images/3.jpg";
 import supremeImg from "@/assets/images/2.jpg";
 import suiteImg from "@/assets/images/1.jpg";
 
-// Room data configuration
+function createSlug(title) {
+  if (!title || typeof title !== "string") return "";
+  return title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
+function formatPrice(num) {
+  if (num == null || Number.isNaN(Number(num))) return "—";
+  return `THB ${Number(num).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function mapApiRoomToRoomData(apiRoom) {
+  const mainImg = apiRoom.image_main || null;
+  const galleryUrls = (apiRoom.image_gallery || []).map((g) => g.image_url || g.image);
+  let roomImages = [mainImg, ...galleryUrls].filter(Boolean).map((src) => ({ src: String(src), alt: apiRoom.title }));
+  if (roomImages.length === 0) roomImages = [{ src: "", alt: apiRoom.title }];
+
+  return {
+    title: apiRoom.title ?? "Room",
+    description: apiRoom.description ?? "",
+    statistics: {
+      person: "—",
+      bed: apiRoom.bed_type?.name ?? "—",
+      size: apiRoom.location ?? "—",
+    },
+    pricing: {
+      original: formatPrice(apiRoom.price_per_night),
+      current: formatPrice(apiRoom.price_per_night),
+    },
+    amenities: (apiRoom.amenities || []).map((a) => a.name || a).filter(Boolean),
+    imageAlt: `${apiRoom.title ?? "Room"} Room`,
+    roomImages,
+  };
+}
+
+// Room data configuration (fallback when API room not found by slug)
 const ROOM_DATA = {
   "superior-garden-view": {
     title: "Superior Garden View",
@@ -206,72 +240,112 @@ const ROOM_DATA = {
 };
 
 export default function RoomDetail({ roomId }) {
-  const roomData = ROOM_DATA[roomId];
+  const [roomData, setRoomData] = useState(null);
+  const [otherRoomsList, setOtherRoomsList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [otherRoomsIndex, setOtherRoomsIndex] = useState(0);
   const [mobileRoomsIndex, setMobileRoomsIndex] = useState(0);
   const [shuffledRooms, setShuffledRooms] = useState([]);
 
-  // Room images array - moved inside component to avoid SSR issues
-  // Ensure all image sources are strings
   const getImageSrc = (img) => {
-    if (!img) return '';
-    if (typeof img === 'string') return img;
+    if (!img) return "";
+    if (typeof img === "string") return img;
     return img?.src ?? String(img);
   };
 
-  const roomImages = [
+  const defaultRoomImages = [
     { src: getImageSrc(RoomImg1), alt: "Room Image" },
     { src: getImageSrc(RoomImg2), alt: "Room Image" },
     { src: getImageSrc(RoomImg3), alt: "Room Image" },
     { src: getImageSrc(RoomImg4), alt: "Room Image" },
   ];
 
-  // Other rooms data for carousel - moved inside component to avoid SSR issues
-  const OTHER_ROOMS = [
-    {
-      name: "Deluxe",
-      slug: "deluxe",
-      image: getImageSrc(deluxeImg),
-    },
-    {
-      name: "Superior",
-      slug: "superior",
-      image: getImageSrc(superiorImg),
-    },
-    {
-      name: "Suite",
-      slug: "suite",
-      image: getImageSrc(suiteImg),
-    },
-    {
-      name: "Superior Garden View",
-      slug: "superior-garden-view",
-      image: getImageSrc(superiorGardenViewImg),
-    },
-    {
-      name: "Premier Sea View",
-      slug: "premier-sea-view",
-      image: getImageSrc(premierSeaViewImg),
-    },
-    {
-      name: "Supreme",
-      slug: "supreme",
-      image: getImageSrc(supremeImg),
-    },
+  const fallbackOTHER_ROOMS = [
+    { name: "Deluxe", slug: "deluxe", image: getImageSrc(deluxeImg) },
+    { name: "Superior", slug: "superior", image: getImageSrc(superiorImg) },
+    { name: "Suite", slug: "suite", image: getImageSrc(suiteImg) },
+    { name: "Superior Garden View", slug: "superior-garden-view", image: getImageSrc(superiorGardenViewImg) },
+    { name: "Premier Sea View", slug: "premier-sea-view", image: getImageSrc(premierSeaViewImg) },
+    { name: "Supreme", slug: "supreme", image: getImageSrc(supremeImg) },
   ];
 
-  // Filter out current room from other rooms
-  const otherRooms = OTHER_ROOMS.filter(room => room.slug !== roomId);
+  useEffect(() => {
+    if (!roomId) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setFetchError(null);
+    fetch("/api/chatbot/all-room")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load room");
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data?.data) ? data.data : [];
+        const current = list.find((r) => createSlug(r.title) === roomId);
+        if (current) {
+          setRoomData(mapApiRoomToRoomData(current));
+          const others = list
+            .filter((r) => createSlug(r.title) !== roomId)
+            .map((r) => ({
+              name: r.title ?? r.room_type?.name ?? "Room",
+              slug: createSlug(r.title) || String(r.id),
+              image: r.image_main || "",
+            }));
+          setOtherRoomsList(others);
+        } else {
+          const fallback = ROOM_DATA[roomId];
+          if (fallback) {
+            setRoomData(fallback);
+            setOtherRoomsList(fallbackOTHER_ROOMS.filter((r) => r.slug !== roomId));
+          } else {
+            setRoomData(null);
+            setOtherRoomsList([]);
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setFetchError(err.message);
+          const fallback = ROOM_DATA[roomId];
+          setRoomData(fallback ?? null);
+          setOtherRoomsList(fallback ? fallbackOTHER_ROOMS.filter((r) => r.slug !== roomId) : []);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [roomId]);
 
-  // Shuffle rooms on mount
+  const otherRooms = otherRoomsList.length > 0 ? otherRoomsList : fallbackOTHER_ROOMS.filter((r) => r.slug !== roomId);
+
   useEffect(() => {
     const shuffled = [...otherRooms].sort(() => Math.random() - 0.5);
     setShuffledRooms(shuffled);
-  }, [roomId]);
+  }, [roomId, otherRooms.length]);
+
+  const roomImages = roomData?.roomImages?.length ? roomData.roomImages : defaultRoomImages;
+
+  if (loading) {
+    return (
+      <div className="w-full bg-white min-h-[400px] flex items-center justify-center">
+        <p className="text-gray-600">Loading room...</p>
+      </div>
+    );
+  }
 
   if (!roomData) {
-    return null;
+    return (
+      <div className="w-full bg-white min-h-[400px] flex items-center justify-center">
+        <p className="text-gray-600">{fetchError || "Room not found."}</p>
+      </div>
+    );
   }
   
   // Desktop: Show 3 rooms at a time, wrap around if needed

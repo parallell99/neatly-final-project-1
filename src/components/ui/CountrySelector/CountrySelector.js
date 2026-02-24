@@ -2,15 +2,13 @@
 
 import React from "react";
 import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/CountrySelector/combobox";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { countries } from "@/utils/dataCountries";
-import ExclamationCircle from "@/assets/icons/exclamation-circle.svg";
 
 export default function CountrySelector({
   label,
@@ -23,7 +21,6 @@ export default function CountrySelector({
   onChange,
   ...props
 }) {
-  // for react-hook-form support: set value back to '' (if undefined) and treat as controlled
   const selectedCountry = value ?? "";
 
   return (
@@ -36,52 +33,35 @@ export default function CountrySelector({
           {label}
         </label>
       )}
-      <Combobox
-        value={selectedCountry}
+      <Select
+        value={selectedCountry || undefined}
         onValueChange={onChange}
         disabled={disabled}
-        items={countries}
+        required={required}
         {...props}
       >
-        <ComboboxInput
+        <SelectTrigger
           id={name}
-          placeholder={placeholder}
-          className={`w-full border py-[24px] rounded-[4px] text-[16px] font-normal shadow-none hover-cursor-pointer !ring-0 !ring-transparent ${
+          className={`w-full h-[48px]! px-3 flex items-center justify-between gap-2 rounded-[4px] border text-left text-[16px] font-normal text-gray-900 ${
             disabled
               ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
-              : `${
-                  error
-                    ? "bg-white"
-                    : "border-gray-300 bg-white hover:border-gray-400"
-                } placeholder:text-gray-500 text-black`
-          }`}
-          autoComplete="off"
-          required={required}
+              : error
+                ? "border-red-500 bg-white focus:ring-1 focus:ring-orange-500 focus:border-transparent"
+                : "border-gray-300 bg-white hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent"
+          } placeholder:text-gray-500`}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
-        />
-        
-        <ComboboxContent className={`mt-1 mb-1`}>
-          <ComboboxEmpty>
-            <div className="text-sm text-gray-500">
-              No countries found
-            </div>
-          </ComboboxEmpty>
-          <ComboboxList>
-            {(country) => (
-              <ComboboxItem
-                key={country}
-                value={country}
-                className={`w-full text-sm rounded-[4px] focus:outline-none 
-                    ${selectedCountry === country ? "bg-gray-300" : ""}`}
-              >
-                <span>{country}</span>
-                
-              </ComboboxItem>
-            )}
-          </ComboboxList>
-        </ComboboxContent>
-      </Combobox>
+        >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {countries.map((country) => (
+            <SelectItem key={country} value={country}>
+              {country}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {error && (
         <div className="flex items-center gap-2 mt-1">
           <p id={`${name}-error`} className="text-[14px] text-red">

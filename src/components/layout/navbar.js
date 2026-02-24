@@ -110,9 +110,9 @@ export default function Navbar() {
               <Popover.Root>
                 <Popover.Trigger asChild>
                   <button className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                    {user?.profile_image_url || user?.profile_image ? (
+                    {(user?.profile_image_url || user?.profile_image) ? (
                       <img
-                        src={user.profile_image_url || user.profile_image}
+                        src={getImageSrc(user.profile_image_url || user.profile_image)}
                         alt="User avatar"
                         className="w-8 h-8 rounded-full object-cover border border-gray-200"
                       />
@@ -122,7 +122,7 @@ export default function Navbar() {
                       </div>
                     )}
                     <span className="text-[#666666] font-sans text-base">
-                      {user.username || user.first_name || user.email || "User"}
+                      {user?.username || user?.first_name || user?.email || "User"}
                     </span>
                     <svg 
                       width="12" 
@@ -150,7 +150,7 @@ export default function Navbar() {
                   >
                     <div className="flex flex-col gap-1">
                       <Link 
-                        href="/profile" 
+                        href="/userProfile" 
                         className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                       >
                         <img src={getImageSrc(profileIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
@@ -281,15 +281,15 @@ export default function Navbar() {
               <>
                 {/* User Menu Items */}
                 <div className="flex items-center gap-3 px-1 py-2">
-                  {user?.profile_image ? (
+                  {user?.profile_image_url || user?.profile_image ? (
                     <img
-                      src={user.profile_image}
+                      src={user.profile_image_url || user.profile_image}
                       alt="User avatar"
                       className="w-9 h-9 rounded-full object-cover border border-gray-200"
                     />
                   ) : (
                     <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-semibold">
-                      {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                      {(user?.username || user?.first_name || "U").charAt(0).toUpperCase()}
                     </div>
                   )}
                   <span className="text-gray-600 font-semibold text-base font-sans truncate max-w-[120px]">
@@ -297,7 +297,7 @@ export default function Navbar() {
                   </span>
                 </div>
                 <Link 
-                  href="/profile" 
+                  href="/userProfile" 
                   className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                   onClick={toggleMenu}
                 >
