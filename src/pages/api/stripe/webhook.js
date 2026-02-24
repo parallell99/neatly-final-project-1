@@ -65,7 +65,7 @@ export default async function handler(req, res) {
 
       const { data: order } = await supabaseAdmin
         .from("orders")
-        .select("status, email_sent")
+        .select("status, email_sent, email")
         .eq("id", orderId)
         .single();
 
@@ -76,11 +76,17 @@ export default async function handler(req, res) {
         return;
       }
 
-      // update status
+      // update 
       await supabaseAdmin
         .from("orders")
-        .update({ status: "paid" })
+        .update({
+          status: "paid",
+          payment_method: "card",
+          payment_intent_id: paymentIntent.id,
+        })
         .eq("id", orderId);
+
+
       if (!order.email_sent && email) {
         await sendBookingConfirmationEmail({
           to: email,

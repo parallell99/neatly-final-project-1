@@ -38,6 +38,11 @@ export default function CreditCardCheckout({
   const confirmStripePayment = async () => {
     if (!stripe || !clientSecret) return;
 
+    console.log("selectedCardId:", selectedCardId);
+    console.log("clientSecret:", clientSecret);
+    console.log("Intent ID:", clientSecret.split("_secret")[0]);
+    console.log("Stripe object:", stripe);
+
     setIsLoading(true);
 
     try {
@@ -50,6 +55,29 @@ export default function CreditCardCheckout({
         setErrorMessage(error.message);
         onConfirm?.({ success: false });
       } else if (paymentIntent?.status === "succeeded") {
+        // อัปเดตสถานะ order ให้เหมือนกรณีชำระเงินสด
+        try {
+          const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+          if (token && orderId) {
+            await axios.patch(
+              "/api/booking/update-payment-status",
+              {
+                orderId,
+                status: "paid",
+                paymentMethod: "card",
+              },
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+          }
+        } catch (updateErr) {
+          console.error("Failed to update order status after card payment:", updateErr);
+        }
+
         onConfirm?.({
           success: true,
           paymentMethod: "Credit Card",

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import Button from "@/components/ui/buttons/buttons";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
+import axios from "axios";
 
 export default function CheckoutConfirm({
   orderId,
@@ -37,10 +38,38 @@ export default function CheckoutConfirm({
     }
 
     if (paymentIntent?.status === "succeeded") {
+      const cardLastDigits =
+        paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ??
+        paymentIntent?.payment_method?.card?.last4 ??
+        "4242";
+
+      // อัปเดตสถานะ order ใน DB ให้เหมือน flow cash / saved card
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        if (token && orderId) {
+          await axios.patch(
+            "/api/booking/update-payment-status",
+            {
+              orderId,
+              status: "paid",
+              paymentMethod: "card",
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        }
+      } catch (updateErr) {
+        console.error("Failed to update order status after new card payment:", updateErr);
+      }
+
       onConfirm?.({
         success: true,
         paymentMethod: "Credit Card",
-        cardLastDigits: paymentIntent?.payment_method?.card?.last4 ?? "4242",
+        cardLastDigits,
       });
     }
   };

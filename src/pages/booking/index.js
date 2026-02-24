@@ -13,6 +13,7 @@ import PaymentMethodForm from "@/components/booking/PaymentMethodForm";
 import PaymentFailed from "@/components/booking/PaymentFailed";
 import PaymentSuccess from "@/components/booking/PaymentSuccess";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
+import BookingExpiredModal from "@/components/booking/BookingExpiredModal";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
@@ -30,6 +31,9 @@ export default function BookingPage() {
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [cardLastDigits, setCardLastDigits] = useState("888");
   const { roomId } = router.query;
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
+  const [expiresAt, setExpiresAt] = useState(null);
+  const [hasMarkedExpired, setHasMarkedExpired] = useState(false);
 
   //ทดสอบ status
   const [orderId, setOrderId] = useState(
@@ -78,6 +82,86 @@ export default function BookingPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
+
+  // 1) ดึง expires_at ครั้งแรกจาก server
+  useEffect(() => {
+    if (!orderId || expiresAt || hasMarkedExpired) return;
+
+    const checkExpiration = async () => {
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const params = new URLSearchParams();
+        params.set("orderId", orderId);
+
+        const res = await fetch(
+          `/api/booking/order-detail?${params.toString()}`,
+          {
+            headers: token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                }
+              : undefined,
+          }
+        );
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const expiresAtStr = data?.order?.expires_at;
+        if (!expiresAtStr) return;
+
+        const parsed = new Date(expiresAtStr);
+        if (Number.isNaN(parsed.getTime())) return;
+
+        setExpiresAt(parsed.toISOString());
+      } catch (err) {
+        console.error("Failed to check booking expiration:", err);
+      }
+    };
+
+    checkExpiration();
+  }, [orderId, expiresAt, hasMarkedExpired]);
+
+  // 2) ใช้ real-time timer ฝั่ง client ตรวจว่าเลยเวลาแล้วหรือยัง
+  useEffect(() => {
+    if (!expiresAt || hasMarkedExpired) return;
+
+    const intervalId = setInterval(async () => {
+      const now = new Date();
+      const exp = new Date(expiresAt);
+      if (Number.isNaN(exp.getTime())) return;
+
+      if (now > exp && !hasMarkedExpired) {
+        setHasMarkedExpired(true);
+
+        try {
+          const token =
+            typeof window !== "undefined" ? localStorage.getItem("token") : null;
+          if (token && orderId) {
+            await fetch("/api/booking/update-payment-status", {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                orderId,
+                status: "expired",
+                paymentMethod: null,
+              }),
+            });
+          }
+        } catch (err) {
+          console.error("Failed to update expired status:", err);
+        }
+
+        setShowExpiredModal(true);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [expiresAt, hasMarkedExpired, orderId]);
 
   // Show Payment Success UI if payment succeeded
   if (paymentSuccess) {
@@ -164,6 +248,17 @@ export default function BookingPage() {
           </div>
         </div>
       </div>
+      <BookingExpiredModal
+        isOpen={showExpiredModal}
+        onGoBack={() => {
+          setShowExpiredModal(false);
+          router.push("/booking");
+        }}
+        onGoHome={() => {
+          setShowExpiredModal(false);
+          router.push("/");
+        }}
+      />
     </div>
   );
 }
