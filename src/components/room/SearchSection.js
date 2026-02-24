@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
+import axios from "axios";
 import { format, addDays, isLastDayOfMonth, addMonths } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -11,11 +12,14 @@ import {
 } from "@/components/ui/popover";
 import RoomsGuestsSelector from "@/components/ui/RoomsGuestsSelector";
 
-export default function SearchSection() {
+export default function SearchSection({ onOrdersChange, onLoadingChange }) {
   const [date, setDate] = useState({
     from: undefined,
     to: undefined,
   });
+
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [openCheckIn, setOpenCheckIn] = useState(false);
   const [openCheckOut, setOpenCheckOut] = useState(false);
@@ -40,6 +44,8 @@ export default function SearchSection() {
         setShowBar(false);
       } else {
         setShowBar(true);
+        console.log("setShowBar");
+        
       }
       setLastScrollY(window.scrollY);
     };
@@ -48,28 +54,42 @@ export default function SearchSection() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const handleSearch = () => {
-    console.log({
-      checkIn: date?.from,
-      checkOut: date?.to,
-      rooms: numRooms,
-      adults: numAdults,
-      kids: numKids,
-    });
-  };
+  const handleSearch = async () => {
+    const checkInFormatted = date?.from ? format(date.from, "yyyy-MM-dd") : null;
+    const checkOutFormatted = date?.to ? format(date.to, "yyyy-MM-dd") : null;
+  
+    if (!checkInFormatted || !checkOutFormatted) return;
+  
+    try {
+      setSearchLoading(true);
+      onLoadingChange?.(true);
+      setError(null);
+      const response = await axios.get("/api/availablerooms/order", {
+        params: { checkIn: checkInFormatted, checkOut: checkOutFormatted },
+      });
 
+      const data = response.data.data;
+
+      // ส่งข้อมูล order กลับไปให้ RoomsList
+      if (onOrdersChange) {
+        onOrdersChange(data);
+      }
+    } catch (error) {
+      console.error("GET ORDERS ERROR:", error);
+      setError(error.response?.data?.error || "Failed to load orders");
+    } finally {
+      setSearchLoading(false);
+      onLoadingChange?.(false);
+    }
+  };
+ 
   return (
-    <section
-      className={`sticky top-0 z-40 transition-transform duration-300 ${
-        showBar ? "translate-y-0" : "-translate-y-full"
-      }`}
-    >
-      <div className="w-full bg-white shadow-md h-[156px] flex items-center">
-        <div className="w-full px-6 lg:px-[160px]">
-          <div className="flex items-end gap-6">
-            
+    <section className={`w-full sticky top-0 z-40 transition-transform duration-300 ease-in-out ${showBar ? "translate-y-0" : "-translate-y-full"}`}>
+      <div className="w-full bg-white shadow-md">
+        <div className="w-full px-4 md:px-6 lg:px-[160px] py-6 md:py-0 md:h-[156px] md:flex md:items-center">
+          <div className="w-full flex flex-col md:flex-row md:items-end gap-5 md:gap-6">  
             {/* Check In */}
-            <div className="flex-1">
+            <div className="w-full md:flex-1">
               <label className="block text-sm font-medium text-[#344054] mb-2">
                 Check In
               </label>
@@ -81,7 +101,7 @@ export default function SearchSection() {
                   >
                     <span>
                       {date?.from
-                        ? format(date.from, "EEE, dd MMM yyyy")
+                        ? format(date.from, "EEE, dd MMM yyyy") 
                         : "Select date"}
                     </span>
                     <CalendarIcon className="h-5 w-5 text-[#98A2B3] group-hover:text-orange-500 transition" />
@@ -91,7 +111,7 @@ export default function SearchSection() {
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={date?.from}
+                    selected={date?.from} 
                     month={checkInMonth}
                     onMonthChange={setCheckInMonth}
                     disabled={{ before: today }}
@@ -124,10 +144,10 @@ export default function SearchSection() {
             </div>
 
             {/* Dash */}
-            <div className="pb-3 text-gray-400 text-lg">-</div>
+            <div className="hidden md:block pb-3 text-gray-400 text-lg">-</div>
 
             {/* Check Out */}
-            <div className="flex-1">
+            <div className="w-full md:flex-1">
               <label className="block text-sm font-medium text-[#344054] mb-2">
                 Check Out
               </label>
@@ -195,7 +215,7 @@ export default function SearchSection() {
             </div>
 
             {/* Rooms & Guests */}
-            <div className="flex-1">
+            <div className="w-full md:flex-1">
               <label className="block text-sm font-medium text-[#344054] mb-2">
                 Rooms & Guests
               </label>
@@ -211,12 +231,17 @@ export default function SearchSection() {
             </div>
 
             {/* Search Button */}
-            <div className="w-[140px]">
+            <div className="w-full md:w-[140px] md:pb-0 pt-2 md:pt-0">
               <button
                 onClick={handleSearch}
-                className="w-full h-[48px] border border-orange-600 text-orange-600 rounded hover:bg-orange-600 hover:text-white transition font-medium"
+                disabled={searchLoading}
+                className={`w-full h-[48px] border border-orange-600 rounded transition font-medium ${
+                  searchLoading
+                    ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                    : "text-orange-600 hover:bg-orange-600 hover:text-white"
+                }`}
               >
-                Search
+                {searchLoading ? "Searching..." : "Search"}
               </button>
             </div>
 

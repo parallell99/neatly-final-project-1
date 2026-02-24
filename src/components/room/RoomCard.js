@@ -1,18 +1,17 @@
-import Image from "next/image";
 
 export default function RoomCard({ room, onClick }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[460px_1fr_280px] gap-10 py-12 px-6 border-b border-gray-200 items-start">
+    <article className="max-w-[1168px] grid grid-cols-1 md:grid-cols-[460px_1fr_280px] gap-10 py-12 px-6 border-b border-gray-200 items-start"> 
 
       {/* Image */}
       <div
-        className="relative w-full h-[300px] cursor-pointer"
+        className="relative w-full h-[300px] object-cover overflow-hidden cursor-pointer"
         onClick={onClick}
       >
-        <Image
-          src={room.images?.[0]}
+        <img
+          src={room.image_main}
           alt={room.title}
-          fill
+          loading="lazy"
           className="object-cover rounded-xl"
         />
       </div>
@@ -27,11 +26,11 @@ export default function RoomCard({ room, onClick }) {
         </h3>
 
         <div className="flex gap-3 text-sm text-gray-500 mb-4">
-          <span>{room.guests}</span>
+          <span>room.guests 0</span>
           <span>|</span>
-          <span>{room.bed}</span>
+          <span>{room.bed_type.name}</span>
           <span>|</span>
-          <span>{room.size}</span>
+          <span>room.size 32</span>
         </div>
 
         <p className="text-gray-600 text-sm leading-relaxed">
@@ -41,14 +40,14 @@ export default function RoomCard({ room, onClick }) {
 
       {/* Price Section */}
       <div className="flex flex-col items-start md:items-end">
-        {room.oldPrice && (
+        {room.price_per_night && (
           <p className="text-sm line-through text-gray-400 mb-1">
-            {room.oldPrice}
+            THB {room.price_per_night}
           </p>
         )}
 
         <p className="text-xl font-semibold">
-          {room.price}
+          room.price x promo
         </p>
 
         <p className="text-xs text-gray-500 mb-6 text-left md:text-right leading-tight">
@@ -66,6 +65,6 @@ export default function RoomCard({ room, onClick }) {
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
