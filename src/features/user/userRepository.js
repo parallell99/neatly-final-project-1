@@ -3,7 +3,8 @@ import connectionPool from "@/utils/db";
 async function findById(id) {
   const query = `
     SELECT id, username, first_name, last_name, phone, date_of_birth,
-           country, profile_image_url, role, created_at, updated_at
+       country, profile_image_url, role, stripe_customer_id,
+       created_at, updated_at
     FROM users
     WHERE id = $1
   `;

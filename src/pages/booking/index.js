@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useAuth } from "@/contexts/authentication";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import Navbar from "@/components/layout/navbar";
 import BookingProgress from "@/components/booking/BookingProgress";
 import BasicInformationForm from "@/components/booking/BasicInformationForm";
@@ -12,11 +14,14 @@ import PaymentFailed from "@/components/booking/PaymentFailed";
 import PaymentSuccess from "@/components/booking/PaymentSuccess";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
 
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+);
+
 export default function BookingPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
-  const [orderId] = useState(() => `order-${Date.now()}`);
   const [extras, setExtras] = useState([]);
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
@@ -24,6 +29,15 @@ export default function BookingPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [cardLastDigits, setCardLastDigits] = useState("888");
+  const { roomId } = router.query;
+
+  //ทดสอบ status
+  const [orderId, setOrderId] = useState(
+    "007d85da-d822-42c4-baa5-f1f7d14aca2e"
+  );
+
+  console.log("BOOKING PAGE orderId:", orderId);
+  
 
   const handlePromotionChange = ({ code, discount }) => {
     setPromotionCode(code);
@@ -54,6 +68,12 @@ export default function BookingPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const handleBackToPaymentDetail = () => {
+    setPaymentFailed(false);
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Scroll to top when step changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -65,6 +85,7 @@ export default function BookingPage() {
       <>
         <Navbar />
         <PaymentSuccess
+          orderId={orderId}
           extras={extras}
           promotionCode={promotionCode}
           promotionDiscount={promotionDiscount}
@@ -82,10 +103,12 @@ export default function BookingPage() {
     return (
       <>
         <Navbar />
+        <Elements stripe={stripePromise}>
         <PaymentFailed
-          onBackToHome={handleBackToHome}
-          onCheckBookingDetail={handleCheckBookingDetail}
+          onBackToPaymentDetail={handleBackToPaymentDetail}
+          orderId={orderId}
         />
+        </Elements>
       </>
     );
   }
@@ -95,7 +118,7 @@ export default function BookingPage() {
       <Navbar />
 
       <div className="flex-1 flex items-center justify-center">
-        <div className="max-w-[1440px] w-full lg:px-[165px] py-15">
+        <div className="w-full lg:max-w-[1440px] lg:mx-auto lg:px-[165px] py-15">
           <h1 className="headline-3-booking-title text-[44px] text-green-800 mb-6 mx-4 lg:mx-0 lg:text-[68px]">
             Booking Room
           </h1>
@@ -104,10 +127,17 @@ export default function BookingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6 mt-8">
             <div className="bg-white rounded-lg px-4 py-6 lg:p-8">
               {currentStep === 1 && (
-                <BasicInformationForm onNext={() => setCurrentStep(2)} />
+                <BasicInformationForm
+                  roomId={roomId}
+                  orderId={orderId}
+                  onNext={ () => {
+                    setCurrentStep(2);
+                  }}
+                />
               )}
               {currentStep === 2 && (
                 <SpecialRequestForm
+                  orderId={orderId}
                   onBack={() => setCurrentStep(1)}
                   onNext={() => setCurrentStep(3)}
                   onExtrasChange={setExtras}
@@ -129,11 +159,7 @@ export default function BookingPage() {
             </div>
 
             <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
-              <BookingDetailCard
-                extras={extras}
-                promotionCode={promotionCode}
-                promotionDiscount={promotionDiscount}
-              />
+              <BookingDetailCard orderId={orderId} />
             </div>
           </div>
         </div>

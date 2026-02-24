@@ -50,7 +50,7 @@ export default function CountrySelector({
           placeholder={placeholder}
           className={`w-full h-[48px] px-3 border rounded-[4px] text-[16px] font-normal shadow-none !ring-0 !ring-transparent !placeholder:text-[16px] !placeholder:text-gray-500 text-gray-500${
             disabled
-              ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+              ? "bg-gray-100 border-gray-400 text-gray-500 cursor-not-allowed"
               : `${
                   error
                     ? "bg-white"
