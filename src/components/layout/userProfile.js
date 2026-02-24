@@ -291,32 +291,54 @@ export default function UserProfile() {
         </section>
 
         {/* Profile Picture */}
-        <section className="flex flex-col items-center gap-4">
-          <h2 className="text-base font-medium text-gray-600 text-center">
+        <section className="flex flex-col items-center lg:items-start gap-4">
+          <h2 className="text-base font-medium text-gray-600 text-center lg:text-left">
             Profile Picture
           </h2>
-          <div className="relative inline-block w-fit">
-            <div className="w-32 h-32 rounded-lg border border-gray-300 overflow-hidden bg-gray-100 flex items-center justify-center">
+          <div className="flex flex-col items-start w-[167px] h-[167px]">
+            <label
+              htmlFor="userProfilePicture"
+              onDrop={onBoxDrop}
+              onDragOver={onBoxDragOver}
+              className={`
+                relative w-full max-w-xs aspect-square rounded-[4px]
+                flex flex-col items-center justify-center cursor-pointer
+                transition-all duration-200 overflow-hidden border
+                bg-gray-200 border-gray-300 hover:border-gray-400
+              `}
+            >
+              <input
+                ref={fileInputRef}
+                id="userProfilePicture"
+                type="file"
+                accept="image/*"
+                onChange={onFileChange}
+                className="hidden"
+                aria-label="Upload profile picture"
+              />
               {profileImageUrl ? (
-                <img
-                  src={profileImageUrl}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <img
+                    src={profileImageUrl}
+                    alt="Profile"
+                    className="w-full h-full object-cover object-center pointer-events-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={onRemoveProfilePicture}
+                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white shadow-lg hover:bg-red-500 cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95 z-10"
+                    aria-label="Remove profile picture"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </>
               ) : (
-                <span className="text-gray-400 text-sm">No photo</span>
+                <div className="relative z-10 text-[30px] text-orange-500 flex flex-col items-center">
+                  +
+                  <span className="text-orange-500 font-medium text-base">Upload photo</span>
+                </div>
               )}
-            </div>
-            {profileImageUrl && (
-              <button
-                type="button"
-                onClick={onRemoveProfilePicture}
-                className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
-                aria-label="Remove profile picture"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+            </label>
           </div>
           <Button
             type="submit"

@@ -1,13 +1,15 @@
+
 "use client";
 
 import React from "react";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/CountrySelector/combobox";
 import { countries } from "@/utils/dataCountries";
 
 export default function CountrySelector({
@@ -21,6 +23,7 @@ export default function CountrySelector({
   onChange,
   ...props
 }) {
+  // for react-hook-form support: set value back to '' (if undefined) and treat as controlled
   const selectedCountry = value ?? "";
   console.log(1);
   console.log(selectedCountry);
@@ -35,17 +38,17 @@ export default function CountrySelector({
           {label}
         </label>
       )}
-      <Select
-        value={selectedCountry || undefined}
+      <Combobox
+        value={selectedCountry}
         onValueChange={onChange}
         disabled={disabled}
-        required={required}
+        items={countries}
         {...props}
       >
-        <SelectTrigger
+        <ComboboxInput
           id={name}
           placeholder={placeholder}
-          className={`w-full border py-[24px] rounded-[4px] text-[16px] font-normal shadow-none !ring-0 !ring-transparent !placeholder:text-[16px] !placeholder:text-gray-500 text-gray-500${
+          className={`w-full h-[48px] px-3 border rounded-[4px] text-[16px] font-normal shadow-none !ring-0 !ring-transparent !placeholder:text-[16px] !placeholder:text-gray-500 text-gray-500${
             disabled
               ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
               : `${
