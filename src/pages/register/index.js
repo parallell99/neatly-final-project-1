@@ -13,6 +13,16 @@ import PhoneInput from "@/components/ui/PhoneInput/PhoneInput";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/authentication";
 import RegisterImage from "@/assets/images/9.jpg"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/booking/popover";
+import { CalendarIcon } from "lucide-react";
+import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
+import { Calendar } from "@/components/ui/booking/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 export default function Register() {
   const { fetchUser } = useAuth();
@@ -20,6 +30,7 @@ export default function Register() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [date, setDate] = useState(undefined);
   const fileInputRef = useRef(null);
 
   const {
@@ -47,6 +58,16 @@ export default function Register() {
       setPreviewImage(null);
     }
   }, [profilePicture]);
+
+  // เพิ่ม useEffect เพื่อ sync date state จาก watch
+  React.useEffect(() => {
+    const dob = watch("dateOfBirth");
+    if (dob) {
+      setDate(new Date(dob));
+    } else {
+      setDate(undefined);
+    }
+  }, [watch("dateOfBirth")]);
 
   const handleRemoveImage = () => {
     setPreviewImage(null);
@@ -110,15 +131,12 @@ export default function Register() {
 
         // 4️. ส่ง URL ไป backend เพื่อ update database
         await axios.patch("/api/users/avatar", {
-          userId,
           avatarUrl: publicUrl,
-        },
-          {
-            headers: token
-              ? { Authorization: `Bearer ${token}` }
-              : {},
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-        );
+        });
       }
 
       router.push("/");
@@ -238,23 +256,61 @@ export default function Register() {
                   control={control}
                   placeholder="Enter your phone number"
                   error={errors.phoneNumber}
+                  disableSearchIcon={true}
                   required
                   country="th"
                 />
 
 
-                {/* Date and Location Section */}
+                {/* Date of Birth - Popover + Calendar */}
+                <div className="w-full">
+                  <label
+                    htmlFor="dateOfBirth"
+                    className="block text-[16px] font-normal text-gray-900 mb-2"
+                  >
+                    Date of Birth
+                  </label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <ButtonCalendar
+                      id="dateOfBirth"
+                        variant="outline"
+                        className={cn(
+                          "w-full h-[50px] justify-between text-left text-[16px] font-normal text-gray-900 hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500",
+                          "data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0 ",
+                          !date && "text-muted-foreground",
+                          errors.dateOfBirth && "border-red"
+                        )}
+                      >
 
-                <DatePicker
-                  label="Date of Birth"
-                  name="dateOfBirth"
-                  placeholder="Select your date of birth"
-                  register={register}
-                  error={errors.dateOfBirth}
-                  setValue={setValue}
-                  watch={watch}
-                  required
-                />
+                        {date ? format(date, "PPP") : <span className="text-gray-600">Select your date of birth</span>}<CalendarIcon className="h-4 w-4 text-gray-500" />
+                      </ButtonCalendar>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-white shadow-md border ">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(selectedDate) => {
+                          setDate(selectedDate);
+                          setValue(
+                            "dateOfBirth",
+                            selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
+                            { shouldValidate: true }
+                          );
+                        }}
+                        disabled={(day) => day > new Date()}
+                        initialFocus
+                        classNames={{ day: "focus:outline-none focus:ring-0" }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  {errors.dateOfBirth && (
+                    <p className="mt-1 text-sm text-red">{errors.dateOfBirth.message}</p>
+                  )}
+                </div>
+
+
+
                 {/* Country selection */}
                 <CountrySelector
                   label="Country"
@@ -269,18 +325,19 @@ export default function Register() {
             </section>
 
             {/* Profile Picture Section */}
-            <section className="lg:grid grid-cols-2 lg:gap-[40px]">
-              <div className="flex flex-col items-center">
+            <section className=" lg:gap-[40px] ">
+              <h5 className="headline-5 text-gray-600 pb-[24px]">Profile Picture</h5>
+              <div className="flex flex-col items-start w-[167px] h-[167px] ">
                 <label
                   htmlFor="profilePicture"
                   className={`
                   relative w-full max-w-xs aspect-square 
-                  border border-gray-300 rounded-lg
+                   rounded-[4px] 
                   flex flex-col items-center justify-center cursor-pointer
-                  transition-all duration-200 overflow-hidden
+                  transition-all duration-200 overflow-hidden 
                   ${errors.profilePicture
                       ? 'border-red-500 bg-red-50'
-                      : 'bg-white hover:border-gray-400'
+                      : 'bg-gray-200 hover:border-gray-400'
                     }
                 `}
                 >
@@ -303,21 +360,8 @@ export default function Register() {
                     </>
                   ) : (
                     <>
-                      <div className="absolute inset-0 border-2 border-dashed border-gray-300 rounded-lg m-2" />
-                      <div className="relative z-10 flex flex-col items-center">
-                        <svg
-                          className="w-16 h-16 text-orange-500 mb-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
+                      <div className="relative z-10 text-[30px] text-orange-500 flex flex-col items-center ">
+                        +
                         <span className="text-orange-500 font-medium text-base">Upload photo</span>
                       </div>
                     </>
@@ -346,11 +390,11 @@ export default function Register() {
 
             {/* Submit Button */}
             <div className="contents lg:grid grid-cols-2 lg:gap-[40px]">
-            <Button buttonStyle="primary" buttonText={isSubmitting ? "Register..." : "Register"} type="submit" disabled={isSubmitting} />
+              <Button buttonStyle="primary" buttonText={isSubmitting ? "Register..." : "Register"} type="submit" disabled={isSubmitting}  className=""/>
             </div>
           </form>
         </main>
       </div>
-    </div>
+    </div >
   );
 }

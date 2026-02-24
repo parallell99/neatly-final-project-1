@@ -10,7 +10,6 @@ import {
   ComboboxList,
 } from "@/components/ui/CountrySelector/combobox";
 import { countries } from "@/utils/dataCountries";
-import ExclamationCircle from "@/assets/icons/exclamation-circle.svg";
 
 export default function CountrySelector({
   label,
@@ -25,6 +24,8 @@ export default function CountrySelector({
 }) {
   // for react-hook-form support: set value back to '' (if undefined) and treat as controlled
   const selectedCountry = value ?? "";
+  console.log(1);
+  console.log(selectedCountry);
 
   return (
     <div className="flex flex-col w-full gap-[4px]">
@@ -46,14 +47,14 @@ export default function CountrySelector({
         <ComboboxInput
           id={name}
           placeholder={placeholder}
-          className={`w-full border py-[24px] rounded-[4px] text-[16px] font-normal shadow-none hover-cursor-pointer !ring-0 !ring-transparent ${
+          className={`w-full border py-[24px] rounded-[4px] text-[16px] font-normal shadow-none !ring-0 !ring-transparent !placeholder:text-[16px] !placeholder:text-gray-500 text-gray-500${
             disabled
               ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
               : `${
                   error
                     ? "bg-white"
                     : "border-gray-300 bg-white hover:border-gray-400"
-                } placeholder:text-gray-500 text-black`
+                }  text-black`
           }`}
           autoComplete="off"
           required={required}
@@ -61,7 +62,7 @@ export default function CountrySelector({
           aria-describedby={error ? `${name}-error` : undefined}
         />
         
-        <ComboboxContent className={`mt-1 mb-1`}>
+        <ComboboxContent className={`mt-1 mb-1 `}>
           <ComboboxEmpty>
             <div className="text-sm text-gray-500">
               No countries found
