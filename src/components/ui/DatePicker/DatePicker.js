@@ -85,3 +85,15 @@ export default function DatePicker({
     </div>
   );
 }
+
+
+// <DatePicker
+// label="Date of Birth"
+// name="dateOfBirth"
+// placeholder="Select your date of birth"
+// register={register}
+// error={errors.dateOfBirth}
+// setValue={setValue}
+// watch={watch}
+// required
+// />
