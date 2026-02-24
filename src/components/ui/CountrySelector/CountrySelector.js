@@ -22,6 +22,8 @@ export default function CountrySelector({
   ...props
 }) {
   const selectedCountry = value ?? "";
+  console.log(1);
+  console.log(selectedCountry);
 
   return (
     <div className="flex flex-col w-full gap-[4px]">
@@ -42,26 +44,43 @@ export default function CountrySelector({
       >
         <SelectTrigger
           id={name}
-          className={`w-full h-[48px]! px-3 flex items-center justify-between gap-2 rounded-[4px] border text-left text-[16px] font-normal text-gray-900 ${
+          placeholder={placeholder}
+          className={`w-full border py-[24px] rounded-[4px] text-[16px] font-normal shadow-none !ring-0 !ring-transparent !placeholder:text-[16px] !placeholder:text-gray-500 text-gray-500${
             disabled
               ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
-              : error
-                ? "border-red-500 bg-white focus:ring-1 focus:ring-orange-500 focus:border-transparent"
-                : "border-gray-300 bg-white hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent"
-          } placeholder:text-gray-500`}
+              : `${
+                  error
+                    ? "bg-white"
+                    : "border-gray-300 bg-white hover:border-gray-400"
+                }  text-black`
+          }`}
+          autoComplete="off"
+          required={required}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
-        >
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {countries.map((country) => (
-            <SelectItem key={country} value={country}>
-              {country}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        />
+        
+        <ComboboxContent className={`mt-1 mb-1 `}>
+          <ComboboxEmpty>
+            <div className="text-sm text-gray-500">
+              No countries found
+            </div>
+          </ComboboxEmpty>
+          <ComboboxList>
+            {(country) => (
+              <ComboboxItem
+                key={country}
+                value={country}
+                className={`w-full text-sm rounded-[4px] focus:outline-none 
+                    ${selectedCountry === country ? "bg-gray-300" : ""}`}
+              >
+                <span>{country}</span>
+                
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
       {error && (
         <div className="flex items-center gap-2 mt-1">
           <p id={`${name}-error`} className="text-[14px] text-red">
