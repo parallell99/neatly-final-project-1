@@ -246,7 +246,7 @@ export default function UserProfile() {
                 type="tel"
                 placeholder="Phone number"
                 {...register("phone")}
-                className="w-full pl-[12px] pr-[12px] py-[12px] border border-gray-300 rounded-[4px] focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent bg-white text-black placeholder:text-gray-600"
+                className="w-full pl-[12px] pr-[12px] py-[12px] border border-gray-300 rounded-[4px] focus:outline-none focus:ring-0 focus:border-gray-400 bg-white text-black placeholder:text-gray-600"
               />
             </div>
             <div className="flex flex-col gap-1">
@@ -258,7 +258,7 @@ export default function UserProfile() {
                   <button
                     type="button"
                     className={cn(
-                      "w-full h-[48px] px-3 flex items-center justify-between gap-2 rounded-[4px] border bg-white text-left font-normal text-gray-900 border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent"
+                      "w-full h-[48px] px-3 flex items-center justify-between gap-2 rounded-[4px] border bg-white text-left font-normal text-gray-900 border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-0 focus:border-gray-400"
                     )}
                   >
                     <span>
