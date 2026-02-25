@@ -30,7 +30,7 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
   return (
     <div className="flex flex-col gap-3 pb-4">
       {messages.length === 0 && !isTyping && (
-        <p className="text-gray-500">พิมพ์ข้อความเพื่อเริ่มคุย (ลองพิมพ์ &quot;สวัสดี&quot;)</p>
+        <p className="text-gray-500">Welcome to Neatly Hotel! 🌟 I'm your virtual assistant. Choose a topic you'd like to know more about. I'm here to help! 😊</p>
       )}
       {messages.map((msg, i) => {
         if (msg.role === "bot" && msg.type === "loading") {
@@ -116,7 +116,7 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
                   : "bg-white text-gray-700"
               }`}
             >
-              {msg.text}
+              {msg.text || msg.message || msg.answer || ""}
             </div>
           </div>
         )

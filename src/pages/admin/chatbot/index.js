@@ -320,44 +320,46 @@ export default function ChatbotAdmin() {
               </div>
               {/* section Suggestion menu & Response */}
               <span className="h-[54px] headline-5 text-gray-600 flex items-end border-t border-gray-300">Suggestion menu & Response</span>
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                  {cards.map((card) => (
-                    <CardResponseMenu
-                      key={card.id}
-                      id={card.id}
-                      initialData={card.data}
-                      onSave={(topicPayload) => handleSaveCard(card.id, topicPayload)}
-                      onCancel={(opts) => removeCard(card.id, opts)}
-                      onEditingChange={(isEditing) => {
-                        if (!isEditing) setEditingCount((c) => c - 1)
-                      }}
-                      isSaving={savingCardId === card.id}
-                    />
-                  ))}
-                </SortableContext>
-                <DragOverlay>
-                  {activeCard ? (
-                    <CardResponseMenu
-                      id={activeCard.id}
-                      initialData={activeCard.data}
-                      isOverlay
-                    />
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-              {editingCount === 0 && (
-                <div className="flex gap-6">
-                  <button
-                    onClick={addCard}
-                    className="text-[16px] font-medium text-orange-500 w-[246px] h-[48px] border border-orange-500 rounded-[4px] hover:border-orange-400 hover:text-orange-400 active:border-orange-600 active:text-orange-600 cursor-pointer"
-                  >
-                    + Add Suggestion menu
-                  </button>
-                </div>
-              )}
-                </>
-              )}
+              <div className="flex flex-col gap-5">
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                  <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                    {cards.map((card) => (
+                      <CardResponseMenu
+                        key={card.id}
+                        id={card.id}
+                        initialData={card.data}
+                        onSave={(topicPayload) => handleSaveCard(card.id, topicPayload)}
+                        onCancel={(opts) => removeCard(card.id, opts)}
+                        onEditingChange={(isEditing) => {
+                          if (!isEditing) setEditingCount((c) => c - 1)
+                        }}
+                        isSaving={savingCardId === card.id}
+                      />
+                    ))}
+                  </SortableContext>
+                  <DragOverlay>
+                    {activeCard ? (
+                      <CardResponseMenu
+                        id={activeCard.id}
+                        initialData={activeCard.data}
+                        isOverlay
+                      />
+                    ) : null}
+                  </DragOverlay>
+                </DndContext>
+                {editingCount === 0 && (
+                  <div className="flex gap-6">
+                    <button
+                      onClick={addCard}
+                      className="text-[16px] font-medium text-orange-500 w-[246px] h-[48px] border border-orange-500 rounded-[4px] hover:border-orange-400 hover:text-orange-400 active:border-orange-600 active:text-orange-600 cursor-pointer"
+                    >
+                      + Add Suggestion menu
+                    </button>
+                  </div>
+                )}
+              </div>
+                  </>
+                )}
             </div>
           </div>
         </div>
