@@ -76,6 +76,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
   const [replyMessageError, setReplyMessageError] = useState(false)
 
   const [hasError, setHasError] = useState(!isSaved)
+  const [isExpanded, setIsExpanded] = useState(!isSaved)
 
   const addOption = () => {
     setOptions((prev) => [...prev, { option: "", details: "" }])
@@ -128,6 +129,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
 
     if (hasErrorCycle) return
     setHasError(false)
+    setIsExpanded(false)
     onEditingChange?.(false)
 
     const topicPayload = {
@@ -169,6 +171,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
     setOptionReplyTitleError(false)
     setReplyMessageError(false)
     setHasError(false)
+    setIsExpanded(false)
   }
 
   const handleDelete = () => setShowDeleteDialog(true)
@@ -223,10 +226,37 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
       ref={isOverlay ? undefined : setNodeRef}
       style={isOverlay ? undefined : { transform: CSS.Transform.toString(transform), transition }}
       {...(isOverlay ? {} : attributes)}
-      className={`bg-gray-100 p-6 flex gap-4 rounded-[8px] text-gray-900 hover:bg-gray-200 ${isOverlay ? "shadow-2xl cursor-grabbing opacity-80" : ""} ${hasError ? "border" : ""}`}
+      className={`bg-gray-100 flex gap-4 rounded-[8px] text-gray-900 hover:bg-gray-200 ${isOverlay ? "shadow-2xl cursor-grabbing opacity-80" : ""} ${hasError ? "border" : ""} ${isExpanded? "p-6":"p-2"}`}
     >
       {/* fields */}
-      <div className="flex flex-col gap-6 flex-1">
+      <div className="flex flex-col gap-6 flex-1 pl-3">
+        {/* Accordion header — visible when saved & not editing */}
+        {isSaved && !hasError && (
+          <div
+            className="flex items-center gap-4 cursor-pointer select-none min-h-[48px]"
+            onClick={() => setIsExpanded((prev) => !prev)}
+          >
+            <span className="body-1 font-semibold! truncate flex-1 text-gray-900">{topic || "Untitled"}</span>
+            {replyFormat && (
+              <span className="shrink-0 body-2 px-3 py-1 rounded-full bg-orange-100 text-orange-600 font-medium!">
+                {FORMAT_REVERSE[replyFormat] ?? replyFormat}
+              </span>
+            )}
+            <svg
+              className={`w-5 h-5 shrink-0 text-gray-500 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        )}
+
+        {/* Detail content — visible when expanded or editing */}
+        {(isExpanded || hasError || !isSaved) && (
+          <>
         <div className="flex gap-10">
           <div className="flex flex-col body-1 gap-1 w-[50%]">
             <span>Topic *</span>
@@ -372,9 +402,11 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
             <button className="body-1 font-semibold text-gray-600 px-4 py-2 rounded-[4px] hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleCancel} disabled={isSaving}>Cancel</button>
           </div>
         )}
+          </>
+        )}
       </div>
 
-      <div className="flex flex-col items-center gap-3 pt-1">
+      <div className={`flex flex-col gap-2 items-center pt-1 ${isExpanded? "" : "flex-row"}`}>
         {/* Drag Icon */}
         <div
           {...listeners}
@@ -386,7 +418,7 @@ export default function CardResponseMenu({ id, onSave, onCancel, onEditingChange
         {/* Edit Button */}
         <button
           type="button"
-          onClick={() => setHasError(true)}
+          onClick={() => { setHasError(true); setIsExpanded(true) }}
           className="cursor-pointer p-1.5 border-0 bg-transparent rounded-md hover:bg-blue-50 transition-all duration-200 active:scale-90"
         >
           <img src={PencilEditIcon} className="w-5 h-5" alt="Edit" />

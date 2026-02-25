@@ -3,13 +3,8 @@ import axios from "axios"
 import ChatbotLogo from "@/assets/icons/chatbot_inside_logo.svg"
 import CirLogo from "@/assets/icons/circlelogo-chatbot.svg?url"
 import StarLogo from "@/assets/icons/starlogo-chatbot.svg?url"
-import SendLogo from "@/assets/icons/send.svg?url"
+import SendLogo from "@/assets/icons/send.svg"
 import { ChatbotResponse } from "@/components/layout/chatbot/ChatbotResponse.js"
-
-// ตัวอย่างคำที่ตั้งไว้ → คำตอบอัตโนมัติ
-const AUTO_REPLIES = {
-  สวัสดี: "สวัสดีจ้า",
-}
 
 export default function ChatbotWindow({ onClose }) {
   const [messages, setMessages] = useState([])
@@ -17,6 +12,8 @@ export default function ChatbotWindow({ onClose }) {
   const [topics, setTopics] = useState([])
   const [isTyping, setIsTyping] = useState(false)
   const chatScrollRef = useRef(null)
+  // เก็บ history ในรูปแบบที่ OpenRouter ต้องการ [{ role, content }]
+  const aiHistoryRef = useRef([])
 
   useEffect(() => {
     const el = chatScrollRef.current
@@ -33,18 +30,33 @@ export default function ChatbotWindow({ onClose }) {
       .catch(() => setTopics([]))
   }, [])
 
-  function handleSend() {
+  async function handleSend() {
     const text = inputValue.trim()
-    if (!text) return
+    if (!text || isTyping) return
     setInputValue("")
     setMessages((prev) => [...prev, { role: "user", text }])
-    const reply = AUTO_REPLIES[text]
-    if (reply) {
-      setIsTyping(true)
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "bot", text: reply }])
-        setIsTyping(false)
-      }, 1000)
+    setIsTyping(true)
+
+    try {
+      const res = await axios.post("/api/chatbot/ai", {
+        message: text,
+        history: aiHistoryRef.current,
+      })
+      const data = res.data
+
+      // อัปเดต history สำหรับรอบถัดไป — ส่งแค่ text ธรรมดา ไม่ใช่ JSON string
+      const assistantContent = data.text ?? data.reply_title ?? ""
+      aiHistoryRef.current = [
+        ...aiHistoryRef.current,
+        { role: "user", content: text },
+        { role: "assistant", content: assistantContent },
+      ]
+
+      setMessages((prev) => [...prev, { role: "bot", ...data }])
+    } catch {
+      setMessages((prev) => [...prev, { role: "bot", type: "message", text: "ขออภัย AI Chatbot ใช้งานไม่ได้ในขณะนี้ กรุณากดใช้เมนูด้านล่างแทนค่ะ" }])
+    } finally {
+      setIsTyping(false)
     }
   }
 
@@ -118,7 +130,7 @@ export default function ChatbotWindow({ onClose }) {
       <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onClose}>
       </div>
       {/* Chat window */}
-      <div className="fixed bottom-0 left-0 right-0 h-[calc(831/871*100%)] rounded-t-[8px] lg:bottom-26 lg:right-6 lg:left-auto lg:w-[calc(454/1440*100%)] lg:h-[calc(625/1000*100%)] lg:max-h-[900px] lg:max-w-[640px] lg:rounded-xl bg-white flex flex-col z-50">
+      <div className="fixed bottom-0 left-0 right-0 h-[calc(831/871*100%)] rounded-t-[8px] lg:bottom-26 lg:right-6 lg:left-auto lg:w-[calc(454/1440*100%)] lg:h-[calc(625/1000*100%)] lg:max-h-[850px] lg:max-w-[600px] lg:rounded-xl bg-white flex flex-col z-50">
         {/* head */}
         <section className="flex items-center pl-4 h-[60px] justify-between">
           <div className="flex items-center gap-2">
@@ -154,14 +166,14 @@ export default function ChatbotWindow({ onClose }) {
         {/* write message */}
         <section className="flex items-center p-4 gap-2 shadow-[0px_-8px_12px_6px_#0000000D] relative z-10">
           <input
-            className="flex-1 rounded-4xl px-3 body-1 h-[33px] border border-white outline-none focus:border-gray-500"
+            className="flex-1 rounded-xl px-3 body-1 h-[33px] border border-white outline-none focus:border-gray-500"
             placeholder="Write your message"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
           />
           <button type="button" onClick={handleSend} className="shrink-0" aria-label="Send">
-            <img src={SendLogo} className="text-orange-500 cursor-pointer w-8 h-8" alt="" />
+            <SendLogo className="text-orange-500 cursor-pointer w-8 h-8 transition-transform active:text-orange-600" alt="" />
           </button>
         </section>
       </div>
