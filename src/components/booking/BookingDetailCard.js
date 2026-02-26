@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import CsBookingIcon from "@/assets/icons/cs_booking.svg?url";
+import CsBookingIcon from "@/assets/icons/cs_booking.svg";
 
 function formatDateRange(checkIn, checkOut) {
   if (!checkIn || !checkOut) return "—";
@@ -135,11 +135,8 @@ export default function BookingDetailCard({ orderId }) {
         {/* Header */}
         <div className="flex items-center justify-between mb-6 p-4 bg-green-800 rounded-t-lg">
           <div className="w-full flex items-center gap-2">
-            <img
-              src={CsBookingIcon}
-              width={24}
-              height={24}
-              className="text-green-500"
+            <CsBookingIcon
+              className="text-green-500 w-[24px] h-[24px]"
               alt="Booking detail"
               aria-hidden
             />

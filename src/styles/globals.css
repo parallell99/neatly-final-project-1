@@ -269,6 +269,13 @@ html, body {
   letter-spacing: -0.02em;
 }
 
+.headline-3-refund {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+
 .headline-4 {
   font-family: var(--font-sans);
   font-size: 28px;
