@@ -21,27 +21,35 @@ function formatPrice(num) {
 }
 
 function mapApiRoomToRoomData(apiRoom) {
+  const title = apiRoom.name ?? apiRoom.title ?? "Room";
   const mainImg = apiRoom.image_main || null;
-  const galleryUrls = (apiRoom.image_gallery || []).map((g) => g.image_url || g.image);
-  let roomImages = [mainImg, ...galleryUrls].filter(Boolean).map((src) => ({ src: String(src), alt: apiRoom.title }));
-  if (roomImages.length === 0) roomImages = [{ src: "", alt: apiRoom.title }];
+  const galleryUrls = (apiRoom.image_gallery || []).map((g) => g.image_url ?? g.image).filter(Boolean);
+  let roomImages = [mainImg, ...galleryUrls].filter(Boolean).map((src) => ({ src: String(src), alt: title }));
+  if (roomImages.length === 0) roomImages = [{ src: "", alt: title }];
+
+  const sizeLabel = apiRoom.room_size != null ? `${Number(apiRoom.room_size)} sqm` : (apiRoom.location ?? "—");
+
+  const hasPromotion =
+    apiRoom.promotion_price != null && !Number.isNaN(Number(apiRoom.promotion_price));
 
   return {
-    title: apiRoom.title ?? "Room",
+    title,
     roomNumber: apiRoom.room_number ?? "",
     description: apiRoom.description ?? "",
     statistics: {
       guestAdult: apiRoom.room_guest_adult ?? null,
       guestKid: apiRoom.room_guest_kid ?? null,
       bed: apiRoom.bed_type?.name ?? "—",
-      size: apiRoom.location ?? "—",
+      size: sizeLabel,
     },
     pricing: {
-      original: formatPrice(apiRoom.price_per_night),
-      current: formatPrice(apiRoom.price_per_night),
+      original: hasPromotion ? formatPrice(apiRoom.price_per_night) : null,
+      current: hasPromotion
+        ? formatPrice(apiRoom.promotion_price)
+        : formatPrice(apiRoom.price_per_night),
     },
-    amenities: (apiRoom.amenities || []).map((a) => a.name || a).filter(Boolean),
-    imageAlt: `${apiRoom.title ?? "Room"} Room`,
+    amenities: (apiRoom.amenities || []).map((a) => (typeof a === "object" ? a.name : a)).filter(Boolean),
+    imageAlt: `${title} Room`,
     roomImages,
   };
 }
@@ -77,7 +85,7 @@ export default function RoomDetail({ roomId }) {
     let cancelled = false;
     setLoading(true);
     setFetchError(null);
-    fetch("/api/chatbot/all-room")
+    fetch("/api/rooms/rooms-all")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load room");
         return res.json();
@@ -85,9 +93,8 @@ export default function RoomDetail({ roomId }) {
       .then((data) => {
         if (cancelled) return;
         const list = Array.isArray(data?.data) ? data.data : [];
-        const current = list.find(
-          (r) => createSlug(r.title) === roomId || String(r.id) === roomId
-        );
+        const slugOrId = (r) => createSlug(r.title ?? r.name) === roomId || String(r.id) === roomId;
+        const current = list.find(slugOrId);
         if (!current) {
           setRoomData(null);
           setOtherRoomsList([]);
@@ -98,20 +105,20 @@ export default function RoomDetail({ roomId }) {
         const otherRoomsList = [];
         const sameTypeRoomsList = [];
         list.forEach((r) => {
-          const isCurrent = createSlug(r.title) === roomId || String(r.id) === roomId;
-          if (isCurrent) return;
+          if (slugOrId(r)) return;
           const base = {
-            name: r.title ?? r.room_type?.name ?? "Room",
-            roomTypeName: r.room_type?.name ?? "",
-            slug: createSlug(r.title) || String(r.id),
+            name: r.name ?? r.room_type?.name ?? r.title ?? "Room",
+            roomTypeName: r.room_type?.name ?? r.name ?? "",
+            slug: createSlug(r.title ?? r.name) || String(r.id),
             image: r.image_main || "",
           };
           otherRoomsList.push(base);
           if (r.room_type?.id === current.room_type?.id) {
-            const amenityList = (r.amenities || []).map((a) => a.name || a).filter(Boolean);
+            const amenityList = (r.amenities || []).map((a) => (typeof a === "object" ? a.name : a)).filter(Boolean);
             const mainImg = r.image_main || "";
-            const galleryUrls = (r.image_gallery || []).map((g) => g.image_url || g.image).filter(Boolean);
+            const galleryUrls = (r.image_gallery || []).map((g) => g.image_url ?? g.image).filter(Boolean);
             const images = mainImg ? [mainImg, ...galleryUrls.filter((u) => u !== mainImg)] : galleryUrls;
+            const otherSize = r.room_size != null ? `${Number(r.room_size)} sqm` : (r.location ?? "");
             sameTypeRoomsList.push({
               ...base,
               images: images.length > 0 ? images : [mainImg].filter(Boolean),
@@ -120,7 +127,7 @@ export default function RoomDetail({ roomId }) {
               guestAdult: r.room_guest_adult ?? null,
               guestKid: r.room_guest_kid ?? null,
               bed: r.bed_type?.name ?? "",
-              location: r.location ?? "",
+              location: otherSize || (r.location ?? ""),
               pricePerNight: r.price_per_night,
               amenities: amenityList.length > 0 ? amenityList : (currentMapped.amenities || []),
             });
@@ -456,67 +463,57 @@ export default function RoomDetail({ roomId }) {
                   <h3 className="font-serif headline-3 text-gray-900 mb-4">{block.name}</h3>
                 )}
 
-                {/* Description */}
-                {block.description && (
-                  <p className={`font-sans body-1 text-gray-900 ${block.isMain ? "mb-10 lg:mb-12 lg:mt-2 lg:pr-80" : "mb-8 lg:mb-10"}`}>
-                    {block.description}
-                  </p>
-                )}
-
-                {/* Specs: guest adult/kid (icons) + bed (icon) - ทั้งห้องหลักและห้องประเภทเดียวกัน */}
-                {(block.bed || block.guestAdult != null || block.guestKid != null) && (
-                  <div className={`flex flex-wrap items-center gap-4 text-gray-900 font-sans body-1 ${block.isMain ? "mb-8 lg:mb-12" : "mb-8 lg:mb-10"}`}>
-                    <>
-                      <span className="flex items-center gap-1.5" title="Adults">
-                        <svg className="w-5 h-5 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                        <span>{Number(block.guestAdult) || 0}</span>
-                      </span>
-                      <span className="flex items-center gap-1.5" title="Children">
-                        <svg className="w-4 h-4 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-                        <span>{Number(block.guestKid) || 0}</span>
-                      </span>
-                      {block.bed && <span className="text-gray-300">|</span>}
-                    </>
-                    {block.bed && (
-                      <span className="flex items-center gap-1.5">
-                        <svg className="w-5 h-5 text-gray-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2 4v16" /><path d="M2 8h18a2 2 0 0 1 2 2v10" /><path d="M2 17h20" /><path d="M6 8V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4" /></svg>
-                        <span>{block.bed}</span>
-                      </span>
+                {/* Desktop: left = description + specs, right = prices + button. Mobile: stacked. */}
+                <div className={`mb-10 lg:mb-12 pb-8 lg:pb-10 border-b border-gray-200 flex flex-col lg:flex-row lg:items-start lg:justify-between lg:gap-8`}>
+                  {/* Left column (desktop): description + specs */}
+                  <div className={`flex-1 min-w-0 ${block.isMain ? "lg:pr-8" : ""}`}>
+                    {block.description && (
+                      <p className={`font-sans body-1 text-gray-700 ${block.isMain ? "mb-6 lg:mt-2" : "mb-6"}`}>
+                        {block.description}
+                      </p>
+                    )}
+                    {(block.bed || block.guestAdult != null || block.guestKid != null || block.location) && (
+                      <div className="flex flex-wrap items-center gap-2 text-gray-600 font-sans text-sm lg:body-1">
+                        <span>{Number(block.guestAdult) || 0} Person</span>
+                        {block.bed && <span className="text-gray-300">|</span>}
+                        {block.bed && <span>{block.bed}</span>}
+                        {block.location && block.location !== "—" && <span className="text-gray-300">|</span>}
+                        {block.location && block.location !== "—" && <span>{block.location}</span>}
+                      </div>
                     )}
                   </div>
-                )}
-
-                {/* Pricing + Book Now */}
-                <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-10 lg:mb-12 pb-8 lg:pb-10 border-b border-gray-200 ${block.isMain ? "lg:flex lg:items-start lg:justify-between lg:gap-8" : ""}`}>
-                  <div className="flex flex-col">
-                    {block.priceCurrent != null ? (
-                      <>
-                        {block.priceOriginal && <span className="font-sans body-1 text-gray-700 line-through mb-1">{block.priceOriginal}</span>}
-                        <span className="font-sans headline-5 lg:text-3xl font-semibold text-gray-900">{block.priceCurrent}</span>
-                      </>
-                    ) : (block.pricePerNight != null && !Number.isNaN(Number(block.pricePerNight))) ? (
-                      <>
-                        <span className="font-sans body-1 text-gray-700 line-through mb-1">{formatPrice(block.pricePerNight)}</span>
-                        <span className="font-sans headline-5 lg:text-3xl font-semibold text-gray-900">{formatPrice(block.pricePerNight)}</span>
-                      </>
-                    ) : (
-                      <span className="font-sans body-1 text-gray-700">Price on request</span>
-                    )}
+                  {/* Right column (desktop): prices stacked + button below */}
+                  <div className="flex flex-row items-center justify-between gap-4 mt-6 lg:mt-0 lg:flex-col lg:items-end lg:justify-start lg:shrink-0">
+                    <div className="flex flex-col min-w-0">
+                      {block.priceCurrent != null ? (
+                        <>
+                          {block.priceOriginal && <span className="font-sans text-sm text-gray-500 line-through mb-0.5">{block.priceOriginal}</span>}
+                          <span className="font-sans text-xl lg:text-3xl font-semibold text-gray-900 leading-tight">{block.priceCurrent}</span>
+                        </>
+                      ) : (block.pricePerNight != null && !Number.isNaN(Number(block.pricePerNight))) ? (
+                        <>
+                          <span className="font-sans text-sm text-gray-500 line-through mb-0.5">{formatPrice(block.pricePerNight)}</span>
+                          <span className="font-sans text-xl lg:text-3xl font-semibold text-gray-900 leading-tight">{formatPrice(block.pricePerNight)}</span>
+                        </>
+                      ) : (
+                        <span className="font-sans body-1 text-gray-700">Price on request</span>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      buttonStyle="primary"
+                      buttonText="Book Now"
+                      className="h-12 min-w-[120px] shrink-0 rounded-lg bg-[#D25F2E] hover:bg-[#b85226] text-white font-sans font-medium px-6 lg:px-8 lg:h-12 lg:mt-4 lg:w-full lg:min-w-[160px]"
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          window.location.href = "/login";
+                          return;
+                        }
+                        const query = block.slug ? `?room=${block.slug}` : "";
+                        window.location.href = `/room${query}`;
+                      }}
+                    />
                   </div>
-                  <Button
-                    type="button"
-                    buttonStyle="primary"
-                    buttonText="Book Now"
-                    className="h-[48px] lg:w-auto lg:px-8"
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        window.location.href = "/login";
-                        return;
-                      }
-                      const query = block.slug ? `?room=${block.slug}` : "";
-                      window.location.href = `/room${query}`;
-                    }}
-                  />
                 </div>
 
                 {/* Room Amenities */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 function createSlug(title) {
@@ -9,16 +9,22 @@ function createSlug(title) {
 }
 
 function mapApiRoomToCard(room) {
-  const main = room.image_main || null;
-  const gallery = (room.image_gallery || []).map((g) => g.image_url).filter(Boolean);
+  const main =
+    room.image_main ??
+    room.main_image ??
+    room.image ??
+    (room.image_gallery?.[0] && (room.image_gallery[0].image_url ?? room.image_gallery[0].url)) ??
+    null;
+  const gallery = (room.image_gallery || []).map((g) => g.image_url ?? g.url).filter(Boolean);
   const images = main ? [main, ...gallery.filter((url) => url !== main)] : gallery;
+  const displayName = room.room_type?.name ?? room.name ?? room.title ?? "Room";
   return {
     id: room.id,
-    name: room.room_type?.name ?? room.title ?? "Room",
-    slug: createSlug(room.title) || String(room.id),
-    roomType: room.room_type?.name ?? room.title ?? "Room",
+    name: displayName,
+    slug: createSlug(room.title ?? room.name) || String(room.id),
+    roomType: displayName,
     image: main || gallery[0] || null,
-    images: images.length > 0 ? images : [main].filter(Boolean),
+    images: images.length > 0 ? images : (main ? [main] : []),
   };
 }
 
@@ -37,39 +43,7 @@ const PLACEHOLDER_IMG =
 
 function RoomCard({ room, className = "", fill = false }) {
   const cardHeight = fill ? "h-full" : "min-h-[280px] md:min-h-[360px]";
-  const images = (room.images && room.images.length > 0
-    ? room.images
-    : room.image
-      ? [room.image]
-      : [PLACEHOLDER_IMG]
-  ).filter(Boolean);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const isSlider = images.length > 1;
-
-  const goPrev = useCallback(
-    (e) => {
-      e?.preventDefault?.();
-      e?.stopPropagation?.();
-      setCurrentIndex((i) => (i === 0 ? images.length - 1 : i - 1));
-    },
-    [images.length]
-  );
-  const goNext = useCallback(
-    (e) => {
-      e?.preventDefault?.();
-      e?.stopPropagation?.();
-      setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1));
-    },
-    [images.length]
-  );
-
-  useEffect(() => {
-    if (!isSlider) return;
-    const id = setInterval(() => {
-      setCurrentIndex((i) => (i === images.length - 1 ? 0 : i + 1));
-    }, 5000);
-    return () => clearInterval(id);
-  }, [isSlider, images.length]);
+  const mainImage = room.image || (room.images && room.images[0]) || PLACEHOLDER_IMG;
 
   return (
     <Link
@@ -77,63 +51,17 @@ function RoomCard({ room, className = "", fill = false }) {
       className={`relative overflow-hidden group block ${fill ? "h-full w-full min-h-0" : `w-full ${cardHeight}`} ${className}`}
     >
       <div className="absolute inset-0 overflow-hidden">
-        <div
-          className="flex h-full w-full transition-transform duration-500 ease-out"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        >
-          {images.map((src, i) => (
-            <div key={i} className="h-full w-full shrink-0 flex-[0_0_100%]">
-              <img
-                src={src}
-                alt={`${room.name} ${i + 1}`}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-          ))}
+        <div className="h-full w-full">
+          <img
+            src={mainImage}
+            alt={room.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         </div>
         <div
           className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent pointer-events-none"
           aria-hidden
         />
-        {isSlider && (
-          <>
-            <button
-              type="button"
-              onClick={goPrev}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-50 w-9 h-9 rounded-full border border-white/80 bg-black/30 flex items-center justify-center text-white hover:bg-black/50 transition-colors"
-              aria-label="Previous image"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={goNext}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-50 w-9 h-9 rounded-full border border-white/80 bg-black/30 flex items-center justify-center text-white hover:bg-black/50 transition-colors"
-              aria-label="Next image"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
-              {images.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setCurrentIndex(i);
-                  }}
-                  className={`w-2 h-2 rounded-full transition-colors ${i === currentIndex ? "bg-white" : "bg-white/50"}`}
-                  aria-label={`Go to slide ${i + 1}`}
-                />
-              ))}
-            </div>
-          </>
-        )}
       </div>
       <div
         className={`relative z-10 flex flex-col justify-end p-6 md:p-8 lg:p-10 ${fill ? "h-full min-h-0" : `h-full ${cardHeight}`}`}
@@ -159,7 +87,7 @@ export default function HeroRoomSuit() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetch("/api/chatbot/all-room")
+    fetch("/api/rooms/rooms-all")
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load rooms");
         return res.json();
@@ -209,7 +137,7 @@ export default function HeroRoomSuit() {
       ) : (
         <>
           {/* Mobile: one card per room_type, max 6 */}
-          <div className="w-full flex flex-col gap-4 lg:hidden max-w-[1440px] mx-auto px-4">
+          <div className="w-full flex flex-col gap-4 lg:hidden max-w-[1440px] mx-auto">
             {mobileRoomsByType.map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}

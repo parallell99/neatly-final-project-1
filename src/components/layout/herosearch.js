@@ -2,33 +2,47 @@
 
 import { useState } from "react";
 import { useRouter } from "next/router";
+import { format, addDays } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import HotelBgImg from "@/assets/images/7.jpg";
 import Button from "@/components/ui/buttons/buttons";
 import RoomsGuestsSelector from "@/components/ui/RoomsGuestsSelector";
 import ChatbotButton from "@/components/layout/chatbot/ChatbotButton";
+import { Calendar } from "@/components/ui/booking/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/booking/popover";
 
-function formatDateDisplay(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+function getToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
-function getTodayString() {
-  return new Date().toISOString().slice(0, 10);
+function getTomorrow() {
+  return addDays(getToday(), 1);
 }
 
 export default function HeroSearch() {
   const router = useRouter();
-  const [checkIn, setCheckIn] = useState(getTodayString);
-  const [checkOut, setCheckOut] = useState(getTodayString);
+  const today = getToday();
+  const [date, setDate] = useState(() => ({
+    from: getToday(),
+    to: getTomorrow(),
+  }));
+  const [openCheckIn, setOpenCheckIn] = useState(false);
+  const [openCheckOut, setOpenCheckOut] = useState(false);
   const [numRooms, setNumRooms] = useState(1);
   const [numAdults, setNumAdults] = useState(2);
   const [numKids, setNumKids] = useState(0);
 
-  const checkInMin = getTodayString();
-  const checkOutMin = checkIn || checkInMin;
+  const checkIn = date?.from ? format(date.from, "yyyy-MM-dd") : "";
+  const checkOut = date?.to ? format(date.to, "yyyy-MM-dd") : "";
 
   const handleSearch = () => {
+    if (!checkIn || !checkOut) return;
     const params = new URLSearchParams({
       checkIn,
       checkOut,
@@ -72,17 +86,35 @@ export default function HeroSearch() {
                 <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
                   Check In
                 </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={checkIn}
-                    min={checkInMin}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md font-sans text-gray-700  [color-scheme:light]"
-                    placeholder="June 01, 2025"
-                    title={formatDateDisplay(checkIn) || "Select date"}
-                  />
-                </div>
+                <Popover open={openCheckIn} onOpenChange={setOpenCheckIn}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-md font-sans text-gray-700 bg-white text-left flex items-center justify-between hover:border-orange-500 transition [color-scheme:light]"
+                    >
+                      <span>{date?.from ? format(date.from, "MMM d, yyyy") : "Select date"}</span>
+                      <CalendarIcon className="h-5 w-5 text-gray-400 shrink-0" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      defaultMonth={date?.from ?? today}
+                      selected={date?.from}
+                      onSelect={(d) => {
+                        if (!d) return;
+                        setDate((prev) => {
+                          const to = prev?.to && d > prev.to ? d : prev?.to ?? d;
+                          return { from: d, to };
+                        });
+                        setOpenCheckIn(false);
+                        setOpenCheckOut(true);
+                      }}
+                      disabled={{ before: today }}
+                      className="p-6 bg-white border border-gray-300 rounded-md font-sans text-gray-700"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Separator (desktop only) */}
@@ -95,17 +127,36 @@ export default function HeroSearch() {
                 <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
                   Check Out
                 </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={checkOut}
-                    min={checkOutMin}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md font-sans text-gray-700  [color-scheme:light]"
-                    placeholder="June 01, 2025"
-                    title={formatDateDisplay(checkOut) || "Select date"}
-                  />
-                </div>
+                <Popover open={openCheckOut} onOpenChange={setOpenCheckOut}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={!date?.from}
+                      className={`w-full px-4 py-3 border rounded-md font-sans text-left flex items-center justify-between transition [color-scheme:light] ${
+                        date?.from
+                          ? "border-gray-300 text-gray-700 bg-white hover:border-orange-500"
+                          : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                      }`}
+                    >
+                      <span>{date?.to ? format(date.to, "MMM d, yyyy") : "Select date"}</span>
+                      <CalendarIcon className={`h-5 w-5 shrink-0 ${date?.from ? "text-gray-400" : "text-gray-400"}`} />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      defaultMonth={date?.to ?? date?.from ?? today}
+                      selected={date?.to}
+                      onSelect={(d) => {
+                        if (!d) return;
+                        setDate((prev) => ({ ...prev, to: d }));
+                        setOpenCheckOut(false);
+                      }}
+                      disabled={{ before: date?.from ?? today }}
+                      className="p-6 bg-white border border-gray-300 rounded-md font-sans text-gray-700"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               {/* Rooms & Guests */}
