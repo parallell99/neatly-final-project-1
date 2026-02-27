@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
 import { supabase } from "@/lib/supabase";
+import { useAmenitiesModal } from "@/hooks/useAmenitiesModal";
+import { useMainImage } from "@/hooks/useMainImage";
+import { useGalleryNewFiles } from "@/hooks/useGalleryNewFiles";
+import AmenitiesModal from "@/components/admin/AmenitiesModal";
 
 const BED_OPTIONS = [
   { value: "single", label: "Single bed" },
@@ -43,28 +47,20 @@ export default function EditRoom() {
     amenities: [""],
   });
   const [mainImageUrl, setMainImageUrl] = useState(null);
-  const [mainImagePreview, setMainImagePreview] = useState(null);
-  const [mainImageFile, setMainImageFile] = useState(null);
-  const mainImageInputRef = useRef(null);
   const [galleryExisting, setGalleryExisting] = useState([]);
   const [galleryRemoveIds, setGalleryRemoveIds] = useState([]);
-  const [galleryNewFiles, setGalleryNewFiles] = useState([]);
-  const [galleryNewPreviews, setGalleryNewPreviews] = useState([]);
-  const [galleryDragActive, setGalleryDragActive] = useState(false);
   const [galleryDragItem, setGalleryDragItem] = useState(null);
-  const galleryInputRef = useRef(null);
+  const [existingDropTargetIndex, setExistingDropTargetIndex] = useState(null);
+  const [amenityDragIndex, setAmenityDragIndex] = useState(null);
+  const [amenityDropTargetIndex, setAmenityDropTargetIndex] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [amenitiesModalOpen, setAmenitiesModalOpen] = useState(false);
-  const [modalAmenitiesList, setModalAmenitiesList] = useState([]);
-  const [modalLoading, setModalLoading] = useState(false);
-  const [editAmenityTarget, setEditAmenityTarget] = useState(null);
-  const [editAmenityName, setEditAmenityName] = useState("");
-  const [editAmenitySaving, setEditAmenitySaving] = useState(false);
-  const [deleteAmenityTarget, setDeleteAmenityTarget] = useState(null);
-  const [deleteAmenitySaving, setDeleteAmenitySaving] = useState(false);
+
+  const amenitiesModal = useAmenitiesModal(setAmenitiesList);
+  const mainImage = useMainImage({ initialUrl: mainImageUrl, setInitialUrl: setMainImageUrl });
+  const galleryNew = useGalleryNewFiles();
 
   useEffect(() => {
     if (!id) return;
@@ -134,95 +130,6 @@ export default function EditRoom() {
       .catch(() => setAmenitiesList([]));
   }, []);
 
-  const fetchModalAmenities = () => {
-    setModalLoading(true);
-    fetch("/api/admin/amenities-list")
-      .then((res) => res.json())
-      .then((json) => {
-        setModalAmenitiesList(Array.isArray(json?.data) ? json.data : []);
-      })
-      .catch(() => setModalAmenitiesList([]))
-      .finally(() => setModalLoading(false));
-  };
-
-  const openAmenitiesModal = () => {
-    setAmenitiesModalOpen(true);
-    fetchModalAmenities();
-  };
-
-  const closeAmenitiesModal = () => {
-    setAmenitiesModalOpen(false);
-    fetch("/api/admin/amenities-list")
-      .then((res) => res.json())
-      .then((json) => {
-        if (Array.isArray(json?.data)) setAmenitiesList(json.data);
-      })
-      .catch(() => {});
-  };
-
-  const handleModalDeleteAmenity = (amenity) => {
-    setDeleteAmenityTarget(amenity);
-  };
-
-  const handleModalDeleteAmenityCancel = () => {
-    if (deleteAmenitySaving) return;
-    setDeleteAmenityTarget(null);
-  };
-
-  const handleModalDeleteAmenityConfirm = async () => {
-    if (!deleteAmenityTarget) return;
-    setDeleteAmenitySaving(true);
-    try {
-      const res = await fetch(`/api/admin/amenities/${deleteAmenityTarget.id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to delete");
-      fetchModalAmenities();
-      setDeleteAmenityTarget(null);
-    } catch (err) {
-      alert(err?.message || "ไม่สามารถลบได้");
-    } finally {
-      setDeleteAmenitySaving(false);
-    }
-  };
-
-  const handleModalEditAmenity = (amenity) => {
-    setEditAmenityTarget(amenity);
-    setEditAmenityName(amenity?.name ?? "");
-  };
-
-  const handleModalEditAmenityCancel = () => {
-    if (editAmenitySaving) return;
-    setEditAmenityTarget(null);
-    setEditAmenityName("");
-  };
-
-  const handleModalEditAmenitySave = async () => {
-    if (!editAmenityTarget) return;
-    const trimmed = editAmenityName.trim();
-    const current = editAmenityTarget.name ?? "";
-    if (!trimmed || trimmed === current) {
-      handleModalEditAmenityCancel();
-      return;
-    }
-    setEditAmenitySaving(true);
-    try {
-      const res = await fetch(`/api/admin/amenities/${editAmenityTarget.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Failed to update");
-      fetchModalAmenities();
-      setEditAmenityTarget(null);
-      setEditAmenityName("");
-    } catch (err) {
-      alert(err?.message || "ไม่สามารถแก้ไขได้");
-    } finally {
-      setEditAmenitySaving(false);
-    }
-  };
-
   const handleAmenityChange = (index, value) => {
     setForm((f) => ({
       ...f,
@@ -254,142 +161,97 @@ export default function EditRoom() {
     }));
   };
 
-  const handleMainImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file.");
-      return;
-    }
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert("Please upload an image smaller than 5MB.");
-      return;
-    }
-    if (mainImagePreview?.startsWith("blob:")) URL.revokeObjectURL(mainImagePreview);
-    setMainImagePreview(URL.createObjectURL(file));
-    setMainImageFile(file);
-  };
-  const handleRemoveMainImage = (e) => {
-    e?.preventDefault?.();
-    if (mainImagePreview?.startsWith("blob:")) URL.revokeObjectURL(mainImagePreview);
-    setMainImagePreview(null);
-    setMainImageFile(null);
-    setMainImageUrl(null);
-    if (mainImageInputRef.current) mainImageInputRef.current.value = "";
+  const handleAmenityDragStart = (index, e) => {
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+    setAmenityDragIndex(index);
+    setAmenityDropTargetIndex(index);
   };
 
-  const handleGalleryChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    const maxSize = 5 * 1024 * 1024;
-    const valid = [];
-    const previews = [];
-    files.forEach((file) => {
-      if (!file.type.startsWith("image/") || file.size > maxSize) return;
-      valid.push(file);
-      previews.push(URL.createObjectURL(file));
+  const handleAmenityDragOver = (index, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (amenityDragIndex == null) return;
+    setAmenityDropTargetIndex(index);
+  };
+
+  const handleAmenityDrop = (index, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const from = amenityDragIndex;
+    if (from == null || from === index) {
+      setAmenityDragIndex(null);
+      setAmenityDropTargetIndex(null);
+      return;
+    }
+    setForm((f) => {
+      const arr = [...f.amenities];
+      const [moved] = arr.splice(from, 1);
+      arr.splice(index, 0, moved);
+      return { ...f, amenities: arr };
     });
-    if (valid.length) {
-      galleryNewPreviews.forEach((u) => {
-        if (typeof u === "string" && u.startsWith("blob:")) URL.revokeObjectURL(u);
-      });
-      setGalleryNewFiles((prev) => [...prev, ...valid]);
-      setGalleryNewPreviews((prev) => [...prev, ...previews]);
-    }
-    if (galleryInputRef.current) galleryInputRef.current.value = "";
+    setAmenityDragIndex(null);
+    setAmenityDropTargetIndex(null);
   };
 
-  const handleGalleryDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer) {
-      e.dataTransfer.dropEffect = "copy";
-    }
-    setGalleryDragActive(true);
-  };
-
-  const handleGalleryDragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setGalleryDragActive(false);
-  };
-
-  const handleGalleryDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setGalleryDragActive(false);
-    const dt = e.dataTransfer;
-    if (!dt || !dt.files || !dt.files.length) return;
-    handleGalleryChange({ target: { files: dt.files } });
+  const handleAmenityDragEnd = () => {
+    setAmenityDragIndex(null);
+    setAmenityDropTargetIndex(null);
   };
 
   const handleGalleryItemDragStart = (type, index, e) => {
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move";
+    if (type === "new") {
+      galleryNew.handleItemDragStart(index, e);
+      return;
     }
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
     setGalleryDragItem({ type, index });
+    setExistingDropTargetIndex(index);
   };
 
   const handleGalleryItemDragOver = (type, index, e) => {
-    if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
-      return;
-    }
+    if (e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes("Files")) return;
     e.preventDefault();
     e.stopPropagation();
-    if (!galleryDragItem || galleryDragItem.type !== type || galleryDragItem.index === index) return;
-    if (type === "existing") {
-      setGalleryExisting((prev) => {
-        const items = [...prev];
-        const from = galleryDragItem.index;
-        const to = index;
-        if (from < 0 || from >= items.length || to < 0 || to >= items.length) return prev;
-        const [moved] = items.splice(from, 1);
-        items.splice(to, 0, moved);
-        return items;
-      });
-      setGalleryDragItem({ type, index });
-    } else {
-      setGalleryNewFiles((prev) => {
-        const filesArr = [...prev];
-        const from = galleryDragItem.index;
-        const to = index;
-        if (from < 0 || from >= filesArr.length || to < 0 || to >= filesArr.length) return prev;
-        const [movedFile] = filesArr.splice(from, 1);
-        filesArr.splice(to, 0, movedFile);
-        return filesArr;
-      });
-      setGalleryNewPreviews((prev) => {
-        const previewsArr = [...prev];
-        const from = galleryDragItem.index;
-        const to = index;
-        if (from < 0 || from >= previewsArr.length || to < 0 || to >= previewsArr.length) return prev;
-        const [movedPreview] = previewsArr.splice(from, 1);
-        previewsArr.splice(to, 0, movedPreview);
-        return previewsArr;
-      });
-      setGalleryDragItem({ type, index });
+    if (type === "new") {
+      galleryNew.handleItemDragOver(index, e);
+      return;
     }
+    if (!galleryDragItem || galleryDragItem.type !== "existing") return;
+    setExistingDropTargetIndex(index);
   };
 
-  const handleGalleryItemDrop = (type, index, e) => {
-    if (e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes("Files")) {
-      return;
-    }
+  const handleGalleryItemDrop = (type, toIndex, e) => {
+    if (e.dataTransfer?.types && Array.from(e.dataTransfer.types).includes("Files")) return;
     e.preventDefault();
     e.stopPropagation();
+    if (type === "new") {
+      galleryNew.handleItemDrop(toIndex, e);
+      return;
+    }
+    const from = galleryDragItem?.index;
+    if (from == null || from === toIndex) {
+      setGalleryDragItem(null);
+      setExistingDropTargetIndex(null);
+      return;
+    }
+    setGalleryExisting((prev) => {
+      const items = [...prev];
+      if (from < 0 || from >= items.length || toIndex < 0 || toIndex >= items.length) return prev;
+      const [moved] = items.splice(from, 1);
+      items.splice(toIndex, 0, moved);
+      return items;
+    });
     setGalleryDragItem(null);
+    setExistingDropTargetIndex(null);
   };
+
+  const handleExistingDragEnd = () => {
+    setGalleryDragItem(null);
+    setExistingDropTargetIndex(null);
+  };
+
   const removeGalleryExisting = (galleryId) => {
     setGalleryRemoveIds((prev) => [...prev, galleryId]);
-  };
-  const removeGalleryNew = (index) => {
-    setGalleryNewPreviews((prev) => {
-      const u = prev[index];
-      if (typeof u === "string" && u.startsWith("blob:")) URL.revokeObjectURL(u);
-      return prev.filter((_, i) => i !== index);
-    });
-    setGalleryNewFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleUpdate = async () => {
@@ -406,12 +268,12 @@ export default function EditRoom() {
     setSaveError(null);
     try {
       let imageMainUrl = mainImageUrl;
-      if (mainImageFile) {
-        const ext = mainImageFile.name.split(".").pop() || "jpg";
+      if (mainImage.file) {
+        const ext = mainImage.file.name.split(".").pop() || "jpg";
         const filePath = `room-types/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("nealty-profile-image")
-          .upload(filePath, mainImageFile, { upsert: true });
+          .upload(filePath, mainImage.file, { upsert: true });
         if (uploadError) throw uploadError;
         const { data: publicData } = supabase.storage
           .from("nealty-profile-image")
@@ -423,11 +285,11 @@ export default function EditRoom() {
         .filter((g) => !galleryRemoveIds.includes(g.id))
         .map((g) => g.image_url);
       let newGalleryUrls = [];
-      if (galleryNewFiles.length > 0) {
+      if (galleryNew.files.length > 0) {
         const now = Date.now();
         const rnd = Math.random().toString(36).slice(2);
         newGalleryUrls = await Promise.all(
-          galleryNewFiles.map(async (file, index) => {
+          galleryNew.files.map(async (file, index) => {
             const ext = file.name.split(".").pop() || "jpg";
             const filePath = `room-types-gallery/${now}-${rnd}-${index}.${ext}`;
             const { error } = await supabase.storage
@@ -495,8 +357,6 @@ export default function EditRoom() {
       setDeleting(false);
     }
   };
-
-  const mainDisplayUrl = mainImagePreview || mainImageUrl;
 
   if (loading) {
     return (
@@ -698,15 +558,15 @@ export default function EditRoom() {
                     <div className="relative w-[240px] h-[240px] rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300">
                       <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:border-orange-400 transition-colors">
                         <input
-                          ref={mainImageInputRef}
+                          ref={mainImage.inputRef}
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={handleMainImageChange}
+                          onChange={mainImage.handleChange}
                         />
-                        {mainDisplayUrl ? (
+                        {mainImage.displayUrl ? (
                           <img
-                            src={mainDisplayUrl}
+                            src={mainImage.displayUrl}
                             alt="Main"
                             className="w-full h-full object-cover pointer-events-none"
                           />
@@ -717,13 +577,13 @@ export default function EditRoom() {
                           </>
                         )}
                       </label>
-                      {mainDisplayUrl && (
+                      {mainImage.displayUrl && (
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            handleRemoveMainImage(e);
+                            mainImage.handleRemove(e);
                           }}
                           className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-500 z-10"
                           aria-label="Remove main image"
@@ -739,10 +599,10 @@ export default function EditRoom() {
                     </label>
                     <div
                       className="flex flex-wrap gap-3"
-                      onDragEnter={handleGalleryDragOver}
-                      onDragOver={handleGalleryDragOver}
-                      onDragLeave={handleGalleryDragLeave}
-                      onDrop={handleGalleryDrop}
+                      onDragEnter={galleryNew.handleDragOver}
+                      onDragOver={galleryNew.handleDragOver}
+                      onDragLeave={galleryNew.handleDragLeave}
+                      onDrop={galleryNew.handleDrop}
                     >
                       {galleryExisting
                         .filter((g) => !galleryRemoveIds.includes(g.id))
@@ -751,11 +611,18 @@ export default function EditRoom() {
                           return (
                             <div
                               key={g.id}
-                              className="relative w-[100px] h-[100px] rounded-lg overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer"
+                              className={`relative w-[100px] h-[100px] rounded-lg overflow-hidden bg-gray-100 border cursor-pointer transition-shadow ${
+                                galleryDragItem?.type === "existing" && galleryDragItem?.index === existingIndex
+                                  ? "border-gray-200 opacity-40"
+                                  : existingDropTargetIndex === existingIndex
+                                    ? "border-orange-500 ring-2 ring-orange-400 border-2"
+                                    : "border-gray-200"
+                              }`}
                               draggable
                               onDragStart={(e) => handleGalleryItemDragStart("existing", existingIndex, e)}
                               onDragOver={(e) => handleGalleryItemDragOver("existing", existingIndex, e)}
                               onDrop={(e) => handleGalleryItemDrop("existing", existingIndex, e)}
+                              onDragEnd={handleExistingDragEnd}
                             >
                               <img
                                 src={g.image_url}
@@ -773,19 +640,26 @@ export default function EditRoom() {
                             </div>
                           );
                         })}
-                      {galleryNewPreviews.map((url, index) => (
+                      {galleryNew.previews.map((url, index) => (
                         <div
                           key={`new-${index}`}
-                          className="relative w-[100px] h-[100px] rounded-lg overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer"
+                          className={`relative w-[100px] h-[100px] rounded-lg overflow-hidden bg-gray-100 border cursor-pointer transition-shadow ${
+                            galleryNew.dragItem?.index === index
+                              ? "border-gray-200 opacity-40"
+                              : galleryNew.dropTargetIndex === index
+                                ? "border-orange-500 ring-2 ring-orange-400 border-2"
+                                : "border-gray-200"
+                          }`}
                           draggable
                           onDragStart={(e) => handleGalleryItemDragStart("new", index, e)}
                           onDragOver={(e) => handleGalleryItemDragOver("new", index, e)}
                           onDrop={(e) => handleGalleryItemDrop("new", index, e)}
+                          onDragEnd={galleryNew.handleItemDragEnd}
                         >
-                          <img src={url} alt="" className="w-full h-full object-cover" />
+                          <img src={url} alt="" className="w-full h-full object-cover pointer-events-none select-none" draggable={false} />
                           <button
                             type="button"
-                            onClick={() => removeGalleryNew(index)}
+                            onClick={() => galleryNew.removeAt(index)}
                             className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-black/60 text-white text-sm hover:bg-red-500"
                             aria-label="Remove"
                           >
@@ -795,18 +669,18 @@ export default function EditRoom() {
                       ))}
                       <label
                         className={`w-[100px] h-[100px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-gray-500 transition-colors cursor-pointer bg-gray-50 ${
-                          galleryDragActive
+                          galleryNew.dragActive
                             ? "border-orange-500 bg-orange-50"
                             : "border-gray-300 hover:border-orange-400"
                         }`}
                       >
                         <input
-                          ref={galleryInputRef}
+                          ref={galleryNew.inputRef}
                           type="file"
                           accept="image/*"
                           multiple
                           className="hidden"
-                          onChange={handleGalleryChange}
+                          onChange={galleryNew.handleChange}
                         />
                         <span className="text-xl text-orange-500">+</span>
                         <span className="text-xs text-orange-500">Upload photo</span>
@@ -820,16 +694,26 @@ export default function EditRoom() {
               <section>
                 <button
                   type="button"
-                  onClick={openAmenitiesModal}
+                  onClick={amenitiesModal.openAmenitiesModal}
                   className="text-sm font-semibold text-gray-900 mb-4 block text-left hover:text-orange-600 focus:outline-none focus:ring-0"
                 >
                   Room Amenities
                 </button>
                 <div className="space-y-4">
                   {form.amenities.map((amenity, index) => (
-                    <div key={index} className="space-y-1">
+                    <div
+                      key={index}
+                      draggable
+                      onDragStart={(e) => handleAmenityDragStart(index, e)}
+                      onDragOver={(e) => handleAmenityDragOver(index, e)}
+                      onDrop={(e) => handleAmenityDrop(index, e)}
+                      onDragEnd={handleAmenityDragEnd}
+                      className={`space-y-1 rounded p-1 -m-1 cursor-move select-none transition-shadow ${
+                        amenityDragIndex === index ? "opacity-50" : ""
+                      } ${amenityDropTargetIndex === index ? "ring-2 ring-orange-500 ring-inset" : ""}`}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="text-gray-400 cursor-move select-none shrink-0">
+                        <div className="text-gray-400 cursor-move select-none shrink-0 pointer-events-none">
                           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <circle cx="4" cy="4" r="1.2" />
                             <circle cx="10" cy="4" r="1.2" />
@@ -902,148 +786,24 @@ export default function EditRoom() {
                 </div>
               </section>
 
-              {/* Modal: จัดการ Amenities ทั้งหมด */}
-              {amenitiesModalOpen && (
-                <div
-                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-                  onClick={(e) => e.target === e.currentTarget && closeAmenitiesModal()}
-                >
-                  <div
-                    className="relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                      <h3 className="text-lg font-semibold text-gray-900">จัดการ Amenities</h3>
-                      <button
-                        type="button"
-                        onClick={closeAmenitiesModal}
-                        className="p-1 rounded hover:bg-gray-100 text-gray-500"
-                        aria-label="ปิด"
-                      >
-                        <span className="text-xl leading-none">×</span>
-                      </button>
-                    </div>
-                    <div className="p-6 overflow-y-auto flex-1">
-                      {modalLoading ? (
-                        <p className="text-sm text-gray-500">กำลังโหลด...</p>
-                      ) : (
-                        <ul className="space-y-2">
-                          {modalAmenitiesList.map((a) => (
-                            <li
-                              key={a.id}
-                              className="flex items-center justify-between py-2 px-3 rounded border border-gray-200 hover:bg-gray-50"
-                            >
-                              <span className="text-sm text-gray-900">{a.name}</span>
-                              <div className="flex items-center gap-3">
-                                <button
-                                  type="button"
-                                  onClick={() => handleModalEditAmenity(a)}
-                                  className="text-sm text-gray-500 hover:text-orange-600"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleModalDeleteAmenity(a)}
-                                  className="text-sm text-gray-500 hover:text-red-600 hover:cursor-pointer"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </li>
-                          ))}
-                          {modalAmenitiesList.length === 0 && !modalLoading && (
-                            <li className="text-sm text-gray-500 py-4">ยังไม่มีรายการ</li>
-                          )}
-                        </ul>
-                      )}
-                    </div>
-                    <div className="border-t border-gray-200 px-6 py-3 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={closeAmenitiesModal}
-                        className="px-4 py-2 rounded border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
-                      >
-                        ปิด
-                      </button>
-                    </div>
-
-                    {editAmenityTarget && (
-                      <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                        <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-4">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                            Edit Amenity
-                          </h4>
-                          <input
-                            type="text"
-                            value={editAmenityName}
-                            onChange={(e) => setEditAmenityName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                handleModalEditAmenitySave();
-                              }
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                          />
-                          <div className="mt-4 flex justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={handleModalEditAmenityCancel}
-                              disabled={editAmenitySaving}
-                              className="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleModalEditAmenitySave}
-                              disabled={editAmenitySaving || !editAmenityName.trim()}
-                              className="px-3 py-1.5 rounded bg-orange-600 text-white text-sm font-medium hover:bg-orange-700 disabled:opacity-50"
-                            >
-                              {editAmenitySaving ? "Saving..." : "Save"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {deleteAmenityTarget && (
-                      <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                        <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-4">
-                          <h4 className="text-sm font-semibold text-gray-900 mb-3">
-                            Delete Amenity
-                          </h4>
-                          <p className="text-sm text-gray-700 mb-4">
-                            Delete this amenity from the entire system (it will be removed from all rooms).
-                          </p>
-                          <p className="text-sm font-medium text-gray-900 mb-4">
-                            {deleteAmenityTarget.name}
-                          </p>
-                          <div className="mt-2 flex justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={handleModalDeleteAmenityCancel}
-                              disabled={deleteAmenitySaving}
-                              className="px-3 py-1.5 rounded border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handleModalDeleteAmenityConfirm}
-                              disabled={deleteAmenitySaving}
-                              className="px-3 py-1.5 rounded bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50"
-                            >
-                              {deleteAmenitySaving ? "Deleting..." : "Delete"}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <AmenitiesModal
+                open={amenitiesModal.amenitiesModalOpen}
+                onClose={amenitiesModal.closeAmenitiesModal}
+                modalAmenitiesList={amenitiesModal.modalAmenitiesList}
+                modalLoading={amenitiesModal.modalLoading}
+                editAmenityTarget={amenitiesModal.editAmenityTarget}
+                editAmenityName={amenitiesModal.editAmenityName}
+                setEditAmenityName={amenitiesModal.setEditAmenityName}
+                editAmenitySaving={amenitiesModal.editAmenitySaving}
+                deleteAmenityTarget={amenitiesModal.deleteAmenityTarget}
+                deleteAmenitySaving={amenitiesModal.deleteAmenitySaving}
+                handleModalDeleteAmenity={amenitiesModal.handleModalDeleteAmenity}
+                handleModalDeleteAmenityCancel={amenitiesModal.handleModalDeleteAmenityCancel}
+                handleModalDeleteAmenityConfirm={amenitiesModal.handleModalDeleteAmenityConfirm}
+                handleModalEditAmenity={amenitiesModal.handleModalEditAmenity}
+                handleModalEditAmenityCancel={amenitiesModal.handleModalEditAmenityCancel}
+                handleModalEditAmenitySave={amenitiesModal.handleModalEditAmenitySave}
+              />
 
               {/* Delete Room */}
               <div className="pt-4 border-t border-gray-200">
