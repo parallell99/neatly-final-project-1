@@ -10,7 +10,7 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-GB", opts);
 }
 
-export default function RefundCancelSuccess({
+export default function BookingActionSuccess({
   type = "cancel",
   roomName = "Superior Garden View",
   checkInDate,
@@ -33,6 +33,34 @@ export default function RefundCancelSuccess({
       : "2,300.00";
 
   const isRefund = type === "refund";
+  const isChangeDate = type === "change-date";
+
+  const originalCheckInStr = checkInDate ? formatDate(checkInDate) : "Thu, 19 Oct 2022";
+  const originalCheckOutStr = checkOutDate ? formatDate(checkOutDate) : "Fri, 20 Oct 2022";
+  const newCheckInStr = originalCheckInStr;
+  const newCheckOutStr = originalCheckOutStr;
+
+  const title =
+    isRefund
+      ? "Your Request has been Submitted"
+      : isChangeDate
+        ? "Your Change Date Request has been Submitted"
+        : "The Cancellation is Complete";
+
+  const messageLine1 =
+    isRefund
+      ? "The cancellation is complete."
+      : isChangeDate
+        ? "We've received your request to change the check-in and check-out date."
+        : "The cancellation is complete.";
+  const messageLine2 =
+    isRefund
+      ? "You will receive an email with a detail and refund within 48 hours."
+      : isChangeDate
+        ? "You will receive an email with the updated booking details within 24 hours."
+        : "You will receive an email with a detail of cancellation within 24 hours.";
+
+  const dateLabel = isChangeDate ? "Change date" : "Cancellation date";
 
   const handleBackToHome = () => {
     if (onBackToHome) {
@@ -49,14 +77,12 @@ export default function RefundCancelSuccess({
           {/* Header - Dark Green */}
           <div className="bg-green-800 py-10 px-4 text-center lg:rounded-t-md">
             <h1 className="headline-3-refund text-[40px] text-white mb-4">
-              {isRefund ? "Your Request has been Submitted" : "The Cancellation is Complete"}
+              {title}
             </h1>
             <p className="body-2 text-green-400 leading-relaxed max-w-[600px] mx-auto h-[63px]">
-              {"The cancellation is complete."}
+              {messageLine1}
               <br />
-              {isRefund
-                ? "You will receive an email with a detail and refund within 48 hours."
-                : "You will receive an email with a detail of cancellation within 24 hours."}
+              {messageLine2}
             </p>
           </div>
 
@@ -64,10 +90,32 @@ export default function RefundCancelSuccess({
           <div className="bg-green-700 px-4 pt-6 pb-8 lg:px-10 lg:rounded-b-md">
             <div className="bg-green-600 rounded-sm py-6 pl-5">
               <p className="headline-5 font-semibold text-white mb-4">{roomName}</p>
-              <p className="font-sans text-base text-white mb-1">{checkInOutStr}</p>
-              <p className="font-sans text-base text-white">{guests} Guests</p>
-              <p className="body-1 text-green-300 mt-10">Booking date: {bookingDateStr}</p>
-              <p className="body-1 text-green-300 mt-2">Cancellation date: {cancellationDateStr}</p>
+              {isChangeDate ? (
+                <>
+                  <p className="font-sans text-base text-white mb-1">{guests} Guests</p>
+                  <p className="body-1 text-green-900 mt-6">
+                    Original Check-in: {originalCheckInStr}
+                  </p>
+                  <p className="body-1 text-green-900 mt-1">
+                    Original Check-out: {originalCheckOutStr}
+                  </p>
+                  <p className="body-1 text-green-300 mt-4">
+                    New Check-in: {newCheckInStr}
+                  </p>
+                  <p className="body-1 text-green-300 mt-1">
+                    New Check-out: {newCheckOutStr}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-sans text-base text-white mb-1">{checkInOutStr}</p>
+                  <p className="font-sans text-base text-white">{guests} Guests</p>
+                  <p className="body-1 text-green-300 mt-10">Booking date: {bookingDateStr}</p>
+                  <p className="body-1 text-green-300 mt-2">
+                    {dateLabel}: {cancellationDateStr}
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Total Refund - Dark Grey (Refund only) */}

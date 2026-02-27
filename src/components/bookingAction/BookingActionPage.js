@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Navbar from "@/components/layout/navbar";
-import RefundCancelRequest from "@/components/booking/RefundCancelRequest";
+import BookingActionRequest from "@/components/bookingAction/BookingActionRequest";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { BOOKING_ACTIONS, VALID_ACTIONS } from "@/components/bookingAction/BookingActionConfig";
 
 function getImageSrc(img) {
   if (!img) return "";
@@ -11,15 +13,22 @@ function getImageSrc(img) {
   return img?.src ?? String(img);
 }
 
-export default function CancelBookingPage() {
+/**
+ * หน้า logic ร่วมสำหรับ booking action (refund / cancel / change-date)
+ * ใช้โดย pages/booking-action/[orderId]/[action].js
+ */
+export default function BookingActionPage({ orderId, action }) {
   const router = useRouter();
-  const { orderId } = router.query;
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const config = BOOKING_ACTIONS[action];
+  const isValidAction = config && VALID_ACTIONS.includes(action);
 
   useEffect(() => {
-    if (!orderId || typeof orderId !== "string") {
+    if (!orderId || typeof orderId !== "string" || !isValidAction) {
       setLoading(false);
       return;
     }
@@ -52,22 +61,38 @@ export default function CancelBookingPage() {
     return () => {
       cancelled = true;
     };
-  }, [orderId]);
+  }, [orderId, isValidAction]);
 
   const handleCancel = () => {
     router.back();
   };
 
-  const handleConfirm = () => {
-    router.push(
-      `/cancel-booking/success?orderId=${encodeURIComponent(orderId || "")}`
-    );
+  const handleConfirmClick = () => {
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmSuccess = () => {
+    if (config?.successPath) {
+      router.push(config.successPath(orderId));
+    }
+    setConfirmOpen(false);
   };
 
   const roomName = room?.title ?? "Superior Garden View";
   const roomImage = room?.image_main
     ? getImageSrc(room.image_main)
     : room?.image_main;
+
+  if (!isValidAction) {
+    return (
+      <div className="bg-[#F7F7FB] min-h-screen">
+        <Navbar />
+        <div className="w-full max-w-[900px] mx-auto px-4 py-6">
+          <p className="font-sans text-gray-600">Invalid action.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -83,18 +108,28 @@ export default function CancelBookingPage() {
   return (
     <div className="bg-[#F7F7FB] min-h-screen">
       <Navbar />
-      <RefundCancelRequest
-        type="cancel"
+      <BookingActionRequest
+        type={config.type}
         roomName={roomName}
         roomImage={roomImage || undefined}
         checkInDate={order?.check_in_date}
         checkOutDate={order?.check_out_date}
         guests={2}
         bookingDate={order?.created_at}
-        // totalRefund ไม่ใช้ในโหมด cancel แต่ส่งได้ไม่กระทบ
-        totalRefund={order?.total_price != null ? Number(order.total_price) : 2300}
+        totalRefund={
+          order?.total_price != null ? Number(order.total_price) : 2300
+        }
         onCancel={handleCancel}
-        onConfirm={handleConfirm}
+        onConfirm={handleConfirmClick}
+      />
+      <ConfirmModal
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={config.modalTitle}
+        description={config.modalDescription}
+        cancelLabel={config.modalCancelLabel}
+        confirmLabel={config.modalConfirmLabel}
+        onConfirm={handleConfirmSuccess}
       />
     </div>
   );
