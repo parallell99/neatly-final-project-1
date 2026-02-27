@@ -52,7 +52,7 @@ function SetupCardForm({ onSuccess }) {
           buttonStyle="primary"
           buttonText={loading ? "Processing..." : "Update Payment Method"}
           disabled={loading || !stripe}
-          className="h-[48px] px-8"
+          className="h-[48px] px-8 mt-6"
         />
       </div>
     </form>
@@ -149,17 +149,17 @@ export default function PaymentMethodPage() {
     <div className="bg-[#F7F7FB] flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center pt-4">
-        <div className="w-full max-w-[1440px] lg:px-[165px] py-10">
+      <main className="flex-1 flex items-center justify-center">
+        <div className="w-full max-w-[1440px] lg:px-[165px] pb-10">
           <section className="bg-transparent">
-            <div className="flex items-center justify-between mb-10 mx-4 lg:mx-0">
-              <h1 className="headline-3 text-[#1F3B33] lg:text-[48px]">
+            <div className="flex items-center justify-between mb-5 mx-4 lg:mx-0">
+              <h1 className="headline-3-booking-title text-[44px] text-[#1F3B33] lg:text-[68px]">
                 Payment Method
               </h1>
             </div>
 
             <div className="mx-4 lg:mx-0 bg-[#F1F2F6] rounded-lg px-6 py-8 lg:px-10 lg:py-12 shadow-sm">
-              <h2 className="font-sans text-sm font-semibold text-[#7C8194] mb-6">
+              <h2 className="font-sans text-lg font-semibold text-[#7C8194] mb-6 lg:text-">
                 Credit Card
               </h2>
 

@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Button from "@/components/ui/buttons/buttons";
-import CreditCardIcon from "@/assets/icons/credit.svg?url";
-import CashIcon from "@/assets/icons/cash.svg?url";
-import CashHandIcon from "@/assets/icons/cash-hand.svg?url";
+import CreditCardIcon from "@/assets/icons/credit.svg";
+import CashIcon from "@/assets/icons/cash.svg";
+import CashHandIcon from "@/assets/icons/cash-hand.svg";
 import CreditCardCheckout from "@/components/booking/CreditCardCheckout";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
@@ -173,7 +173,7 @@ export default function PaymentMethodForm({
           aria-pressed={method === "credit-card"}
           aria-label="Pay with Credit Card"
         >
-          <img src={CreditCardIcon} className="w-6 h-6" alt="" aria-hidden />
+          <CreditCardIcon className="w-6 h-6" alt="" aria-hidden />
           Credit Card
         </button>
         <button
@@ -183,7 +183,7 @@ export default function PaymentMethodForm({
           aria-pressed={method === "cash"}
           aria-label="Pay with Cash"
         >
-          <img src={CashIcon} className="w-6 h-6" alt="" aria-hidden />
+          <CashIcon className="w-6 h-6" alt="" aria-hidden />
           Cash
         </button>
       </div>
@@ -234,10 +234,7 @@ export default function PaymentMethodForm({
             Cash
           </h3>
           <div className="flex felx-col justify-around items-center bg-[#F1F2F6] rounded-sm mb-6 px-6 py-6 lg:gap-1">
-            <img
-              src={CashHandIcon}
-              width={40}
-              height={40}
+            <CashHandIcon
               className="w-10 h-10 shrink-0 object-contain"
               alt=""
               aria-hidden
