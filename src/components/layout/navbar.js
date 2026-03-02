@@ -22,7 +22,18 @@ export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [navbarHeight, setNavbarHeight] = useState(0);
+  const [navLogoUrl, setNavLogoUrl] = useState(null);
   const navRef = useRef(null);
+
+  useEffect(() => {
+    fetch("/api/hotel-information")
+      .then((res) => res.json())
+      .then((json) => {
+        const url = json?.data?.hotelLogoUrl ?? null;
+        setNavLogoUrl(url || null);
+      })
+      .catch(() => {});
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -64,9 +75,13 @@ export default function Navbar() {
     <>
       {/* Main Navbar */}
       <nav ref={navRef} className="top-0 w-full pt-3 lg:h-[100px] bg-white flex items-center justify-between px-4 pb-3 border-b border-gray-200 lg:px-[160px] max-w-[1440px] mx-auto z-50">
-        {/* Logo */}
+        {/* Logo: จาก hotel_information.hotel_logo_url หรือ fallback เป็น SVG */}
         <Link href="/" className="flex items-center" aria-label="Neatly">
-          <LogoNav className="w-30 lg:w-40" aria-hidden />
+          {navLogoUrl ? (
+            <img src={navLogoUrl} alt="Neatly logo" className="w-30 lg:w-40 h-auto object-contain" />
+          ) : (
+            <LogoNav className="w-30 lg:w-40" aria-hidden />
+          )}
         </Link>
 
         {/* Desktop Navigation - แสดงเฉพาะบน desktop */}

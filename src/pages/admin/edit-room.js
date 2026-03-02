@@ -485,7 +485,7 @@ export default function EditRoom() {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนห้อง</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of rooms</label>
                       <input
                         type="number"
                         min={initialTotalRooms}

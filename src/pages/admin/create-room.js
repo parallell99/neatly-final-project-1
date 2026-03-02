@@ -310,7 +310,7 @@ export default function CreateRoom() {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">จำนวนห้องที่จะเพิ่ม *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of rooms to add *</label>
                       <input
                         type="text"
                         inputMode="numeric"

@@ -1,4 +1,6 @@
-import React from "react"
+"use client"
+
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/router"
 import Logo from "@/assets/logo/logo-foot.svg?url"
@@ -22,13 +24,26 @@ const menuItems = [
 export default function SideBarAdmin() {
   const router = useRouter()
   const pathname = router?.pathname ?? ""
+  const [sidebarLogoUrl, setSidebarLogoUrl] = useState(null)
+
+  useEffect(() => {
+    fetch("/api/hotel-information")
+      .then((res) => res.json())
+      .then((json) => {
+        const url = json?.data?.hotelLogoFooterUrl ?? null
+        setSidebarLogoUrl(url || null)
+      })
+      .catch(() => {})
+  }, [])
+
+  const logoSrc = sidebarLogoUrl || (typeof Logo === "string" ? Logo : Logo?.src) || Logo
 
   return (
     <>
       <div className="bg-green-800 h-dvh w-[240px] flex flex-col gap-[40px]">
         <div className="h-[153px] flex flex-col justify-center items-center gap-4">
           <Link href="/" className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded">
-            <img src={Logo} className="w-[120px]" alt="Neatly logo" />
+            <img src={logoSrc} className="w-[120px] h-auto object-contain" alt="Neatly logo" />
           </Link>
           <span className="body-1 text-green-400">Admin Panel Control</span>
         </div>

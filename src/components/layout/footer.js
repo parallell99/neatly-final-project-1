@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import LogoFoot from "@/assets/logo/logo-foot.svg";
 import PhoneIcon from "@/assets/icons/phone.svg";
 import MailIcon from "@/assets/icons/mail.svg";
@@ -7,6 +8,23 @@ import LocationIcon from "@/assets/icons/location.svg";
 import SocialIcon from "@/assets/icons/social.svg";
 
 export default function Footer() {
+  const [hotelName, setHotelName] = useState("Neatly Hotel");
+  const [hotelLogoFooterUrl, setHotelLogoFooterUrl] = useState(null);
+
+  // Logo จากตาราง hotel_information column hotel_logo_footter_url (API ส่งมาเป็น hotelLogoFooterUrl)
+  useEffect(() => {
+    fetch("/api/hotel-information")
+      .then((res) => res.json())
+      .then((json) => {
+        const d = json?.data;
+        if (d) {
+          setHotelName(d.hotelName ?? "Neatly Hotel");
+          setHotelLogoFooterUrl(d.hotelLogoFooterUrl ?? null);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <footer className="w-full bg-green-800 text-white py-12 px-4 ">
       <div className="max-w-[1440px] mx-auto lg:px-15">
@@ -14,9 +32,13 @@ export default function Footer() {
         {/* Logo & Description Section */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-4">
-           <LogoFoot className="w-40 mb-5" />
+           {hotelLogoFooterUrl ? (
+             <img src={hotelLogoFooterUrl} alt={hotelName} className="w-40 h-auto mb-5 object-contain" />
+           ) : (
+             <LogoFoot className="w-40 mb-5" />
+           )}
           </div>
-          <h2 className="headline-5 mb-2">Neatly Hotel</h2>
+          <h2 className="headline-5 mb-2">{hotelName}</h2>
           <p className="body-2">
             The best hotel for rising your experience
           </p>

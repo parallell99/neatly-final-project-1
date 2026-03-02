@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { format, addDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -25,9 +25,23 @@ function getTomorrow() {
   return addDays(getToday(), 1);
 }
 
+const defaultBg = HotelBgImg?.src ?? HotelBgImg;
+
 export default function HeroSearch() {
   const router = useRouter();
   const today = getToday();
+  const [heroBgUrl, setHeroBgUrl] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/hotel-information")
+      .then((res) => res.json())
+      .then((json) => {
+        const url = json?.data?.hotelBgUrl ?? null;
+        setHeroBgUrl(url || null);
+      })
+      .catch(() => {});
+  }, []);
+
   const [date, setDate] = useState(() => ({
     from: getToday(),
     to: getTomorrow(),
@@ -63,7 +77,7 @@ export default function HeroSearch() {
           <div
             className="absolute inset-0 w-full h-full bg-no-repeat bg-center bg-[length:320%] lg:bg-cover"
             style={{
-              backgroundImage: `url(${HotelBgImg?.src ?? HotelBgImg})`,
+              backgroundImage: `url(${heroBgUrl || defaultBg})`,
             }}
             aria-hidden
           />
