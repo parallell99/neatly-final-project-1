@@ -106,8 +106,8 @@ export default function Navbar() {
 
           {/* Desktop Login/User */}
           <div className="flex items-center gap-6">
-            {/* Notification Bell - desktop */}
-            {isAuthenticated && user && (
+              {/* Notification Bell - desktop */}
+              {isAuthenticated && user && (
               <button
                 className="p-2 relative hover:opacity-80 transition-opacity"
                 aria-label="Notifications"
