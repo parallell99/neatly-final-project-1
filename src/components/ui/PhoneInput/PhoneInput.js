@@ -37,7 +37,10 @@ export default function PhoneInputField({
               id={name}
               country={country}
               value={value || ""}
-              onChange={(phone) => onChange(phone)}
+              onChange={(phone) => {
+                const e164 = phone ? `+${phone.replace(/^\+/, "")}` : "";
+                onChange(e164);
+              }}
               placeholder={placeholder}
               disabled={disabled}
               enableSearch
@@ -45,7 +48,7 @@ export default function PhoneInputField({
               disableSearchIcon
               containerClass="!w-full"
               searchClass="!bg-white !border !border-gray-300 !rounded-[4px] !px-3 !py-2 !mb-2"
-              inputClass={`!w-full !pl-[48px] py-[24px]  !border !rounded-[4px] focus:!outline-none transition-all duration-200 !text-[16px]
+              inputClass={`!w-full !pl-[48px] !h-[50px] !py-[12px] !border !rounded-[4px] focus:!outline-none transition-all duration-200 !text-[16px]
     ${disabled
                   ? "!bg-gray-100 !border-gray-300 !text-gray-500 cursor-not-allowed"
                   : `focus:!ring-1 focus:!ring-orange-500 focus:!border-transparent
@@ -55,11 +58,12 @@ export default function PhoneInputField({
                   }
         placeholder:!text-gray-600 !text-black`
                 }`}
-              buttonClass={`!border !rounded-l-[4px] !bg-white
+              buttonClass={`!h-[50px] !border !rounded-l-[4px] !bg-white
     ${error ? "!border-red" : "!border-gray-300"}
     ${disabled ? "!border-gray-300 !bg-gray-100" : ""}`}
               dropdownClass="!rounded-[4px] !border-gray-300"
               inputProps={{
+                id: name,
                 "aria-invalid": !!error,
                 "aria-describedby": error ? `${name}-error` : undefined,
               }}
