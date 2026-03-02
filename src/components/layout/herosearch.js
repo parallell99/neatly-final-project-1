@@ -64,7 +64,7 @@ export default function HeroSearch() {
       adults: String(numAdults),
       kids: String(numKids),
     });
-    router.push(`/room?${params.toString()}`);
+    router.push(`/search-rooms?${params.toString()}`);
   };
 
   return (

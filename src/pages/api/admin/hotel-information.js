@@ -28,7 +28,7 @@ function generateUuid() {
  *   - hotel_logo_footter_url (text, nullable) — logo สำหรับ footer
  *   - hotel_bg_url (text, nullable) — รูปพื้นหลัง about/landing
  *   - hotel_phone (text, nullable), hotel_email (text, nullable), hotel_location (text, nullable) — contact
- *   - created_at, updated_at (timestampz)
+ *   - created_at, update_at (timestampz) — โปรเจกต์ใช้ชื่อคอลัมน์ update_at
  */
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "POST" && req.method !== "PUT") {
@@ -153,18 +153,18 @@ export default async function handler(req, res) {
       const runInsert = (row, cols) =>
         supabaseAdmin.from("hotel_information").insert(row).select(cols || selectCols).single();
 
-      let result = await runInsert({ ...baseFields, created_at: now, updated_at: now });
+      let result = await runInsert({ ...baseFields, created_at: now, update_at: now });
       if (result.error && ((result.error.message || "").toLowerCase().includes("column") || result.error.code === "PGRST204")) {
         result = await runInsert(baseFields);
       }
       if (result.error && ((result.error.message || "").includes("hotel_phone") || (result.error.message || "").includes("hotel_email") || (result.error.message || "").includes("hotel_location") || result.error.code === "PGRST204")) {
-        result = await runInsert({ ...baseFieldsNoContact, created_at: now, updated_at: now }, selectColsNoContact);
+        result = await runInsert({ ...baseFieldsNoContact, created_at: now, update_at: now }, selectColsNoContact);
       }
       if (result.error && ((result.error.message || "").toLowerCase().includes("column") || (result.error.message || "").includes("hotel_logo_footter_url") || (result.error.message || "").includes("hotel_logo_footer") || (result.error.message || "").includes("hotel_bg_url") || result.error.code === "PGRST204")) {
-        result = await runInsert({ ...baseFieldsNoFooter, created_at: now, updated_at: now }, selectColsNoFooter);
+        result = await runInsert({ ...baseFieldsNoFooter, created_at: now, update_at: now }, selectColsNoFooter);
       }
       if (result.error && ((result.error.message || "").toLowerCase().includes("uuid") && (result.error.message || "").toLowerCase().includes("null"))) {
-        result = await runInsert({ uuid: generateUuid(), ...baseFields, created_at: now, updated_at: now });
+        result = await runInsert({ uuid: generateUuid(), ...baseFields, created_at: now, update_at: now });
       }
       if (result.error && ((result.error.message || "").toLowerCase().includes("column") || (result.error.message || "").includes("hotel_logo_footter_url") || (result.error.message || "").includes("hotel_logo_footer") || (result.error.message || "").includes("hotel_phone") || (result.error.message || "").includes("hotel_email") || (result.error.message || "").includes("hotel_location") || result.error.code === "PGRST204")) {
         result = await runInsert({ uuid: generateUuid(), ...baseFieldsNoContact }, selectColsNoContact);
@@ -213,7 +213,7 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "No row found, use POST to create" });
       }
 
-      const updatePayload = { ...payload, updated_at: new Date().toISOString() };
+      const updatePayload = { ...payload, update_at: new Date().toISOString() };
       let result = await supabaseAdmin
         .from("hotel_information")
         .update(updatePayload)
@@ -228,7 +228,7 @@ export default async function handler(req, res) {
           hotel_logo_url: payload.hotel_logo_url,
           hotel_logo_footter_url: payload.hotel_logo_footter_url,
           hotel_bg_url: payload.hotel_bg_url,
-          updated_at: new Date().toISOString(),
+          update_at: new Date().toISOString(),
         };
         Object.keys(pNoContact).forEach((k) => pNoContact[k] === undefined && delete pNoContact[k]);
         if (Object.keys(pNoContact).length > 1) {
@@ -245,7 +245,7 @@ export default async function handler(req, res) {
           hotel_name: payload.hotel_name,
           hotel_description: payload.hotel_description,
           hotel_logo_url: payload.hotel_logo_url,
-          updated_at: new Date().toISOString(),
+          update_at: new Date().toISOString(),
         };
         Object.keys(pNoFooter).forEach((k) => pNoFooter[k] === undefined && delete pNoFooter[k]);
         if (Object.keys(pNoFooter).length > 1) {
@@ -258,7 +258,7 @@ export default async function handler(req, res) {
         }
       }
       if (result.error && (result.error.message || "").toLowerCase().includes("column")) {
-        const pMin = { hotel_name: payload.hotel_name, hotel_description: payload.hotel_description, hotel_logo_url: payload.hotel_logo_url, updated_at: new Date().toISOString() };
+        const pMin = { hotel_name: payload.hotel_name, hotel_description: payload.hotel_description, hotel_logo_url: payload.hotel_logo_url, update_at: new Date().toISOString() };
         Object.keys(pMin).forEach((k) => pMin[k] === undefined && delete pMin[k]);
         result = await supabaseAdmin
           .from("hotel_information")

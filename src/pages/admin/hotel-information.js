@@ -307,35 +307,38 @@ export default function HotelInformation() {
               />
             </div>
 
-            {/* Hotel contact information */}
+            {/* Hotel contact information — from hotel_information.hotel_phone, hotel_email, hotel_location */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700">Hotel contact information</label>
               <p className="text-xs text-gray-500 mb-2">Phone, email and address for the hotel.</p>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Phone (hotel_phone)</label>
                 <input
                   type="text"
-                  value={hotelPhone}
+                  value={hotelPhone ?? ""}
                   onChange={(e) => setHotelPhone(e.target.value)}
                   className="w-full max-w-md px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  aria-label="Hotel phone from hotel_phone"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Email (hotel_email)</label>
                 <input
                   type="email"
-                  value={hotelEmail}
+                  value={hotelEmail ?? ""}
                   onChange={(e) => setHotelEmail(e.target.value)}
                   className="w-full max-w-md px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  aria-label="Hotel email from hotel_email"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Location / Address</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Location / Address (hotel_location)</label>
                 <textarea
-                  value={hotelLocation}
+                  value={hotelLocation ?? ""}
                   onChange={(e) => setHotelLocation(e.target.value)}
                   rows={3}
                   className="w-full max-w-md px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  aria-label="Hotel location from hotel_location"
                 />
               </div>
             </div>

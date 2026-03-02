@@ -7,11 +7,18 @@ import MailIcon from "@/assets/icons/mail.svg";
 import LocationIcon from "@/assets/icons/location.svg";
 import SocialIcon from "@/assets/icons/social.svg";
 
+const DEFAULT_PHONE = "+66 99 999 9999";
+const DEFAULT_EMAIL = "contact@neatlyhotel.com";
+const DEFAULT_ADDRESS = "188 Phaya Thai Rd, Thung Phaya Thai, Ratchathewi, Bangkok 10400";
+
 export default function Footer() {
   const [hotelName, setHotelName] = useState("Neatly Hotel");
   const [hotelLogoFooterUrl, setHotelLogoFooterUrl] = useState(null);
+  const [hotelPhone, setHotelPhone] = useState(DEFAULT_PHONE);
+  const [hotelEmail, setHotelEmail] = useState(DEFAULT_EMAIL);
+  const [hotelLocation, setHotelLocation] = useState(DEFAULT_ADDRESS);
 
-  // Logo จากตาราง hotel_information column hotel_logo_footter_url (API ส่งมาเป็น hotelLogoFooterUrl)
+  // ข้อมูลจากตาราง hotel_information (API /api/hotel-information)
   useEffect(() => {
     fetch("/api/hotel-information")
       .then((res) => res.json())
@@ -20,6 +27,9 @@ export default function Footer() {
         if (d) {
           setHotelName(d.hotelName ?? "Neatly Hotel");
           setHotelLogoFooterUrl(d.hotelLogoFooterUrl ?? null);
+          setHotelPhone(d.hotelPhone && String(d.hotelPhone).trim() ? d.hotelPhone.trim() : DEFAULT_PHONE);
+          setHotelEmail(d.hotelEmail && String(d.hotelEmail).trim() ? d.hotelEmail.trim() : DEFAULT_EMAIL);
+          setHotelLocation(d.hotelLocation && String(d.hotelLocation).trim() ? d.hotelLocation.trim() : DEFAULT_ADDRESS);
         }
       })
       .catch(() => {});
@@ -48,27 +58,27 @@ export default function Footer() {
         <div className="mb-8">
           <h3 className=" mb-6 headline-5">CONTACT</h3>
           <div className="flex flex-col gap-4">
-            {/* Phone */}
+            {/* Phone — จาก hotel_information.hotel_phone */}
             <div className="flex items-start gap-3">
               <PhoneIcon className="w-5 h-5 shrink-0 text-green-500" aria-hidden />
               <span className="text-base font-normal text-white/90 font-thai">
-                +66 99 999 9999
+                {hotelPhone}
               </span>
             </div>
 
-            {/* Email */}
+            {/* Email — จาก hotel_information.hotel_email */}
             <div className="flex items-start gap-3">
               <MailIcon className="w-5 h-5 shrink-0 text-green-500" aria-hidden />
               <span className="text-base font-normal text-white/90 font-thai">
-                contact@neatlyhotel.com
+                {hotelEmail}
               </span>
             </div>
 
-            {/* Address */}
+            {/* Address — จาก hotel_information.hotel_location */}
             <div className="flex items-start gap-3">
               <LocationIcon className="w-5 h-5 shrink-0 text-green-500" aria-hidden />
               <span className="text-base font-normal text-white/90 font-thai">
-                188 Phaya Thai Rd, Thung Phaya Thai, Ratchathewi, Bangkok 10400
+                {hotelLocation}
               </span>
             </div>
           </div>

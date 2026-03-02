@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import Button from "@/components/ui/buttons/buttons";
 import ChatbotButton from "@/components/layout/chatbot/ChatbotButton";
 import OtherRoomsSection from "@/components/layout/RoomDetail/OtherRoomsSection";
@@ -55,6 +56,7 @@ function mapApiRoomToRoomData(apiRoom) {
 }
 
 export default function RoomDetail({ roomId }) {
+  const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [roomData, setRoomData] = useState(null);
   const [otherRoomsList, setOtherRoomsList] = useState([]);
@@ -505,12 +507,7 @@ export default function RoomDetail({ roomId }) {
                       buttonText="Book Now"
                       className="h-12 min-w-[120px] shrink-0 rounded-lg bg-[#D25F2E] hover:bg-[#b85226] text-white font-sans font-medium px-6 lg:px-8 lg:h-12 lg:mt-4 lg:w-full lg:min-w-[160px]"
                       onClick={() => {
-                        if (!isAuthenticated) {
-                          window.location.href = "/login";
-                          return;
-                        }
-                        const query = block.slug ? `?room=${block.slug}` : "";
-                        window.location.href = `/room${query}`;
+                        router.push("/search-rooms");
                       }}
                     />
                   </div>
