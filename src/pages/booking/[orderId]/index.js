@@ -19,9 +19,11 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 );
 
-export default function BookingPage() {
+export default function BookingOrderPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { roomId, orderId: orderIdQuery } = router.query;
+
   const [currentStep, setCurrentStep] = useState(1);
   const [extras, setExtras] = useState([]);
   const [standards, setStandards] = useState([]);
@@ -32,60 +34,25 @@ export default function BookingPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [cardLastDigits, setCardLastDigits] = useState("888");
-  const { roomId } = router.query;
+  const [orderId, setOrderId] = useState("");
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [expiresAt, setExpiresAt] = useState(null);
   const [hasMarkedExpired, setHasMarkedExpired] = useState(false);
   const [guestData, setGuestData] = useState(null);
 
-  //ทดสอบ status
-  const [orderId, setOrderId] = useState(
-    "007d85da-d822-42c4-baa5-f1f7d14aca2e"
-  );
-
-  console.log("BOOKING PAGE orderId:", orderId);
-  
-
-  const handlePromotionChange = ({ code, discount }) => {
-    setPromotionCode(code);
-    setPromotionDiscount(discount);
-  };
-
-  const handlePaymentConfirm = ({ success, paymentMethod: method, cardLastDigits: digits }) => {
-    if (success) {
-      // Payment successful - show Payment Success UI
-      setPaymentMethod(method || "Credit Card");
-      setCardLastDigits(digits || "888");
-      setPaymentSuccess(true);
-    } else {
-      // Payment failed - show Payment Failed UI
-      setPaymentFailed(true);
+  useEffect(() => {
+    if (typeof orderIdQuery === "string") {
+      setOrderId(orderIdQuery);
     }
-  };
+  }, [orderIdQuery]);
 
-  const handleBackToHome = () => {
-    router.push("/");
-  };
-
-  const handleCheckBookingDetail = () => {
-    // Reset to step 1 and clear payment states
-    setPaymentFailed(false);
-    setPaymentSuccess(false);
-    setCurrentStep(1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleBackToPaymentDetail = () => {
-    setPaymentFailed(false);
-    setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Restore step & basic state on refresh
+  // Restore state for this order on refresh
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!orderIdQuery || typeof orderIdQuery !== "string") return;
 
-    const raw = window.sessionStorage.getItem("booking:state:default");
+    const key = `booking:state:${orderIdQuery}`;
+    const raw = window.sessionStorage.getItem(key);
     if (!raw) return;
 
     try {
@@ -105,11 +72,12 @@ export default function BookingPage() {
     } catch {
       // ignore parse errors
     }
-  }, []);
+  }, [orderIdQuery]);
 
-  // Persist step & selections while user is on the page
+  // Persist state for this order while user is on the page
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!orderId || typeof orderId !== "string") return;
 
     const payload = {
       currentStep,
@@ -121,10 +89,11 @@ export default function BookingPage() {
     };
 
     window.sessionStorage.setItem(
-      "booking:state:default",
+      `booking:state:${orderId}`,
       JSON.stringify(payload)
     );
   }, [
+    orderId,
     currentStep,
     extras,
     standards,
@@ -133,12 +102,46 @@ export default function BookingPage() {
     promotionDiscount,
   ]);
 
-  // Scroll to top when step changes
+  const handlePromotionChange = ({ code, discount }) => {
+    setPromotionCode(code);
+    setPromotionDiscount(discount);
+  };
+
+  const handlePaymentConfirm = ({
+    success,
+    paymentMethod: method,
+    cardLastDigits: digits,
+  }) => {
+    if (success) {
+      setPaymentMethod(method || "Credit Card");
+      setCardLastDigits(digits || "888");
+      setPaymentSuccess(true);
+    } else {
+      setPaymentFailed(true);
+    }
+  };
+
+  const handleBackToHome = () => {
+    router.push("/");
+  };
+
+  const handleCheckBookingDetail = () => {
+    setPaymentFailed(false);
+    setPaymentSuccess(false);
+    setCurrentStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBackToPaymentDetail = () => {
+    setPaymentFailed(false);
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
 
-  // 1) ดึง expires_at ครั้งแรกจาก server
   useEffect(() => {
     if (!orderId || expiresAt || hasMarkedExpired) return;
 
@@ -178,7 +181,6 @@ export default function BookingPage() {
     checkExpiration();
   }, [orderId, expiresAt, hasMarkedExpired]);
 
-  // 2) ใช้ real-time timer ฝั่ง client ตรวจว่าเลยเวลาแล้วหรือยัง
   useEffect(() => {
     if (!expiresAt || hasMarkedExpired) return;
 
@@ -218,7 +220,6 @@ export default function BookingPage() {
     return () => clearInterval(intervalId);
   }, [expiresAt, hasMarkedExpired, orderId]);
 
-  // Show Payment Success UI if payment succeeded
   if (paymentSuccess) {
     return (
       <>
@@ -237,16 +238,15 @@ export default function BookingPage() {
     );
   }
 
-  // Show Payment Failed UI if payment failed
   if (paymentFailed) {
     return (
       <>
         <Navbar />
         <Elements stripe={stripePromise}>
-        <PaymentFailed
-          onBackToPaymentDetail={handleBackToPaymentDetail}
-          orderId={orderId}
-        />
+          <PaymentFailed
+            onBackToPaymentDetail={handleBackToPaymentDetail}
+            orderId={orderId}
+          />
         </Elements>
       </>
     );
@@ -332,3 +332,4 @@ export default function BookingPage() {
     </div>
   );
 }
+

@@ -33,7 +33,13 @@ function useCountdown(expiresAt) {
   return left;
 }
 
-export default function BookingDetailCard({ orderId, standards = [], extras = [] }) {
+export default function BookingDetailCard({
+  orderId,
+  standards = [],
+  extras = [],
+  promotionCode = "",
+  promotionDiscount = 0,
+}) {
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -172,8 +178,8 @@ export default function BookingDetailCard({ orderId, standards = [], extras = []
           </div>
         </div>
 
-        {/* Requests summary (live selections) */}
-        {(standards.length > 0 || extras.length > 0) && (
+        {/* Requests summary (live selections + promotion) */}
+        {(standards.length > 0 || extras.length > 0 || !!promotionCode) && (
           <div className="mx-4 mb-4 space-y-3">
             {standards.length > 0 && (
               <div>
@@ -200,6 +206,22 @@ export default function BookingDetailCard({ orderId, standards = [], extras = []
                       </div>
                     </li>
                   ))}
+                </ul>
+              </div>
+            )}
+            {promotionCode && (
+              <div>
+                <ul className="list-disc list-inside text-sm text-white space-y-0.5">
+                  <li className="flex flex-row justify-between">
+                    {promotionCode}
+                    <div>
+                      {" "}
+                      -
+                      {Number(promotionDiscount ?? 0).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </div>
+                  </li>
                 </ul>
               </div>
             )}

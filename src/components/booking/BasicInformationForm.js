@@ -99,7 +99,7 @@ export default function BasicInformationForm({
             name="firstName"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
 
@@ -117,7 +117,7 @@ export default function BasicInformationForm({
             name="lastName"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
 
@@ -135,7 +135,7 @@ export default function BasicInformationForm({
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
 
@@ -161,7 +161,7 @@ export default function BasicInformationForm({
               <ButtonCalendar
                 variant="outline"
                 className={cn(
-                  "w-full h-[50px] justify-start text-left font-normal border-gray-400",
+                  "w-full h-[50px] justify-start text-left font-normal border-gray-300 rounded-[4px]",
                   !date && "text-muted-foreground"
                 )}
               >
