@@ -30,6 +30,8 @@ export default function PaymentMethodForm({
   extras = [],
   user,
   orderId,
+  guestData,
+  additionalRequest = "",
 }) {
   const [method, setMethod] = useState("credit-card");
   const [promoInput, setPromoInput] = useState(promotionCode || "NEATLYNEW400");
@@ -117,11 +119,73 @@ export default function PaymentMethodForm({
       });
   }, [user]);
 
+  const handleCreateGuest = async () => {
+    if (!guestData?.first_name || !guestData?.last_name || !guestData?.email || !guestData?.phone) {
+      throw new Error("Guest information is required");
+    }
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Unauthorized");
+
+    const res = await fetch("/api/booking/create-guest", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        first_name: guestData.first_name,
+        last_name: guestData.last_name,
+        email: guestData.email,
+        phone: guestData.phone,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Failed to create guest");
+    }
+    return res.json();
+  };
+
+  const handleSaveAdditionalRequest = async () => {
+    if (!additionalRequest || !orderId) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Unauthorized");
+
+    const res = await fetch("/api/booking/additional", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        orderId,
+        additional_request: additionalRequest,
+      }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text || "Failed to save additional request");
+    }
+
+    return res.json();
+  };
+
   const handleCashConfirm = async () => {
     try {
       if (!user) {
         alert("Please login");
         return;
+      }
+
+      await handleCreateGuest();
+
+      try {
+        await handleSaveAdditionalRequest();
+      } catch (saveErr) {
+        console.error("Save additional request error:", saveErr);
       }
 
       const token = localStorage.getItem("token");
@@ -225,6 +289,8 @@ export default function PaymentMethodForm({
             clientSecret={clientSecret}
             onBack={onBack}
             onConfirm={onConfirm}
+            onCreateGuest={handleCreateGuest}
+            onSaveAdditionalRequest={handleSaveAdditionalRequest}
           />
         </Elements>
       )}

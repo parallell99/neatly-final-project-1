@@ -24,6 +24,8 @@ export default function BookingPage() {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [extras, setExtras] = useState([]);
+  const [standards, setStandards] = useState([]);
+  const [additionalRequest, setAdditionalRequest] = useState("");
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
   const [paymentFailed, setPaymentFailed] = useState(false);
@@ -34,6 +36,7 @@ export default function BookingPage() {
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [expiresAt, setExpiresAt] = useState(null);
   const [hasMarkedExpired, setHasMarkedExpired] = useState(false);
+  const [guestData, setGuestData] = useState(null);
 
   //ทดสอบ status
   const [orderId, setOrderId] = useState(
@@ -214,7 +217,10 @@ export default function BookingPage() {
                 <BasicInformationForm
                   roomId={roomId}
                   orderId={orderId}
-                  onNext={ () => {
+                  extras={extras}
+                  standards={standards}
+                  onNext={(data) => {
+                    setGuestData(data);
                     setCurrentStep(2);
                   }}
                 />
@@ -225,7 +231,11 @@ export default function BookingPage() {
                   onBack={() => setCurrentStep(1)}
                   onNext={() => setCurrentStep(3)}
                   onExtrasChange={setExtras}
+                  onStandardsChange={setStandards}
                   extras={extras}
+                  standards={standards}
+                  additionalRequest={additionalRequest}
+                  onAdditionalChange={setAdditionalRequest}
                 />
               )}
               {currentStep === 3 && (
@@ -238,12 +248,18 @@ export default function BookingPage() {
                   extras={extras}
                   user={user}
                   orderId={orderId}
+                  guestData={guestData}
+                  additionalRequest={additionalRequest}
                 />
               )}
             </div>
 
             <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
-              <BookingDetailCard orderId={orderId} />
+              <BookingDetailCard
+                orderId={orderId}
+                extras={extras}
+                standards={standards}
+              />
             </div>
           </div>
         </div>

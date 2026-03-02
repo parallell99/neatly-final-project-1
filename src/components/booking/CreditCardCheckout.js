@@ -22,7 +22,9 @@ export default function CreditCardCheckout({
   setSelectedCardId,
   onBack,
   onConfirm,
+  onCreateGuest,
   clientSecret,
+  onSaveAdditionalRequest,
 }) {
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
@@ -38,14 +40,13 @@ export default function CreditCardCheckout({
   const confirmStripePayment = async () => {
     if (!stripe || !clientSecret) return;
 
-    console.log("selectedCardId:", selectedCardId);
-    console.log("clientSecret:", clientSecret);
-    console.log("Intent ID:", clientSecret.split("_secret")[0]);
-    console.log("Stripe object:", stripe);
-
     setIsLoading(true);
 
     try {
+      if (onCreateGuest) {
+        await onCreateGuest();
+      }
+
       const { error, paymentIntent } =
         await stripe.confirmCardPayment(clientSecret, {
           payment_method: selectedCardId,
@@ -54,7 +55,17 @@ export default function CreditCardCheckout({
       if (error) {
         setErrorMessage(error.message);
         onConfirm?.({ success: false });
-      } else if (paymentIntent?.status === "succeeded") {
+        return;
+      }
+      if (paymentIntent?.status === "succeeded") {
+        try {
+          if (onSaveAdditionalRequest) {
+            await onSaveAdditionalRequest();
+          }
+        } catch (saveErr) {
+          console.error("Failed to save additional request:", saveErr);
+        }
+
         // อัปเดตสถานะ order ให้เหมือนกรณีชำระเงินสด
         try {
           const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -85,6 +96,9 @@ export default function CreditCardCheckout({
             paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ?? "",
         });
       }
+    } catch (err) {
+      if (err?.message) setErrorMessage(err.message);
+      onConfirm?.({ success: false });
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +217,8 @@ export default function CreditCardCheckout({
               orderId={orderId}
               onBack={onBack}
               onConfirm={onConfirm}
+              onCreateGuest={onCreateGuest}
+              onSaveAdditionalRequest={onSaveAdditionalRequest}
             />
           </div>
         </Elements>
