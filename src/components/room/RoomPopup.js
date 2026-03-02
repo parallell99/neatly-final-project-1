@@ -1,200 +1,6 @@
-// "use client";
-
-// import { useState } from "react";
-// import Image from "next/image";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-// } from "@/components/ui/dialog";
-
-// import LeftIcon from "@/assets/icons/arrow-left.svg";
-// import RightIcon from "@/assets/icons/arrow-right.svg";
-
-// export default function RoomPopup({ room, open, onOpenChange }) {
-//   const [currentIndex, setCurrentIndex] = useState(0);
-
-//   const [isImageOpen, setIsImageOpen] = useState(false);
-
-//   if (!room) return null;
-
-//   const images = room.images?.length ? room.images : [room.image];
-
-//   const nextImage = () => {
-//     setCurrentIndex((prev) =>
-//       prev === images.length - 1 ? 0 : prev + 1
-//     );
-//   };
-
-//   const prevImage = () => {
-//     setCurrentIndex((prev) =>
-//       prev === 0 ? images.length - 1 : prev - 1
-//     );
-//   };
-
-//   return (
-//     <>
-//       {/* ================= MAIN POPUP ================= */}
-//       <Dialog open={open} onOpenChange={onOpenChange}>
-//         <DialogContent className="w-full max-w-none h-screen rounded-none p-4 md:max-w-[800px] md:h-auto md:rounded-lg md:p-6">
-//           <div className="flex-1 overflow-y-auto p-4 md:p-0">
-//             <DialogHeader>
-//               <DialogTitle className="headline-4">
-//                 {room.title}
-//               </DialogTitle>
-//             </DialogHeader>
-
-//             {/* ================= IMAGE SECTION ================= */}
-//             {/* ✅ เพิ่ม onClick + cursor-pointer */}
-//             <div
-//               className="relative w-full h-[400px] overflow-hidden md:cursor-pointer"
-//               onClick={() => {
-//                 if (window.innerWidth >= 768) {
-//                   setIsImageOpen(true);
-//                 }
-//               }}
-//             >
-//               <Image
-//                 src={images[currentIndex]}
-//                 alt={room.title}
-//                 fill
-//                 sizes="(max-width: 768px) 100vw, 800px"
-//                 className="object-cover"
-//                 priority
-//               />
-
-//               {images.length > 1 && (
-//                 <>
-//                   <button
-//                     onClick={(e) => {
-//                       e.stopPropagation();
-//                       prevImage();
-//                     }}
-//                     className="absolute left-6 top-1/2 -translate-y-1/2
-//              w-12 h-12 rounded-full
-//              border border-white
-//              bg-white/20 backdrop-blur-md
-//              flex items-center justify-center
-//              text-white
-//              hover:bg-white/40 transition"
-//                   >
-//                     <LeftIcon className="w-5 h-5" />
-//                   </button>
-
-//                   <button
-//                     onClick={(e) => {
-//                       e.stopPropagation();
-//                       nextImage();
-//                     }}
-//                     className="absolute right-6 top-1/2 -translate-y-1/2
-//              w-12 h-12 rounded-full
-//              border border-white
-//              bg-white/20 backdrop-blur-md
-//              flex items-center justify-center
-//              text-white
-//              hover:bg-white/40 transition"
-//                   >
-//                     <RightIcon className="w-5 h-5" />
-//                   </button>
-//                 </>
-//               )}
-//             </div>
-
-//             {/* ================= ROOM INFO ================= */}
-//             <div className="mt-6">
-//               <div className="flex gap-4 body-3 text-[var(--color-gray-600)] mb-3">
-//                 <span>{room.guests || "2 Guests"}</span>
-//                 <span>{room.bed || "1 Double bed"}</span>
-//                 <span>{room.size || "36 sqm"}</span>
-//               </div>
-
-//               <p className="body-2 text-[var(--color-gray-700)]">
-//                 {room.description}
-//               </p>
-//             </div>
-
-//             <hr className="my-4" />
-
-//             {/* ================= AMENITIES ================= */}
-//             <div>
-//               <h4 className="headline-5 mb-4">Room Amenities</h4>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 body-2 text-[var(--color-gray-700)]">
-//                 <ul className="space-y-1 list-disc pl-5">
-//                   <li>Safe in Room</li>
-//                   <li>Air Conditioning</li>
-//                   <li>High speed internet connection</li>
-//                   <li>Hairdryer</li>
-//                   <li>Shower</li>
-//                   <li>Bathroom amenities</li>
-//                   <li>Lamp</li>
-//                 </ul>
-
-//                 <ul className="space-y-1 list-disc pl-5">
-//                   <li>Minibar</li>
-//                   <li>Telephone</li>
-//                   <li>Ironing board</li>
-//                   <li>A floor only accessible via a guest room key</li>
-//                   <li>Alarm clock</li>
-//                   <li>Bathrobe</li>
-//                 </ul>
-//               </div>
-//             </div>
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-
-//       {/* ================= FULLSCREEN LIGHTBOX ================= */}
-//       {/* ✅ เพิ่ม Dialog ตัวใหม่ */}
-//       <Dialog open={isImageOpen} onOpenChange={setIsImageOpen}>
-//         <DialogContent className="w-full h-screen max-w-none p-0 bg-black border-none">
-//           <div className="relative w-full h-full flex items-center justify-center">
-//             <Image
-//               src={images[currentIndex]}
-//               alt={room.title}
-//               fill
-//               sizes="100vw"
-//               className="object-contain"
-//               priority
-//             />
-
-//             {images.length > 1 && (
-//               <>
-//                 <button
-//                   onClick={prevImage}
-//                   className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white bg-white/20 backdrop-blur flex items-center justify-center"
-//                 >
-//                   <LeftIcon className="w-6 h-6" />
-//                 </button>
-
-//                 <button
-//                   onClick={nextImage}
-//                   className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white bg-white/20 backdrop-blur flex items-center justify-center"
-//                 >
-//                   <RightIcon className="w-6 h-6" />
-//                 </button>
-//               </>
-//             )}
-
-//             <button
-//               onClick={() => setIsImageOpen(false)}
-//               className="absolute top-6 right-6 text-white text-3xl"
-//             >
-//               ✕
-//             </button>
-//           </div>
-//         </DialogContent>
-//       </Dialog>
-//     </>
-//   );
-// }
-
-
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -202,20 +8,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-
-// ==============================
 // Arrow Button (Inline SVG)
-// ==============================
 function ArrowButton({ direction, onClick }) {
   const isLeft = direction === "left";
 
   return (
     <button
       onClick={onClick}
-      className={`absolute ${
-        isLeft ? "left-6" : "right-6"
-      } top-1/2 -translate-y-1/2
-      w-12 h-12 rounded-full
+      className={`absolute ${isLeft ? "left-4" : "right-4"
+        } top-1/2 -translate-y-1/2
+      w-10 h-10 rounded-full
       border border-white
       hover:bg-white
       flex items-center justify-center
@@ -233,19 +35,27 @@ function ArrowButton({ direction, onClick }) {
         className="text-white"
       >
         {isLeft ? (
-          <polyline points="15 18 9 12 15 6" />
+          <>
+           {/* เส้นตรงกลาง */}
+           <polyline points="19 12 5 12" />
+           {/* หัวลูกศรซ้าย */}
+           <polyline points="12 19 5 12 12 5" />
+           </>
         ) : (
-          <polyline points="9 18 15 12 9 6" />
+          <>
+          {/* เส้นตรงกลาง */}
+          <polyline points="5 12 19 12" />
+          {/* หัวลูกศรขวา */}
+          <polyline points="12 5 19 12 12 19" />
+          </>
         )}
       </svg>
     </button>
+    
   );
 }
 
-
-// ==============================
 // Image Carousel
-// ==============================
 function ImageCarousel({
   images,
   currentIndex,
@@ -256,16 +66,16 @@ function ImageCarousel({
 }) {
   return (
     <div
-      className="relative w-full h-[400px] overflow-hidden"
-      onClick={onClick}
+      className="relative flex justify-center items-center w-[343px] h-[209px] mt-4 rounded-sm overflow-hidden lg:w-[640px] lg:h-[400px] lg:mx-auto"
     >
       <img
-        src={images}
+        src={images[currentIndex].image_url}
         alt="room image"
         fill
         sizes="100vw"
-        className={contain ? "object-contain" : "object-cover"}
+        className="w-full max-w-[1440px] h-full object-cover"
         priority
+        onClick={onClick}
       />
 
       {images.length > 1 && (
@@ -278,20 +88,17 @@ function ImageCarousel({
   );
 }
 
-
-// ==============================
 // Main Component
-// ==============================
 export default function RoomPopup({ room, open, onOpenChange }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isImageOpen, setIsImageOpen] = useState(false);
-console.log("ROOM =",room);
+
 
   if (!room) return null;
 
   const images =
-    room.image_gallery ?.length ? room.image_main : [room.image_main];
-console.log("IMAGES=",images);
+    room.image_gallery?.length ? room.image_gallery : [room.image_main];
+  console.log("IMAGES=", images);
 
   const nextImage = () => {
     setCurrentIndex((prev) =>
@@ -309,36 +116,40 @@ console.log("IMAGES=",images);
     <>
       {/* ================= MAIN POPUP ================= */}
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-full max-w-none h-screen rounded-none p-4 md:max-w-[800px] md:h-auto md:rounded-lg md:p-6">
-          <div className="flex-1 overflow-y-auto p-4 md:p-0">
-            <DialogHeader>
-              <DialogTitle className="headline-4">
-                {room.title}
+        <DialogContent className="w-full max-w-none fixed left-1/2 top-[50%] -translate-x-1/2 -translate-y-1/2 p-0 rounded-t-lg mt-[10vh] lg:mt-[1vh] md:max-w-[800px] lg:h-auto md:rounded-lg lg:p-6">
+          <div className="flex-1 md:p-0">
+            <DialogHeader className="border-b border-b-gray-300">
+              <DialogTitle className="text-start headline-5 p-4">
+                {room.room_type_name}
               </DialogTitle>
             </DialogHeader>
+            <div className="max-h-[517px] px-4 overflow-auto">
+              <ImageCarousel
+                images={images}
+                currentIndex={currentIndex}
+                nextImage={nextImage}
+                prevImage={prevImage}
+                onClick={() => {
+                  if (window.innerWidth >= 768) {
+                    setIsImageOpen(true);
+                  }
+                }}
+              />
 
-            <ImageCarousel
-              images={images}
-              currentIndex={currentIndex}
-              nextImage={nextImage}
-              prevImage={prevImage}
-              onClick={() => {
-                if (window.innerWidth >= 768) {
-                  setIsImageOpen(true);
-                }
-              }}
-            />
+              <div className="mt-6">
+                <div className="flex gap-4 body-1 text-gray-700 mb-3">
+                  <span>{Number(room.room_guest_adult) + Number(room.room_guest_kid)} Guests</span>
+                  <span>|</span>
+                  <span>{room.bed_type}</span>
+                  <span>|</span>
+                  <span>{room.room_size} sqm</span>
+                </div>
 
-            <div className="mt-6">
-              <div className="flex gap-4 body-3 text-[var(--color-gray-600)] mb-3">
-                <span>{room.guests || "2 Guests"}</span>
-                <span>{room.bed || "1 Double bed"}</span>
-                <span>{room.size || "36 sqm"}</span>
+                <p className="body-1 text-gray-700">
+                  {room.description}
+                </p>
+                     
               </div>
-
-              <p className="body-2 text-[var(--color-gray-700)]">
-                {room.description}
-              </p>
             </div>
           </div>
         </DialogContent>
@@ -346,7 +157,9 @@ console.log("IMAGES=",images);
 
       {/* ================= FULLSCREEN LIGHTBOX ================= */}
       <Dialog open={isImageOpen} onOpenChange={setIsImageOpen}>
-        <DialogContent className="w-full h-screen max-w-none p-0 bg-black border-none">
+        <DialogContent
+          className="w-screen h-screen max-w-none max-h-none p-0 bg-black border-none rounded-none top-0 left-0 translate-x-0 translate-y-0"
+          showCloseButton={false}>
           <div className="relative w-full h-full flex items-center justify-center">
             <ImageCarousel
               images={images}
@@ -364,7 +177,7 @@ console.log("IMAGES=",images);
             </button>
           </div>
         </DialogContent>
-      </Dialog>
+      </Dialog >
     </>
   );
 }
