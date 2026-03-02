@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import axios from "axios";
-import { format, addDays, isLastDayOfMonth, addMonths } from "date-fns";
+import { format, isLastDayOfMonth, addMonths, addDays } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -18,10 +18,19 @@ function parseDateStr(str) {
   return isNaN(d.getTime()) ? undefined : d;
 }
 
-export default function SearchSection({ initialSearch, onOrdersChange, onLoadingChange }) {
+export default function SearchSection({
+  initialSearch,
+  onRoomsListChange,
+  onLoadingChange,
+}) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const tomorrow = addDays(today, 1);
+
   const [date, setDate] = useState({
-    from: undefined,
-    to: undefined,
+    from: today,
+    to: tomorrow,
   });
 
   const [searchLoading, setSearchLoading] = useState(false);
@@ -40,15 +49,14 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
   const [showBar, setShowBar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Apply initialSearch from URL (e.g. from HeroSearch) and fetch orders
   useEffect(() => {
     if (!initialSearch?.checkIn || !initialSearch?.checkOut) return;
+
     const from = parseDateStr(initialSearch.checkIn);
     const to = parseDateStr(initialSearch.checkOut);
+
     if (!from || !to) return;
+
     setDate({ from, to });
     setCheckInMonth(from);
     setCheckOutMonth(to);
@@ -56,36 +64,48 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
     setNumAdults(initialSearch.numAdults ?? 2);
     setNumKids(initialSearch.numKids ?? 0);
 
-    const fetchOrders = async () => {
+    const fetchRooms = async () => {
       try {
         setSearchLoading(true);
         onLoadingChange?.(true);
         setError(null);
-        const response = await axios.get("/api/availablerooms/order", {
-          params: { checkIn: initialSearch.checkIn, checkOut: initialSearch.checkOut },
-        });
+
+        const response = await axios.get(
+          "/api/rooms/availablerooms",
+          {
+            params: {
+              checkIn: initialSearch.checkIn,
+              checkOut: initialSearch.checkOut,
+            },
+          }
+        );
+
         const data = response.data.data;
-        if (onOrdersChange) onOrdersChange(data);
+
+        onRoomsListChange?.(data, {
+          checkIn: initialSearch.checkIn,
+          checkOut: initialSearch.checkOut,
+          numRooms: initialSearch.numRooms ?? 1,
+          numAdults: initialSearch.numAdults ?? 2,
+          numKids: initialSearch.numKids ?? 0,
+        });
       } catch (err) {
-        console.error("GET ORDERS ERROR:", err);
-        setError(err.response?.data?.error || "Failed to load orders");
+        setError(err.response?.data?.error || "Failed to load rooms");
       } finally {
         setSearchLoading(false);
         onLoadingChange?.(false);
       }
     };
-    fetchOrders();
+
+    fetchRooms();
   }, [initialSearch?.checkIn, initialSearch?.checkOut]);
 
-  // Scroll hide/show
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > lastScrollY && window.scrollY > 100) {
         setShowBar(false);
       } else {
         setShowBar(true);
-        console.log("setShowBar");
-        
       }
       setLastScrollY(window.scrollY);
     };
@@ -94,54 +114,48 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  const handleSearch = async () => {
-    const checkInFormatted = date?.from ? format(date.from, "yyyy-MM-dd") : null;
-    const checkOutFormatted = date?.to ? format(date.to, "yyyy-MM-dd") : null;
-  
-    if (!checkInFormatted || !checkOutFormatted) return;
-  
-    try {
-      setSearchLoading(true);
-      onLoadingChange?.(true);
-      setError(null);
-      const response = await axios.get("/api/availablerooms/order", {
-        params: { checkIn: checkInFormatted, checkOut: checkOutFormatted },
-      });
-
-      const data = response.data.data;
-
-      // ส่งข้อมูล order กลับไปให้ RoomsList
-      if (onOrdersChange) {
-        onOrdersChange(data);
-      }
-    } catch (error) {
-      console.error("GET ORDERS ERROR:", error);
-      setError(error.response?.data?.error || "Failed to load orders");
-    } finally {
-      setSearchLoading(false);
-      onLoadingChange?.(false);
+  useEffect(() => {
+    if (date?.from && date?.to) {
+      handleSearch();
     }
+  }, []);
+
+  const handleSearch = () => {
+    if (!date?.from || !date?.to) return;
+  
+    const checkInFormatted = format(date.from, "yyyy-MM-dd");
+    const checkOutFormatted = format(date.to, "yyyy-MM-dd");
+  
+    onRoomsListChange?.({
+      checkIn: checkInFormatted,
+      checkOut: checkOutFormatted,
+      numRooms,
+      numAdults,
+      numKids,
+    });
   };
- 
+
   return (
-    <section className={`w-full sticky top-0 z-40 transition-transform duration-300 ease-in-out ${showBar ? "translate-y-0" : "-translate-y-full"}`}>
+    <section
+      className={`w-full md:sticky md:top-0 z-40 transition-transform duration-300 ease-in-out ${
+        showBar ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       <div className="w-full bg-white shadow-md">
         <div className="w-full px-4 md:px-6 lg:px-[160px] py-6 md:py-0 md:h-[156px] md:flex md:items-center">
-          <div className="w-full flex flex-col md:flex-row md:items-end gap-5 md:gap-6">  
+          <div className="w-full flex flex-col md:flex-row md:items-end gap-5 md:gap-6">
             {/* Check In */}
             <div className="w-full md:flex-1">
-              <label className="block text-sm font-medium text-[#344054] mb-2">
+              <label className="block mb-2 body-1 text-gray-900">
                 Check In
               </label>
 
               <Popover open={openCheckIn} onOpenChange={setOpenCheckIn}>
                 <PopoverTrigger asChild>
-                  <button
-                    className="group w-full h-[48px] px-4 border border-gray-300 rounded text-left text-sm flex items-center justify-between hover:border-orange-500 transition"
-                  >
-                    <span>
+                  <button className="group w-full h-[48px] px-4 border border-gray-300 rounded text-left text-sm flex items-center justify-between hover:border-orange-500 transition">
+                    <span className="text-gray-700 body-1">
                       {date?.from
-                        ? format(date.from, "EEE, dd MMM yyyy") 
+                        ? format(date.from, "EEE, dd MMM yyyy")
                         : "Select date"}
                     </span>
                     <CalendarIcon className="h-5 w-5 text-[#98A2B3] group-hover:text-orange-500 transition" />
@@ -151,10 +165,10 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={date?.from} 
+                    selected={date?.from}
                     month={checkInMonth}
                     onMonthChange={setCheckInMonth}
-                    disabled={{ before: today }}
+                    // disabled={{ before: today }}
                     onSelect={(selectedDate) => {
                       if (!selectedDate) return;
 
@@ -183,31 +197,31 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
               </Popover>
             </div>
 
-            {/* Dash */}
-            <div className="hidden md:block pb-3 text-gray-400 text-lg">-</div>
+            <div className="hidden md:block pb-3 text-gray-600 text-lg">
+              -
+            </div>
 
             {/* Check Out */}
             <div className="w-full md:flex-1">
-              <label className="block text-sm font-medium text-[#344054] mb-2">
+              <label className="block mb-2 body-1 text-gray-900">
                 Check Out
               </label>
 
               <Popover open={openCheckOut} onOpenChange={setOpenCheckOut}>
                 <PopoverTrigger asChild>
                   <button
-                    disabled={!date?.from}
+                    // disabled={!date?.from}
                     className={`group w-full h-[48px] px-4 border rounded text-left text-sm flex items-center justify-between transition ${
                       date?.from
                         ? "border-gray-300 hover:border-orange-500"
                         : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    <span>
+                    <span className="text-gray-700 body-1">
                       {date?.to
                         ? format(date.to, "EEE, dd MMM yyyy")
                         : "Select date"}
                     </span>
-
                     <CalendarIcon
                       className={`h-5 w-5 transition ${
                         date?.from
@@ -239,9 +253,7 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
 
                       setCheckOutMonth(selectedDate);
 
-                      setTimeout(() => {
-                        setOpenCheckOut(false);
-                      }, 500);
+                      setTimeout(() => setOpenCheckOut(false), 500);
                     }}
                     initialFocus
                     className="p-6"
@@ -256,7 +268,7 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
 
             {/* Rooms & Guests */}
             <div className="w-full md:flex-1">
-              <label className="block text-sm font-medium text-[#344054] mb-2">
+              <label className="block mb-2 body-1 text-gray-900">
                 Rooms & Guests
               </label>
 
@@ -271,7 +283,7 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
             </div>
 
             {/* Search Button */}
-            <div className="w-full md:w-[140px] md:pb-0 pt-2 md:pt-0">
+            <div className="w-full md:w-[140px] pt-2 md:pt-0">
               <button
                 onClick={handleSearch}
                 disabled={searchLoading}
@@ -284,7 +296,6 @@ export default function SearchSection({ initialSearch, onOrdersChange, onLoading
                 {searchLoading ? "Searching..." : "Search"}
               </button>
             </div>
-
           </div>
         </div>
       </div>
