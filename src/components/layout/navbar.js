@@ -10,6 +10,7 @@ import profileIcon from "@/assets/icons/people.svg?url";
 import paymentIcon from "@/assets/icons/credit.svg?url";
 import bookingIcon from "@/assets/icons/cs_booking.svg?url";
 import logoutIcon from "@/assets/icons/logout.svg?url";
+import adminIcon from "@/assets/icons/manage.svg?url";
 
 // Helper function to get image source (handles both string and object)
 const getImageSrc = (img) => {
@@ -19,7 +20,8 @@ const getImageSrc = (img) => {
 };
 
 export default function Navbar() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, userRole, logout } = useAuth();
+  const isAgent = userRole === "agent";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [navbarHeight, setNavbarHeight] = useState(0);
   const [navLogoUrl, setNavLogoUrl] = useState(null);
@@ -194,6 +196,15 @@ export default function Navbar() {
                         <img src={getImageSrc(bookingIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                         Booking History
                       </Link>
+                      {isAgent && (
+                        <Link 
+                          href="/admin/customer-booking" 
+                          className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
+                        >
+                          <img src={getImageSrc(adminIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                          Admin Panel
+                        </Link>
+                      )}
                       <div className="border-t border-gray-200 my-1"></div>
                       <button 
                         onClick={logout}
@@ -344,6 +355,16 @@ export default function Navbar() {
                   <img src={bookingIcon?.src || bookingIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                   Booking History
                 </Link>
+                {isAgent && (
+                  <Link 
+                    href="/admin/customer-booking" 
+                    className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                    onClick={toggleMenu}
+                  >
+                    <img src={adminIcon?.src || adminIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                    Admin Panel
+                  </Link>
+                )}
 
                 {/* Separator */}
                 <div className="border-t border-gray-300"></div>
