@@ -27,6 +27,9 @@ export default function CountrySelector({
   const selectedCountry = value ?? "";
   console.log(1);
   console.log(selectedCountry);
+  const selectedCountryObj = countries.find(
+    (c) => c.code === selectedCountry
+  );
 
   return (
     <div className="flex flex-col w-full gap-[4px]">
@@ -39,7 +42,7 @@ export default function CountrySelector({
         </label>
       )}
       <Combobox
-        value={selectedCountry}
+        value={selectedCountryObj?.name || ""}
         onValueChange={onChange}
         disabled={disabled}
         items={countries}
@@ -48,21 +51,19 @@ export default function CountrySelector({
         <ComboboxInput
           id={name}
           placeholder={placeholder}
-          className={`w-full h-[48px] px-3 border rounded-[4px] text-[16px] font-normal shadow-none !ring-0 !ring-transparent !placeholder:text-[16px] !placeholder:text-gray-500 text-gray-500${
-            disabled
-              ? "bg-gray-100 border-gray-400 text-gray-500 cursor-not-allowed"
-              : `${
-                  error
-                    ? "bg-white"
-                    : "border-gray-300 bg-white hover:border-gray-400"
-                }  text-black`
-          }`}
+          className={`w-full h-[48px] px-3 border rounded-[4px] text-[16px] font-normal shadow-none !ring-0 !ring-transparent !placeholder:text-[16px] !placeholder:text-gray-500 text-gray-500${disabled
+              ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+              : `${error
+                ? "bg-white"
+                : "border-gray-300 bg-white hover:border-gray-400"
+              }  text-black`
+            }`}
           autoComplete="off"
           required={required}
           aria-invalid={!!error}
           aria-describedby={error ? `${name}-error` : undefined}
         />
-        
+
         <ComboboxContent className={`mt-1 mb-1 `}>
           <ComboboxEmpty>
             <div className="text-sm text-gray-500">
@@ -72,13 +73,12 @@ export default function CountrySelector({
           <ComboboxList>
             {(country) => (
               <ComboboxItem
-                key={country}
-                value={country}
-                className={`w-full text-sm rounded-[4px] focus:outline-none 
-                    ${selectedCountry === country ? "bg-gray-300" : ""}`}
+                key={country.code}
+                value={country.code}   // เก็บ code
+                className={`w-full text-sm rounded-[4px] focus:outline-none
+        ${selectedCountry === country.code ? "bg-gray-200" : ""}`}
               >
-                <span>{country}</span>
-                
+                <span>{country.name}</span>  {/* แสดงชื่อ */}
               </ComboboxItem>
             )}
           </ComboboxList>

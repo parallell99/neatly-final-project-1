@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import Navbar from "@/components/layout/navbar";
 import Input from "@/components/ui/AuthInput/AuthInput";
-import DatePicker from "@/components/ui/DatePicker/DatePicker";
 import { useRegisterForm } from "@/hooks/useRegisterForm";
 import Button from "@/components/ui/buttons/buttons";
 import axios from "axios";
@@ -39,47 +38,62 @@ export default function Register() {
     formState: { errors },
     setValue,
     watch,
-    control
+    control,
+    setError,
   } = useRegisterForm();
 
+  const phoneNumber = watch("phoneNumber");
 
+  useEffect(() => {
+    console.log("phoneNumber เปลี่ยน:", phoneNumber);
+  }, [phoneNumber]);
 
   const profilePicture = watch("profilePicture");
 
   // Handle image preview
-  React.useEffect(() => {
-    if (profilePicture) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
-      reader.readAsDataURL(profilePicture);
-    } else {
+  useEffect(() => {
+    if (!profilePicture) {
       setPreviewImage(null);
+      return;
     }
+
+    const objectUrl = URL.createObjectURL(profilePicture);
+    setPreviewImage(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
   }, [profilePicture]);
 
   // เพิ่ม useEffect เพื่อ sync date state จาก watch
-  React.useEffect(() => {
-    const dob = watch("dateOfBirth");
-    if (dob) {
-      setDate(new Date(dob));
+  const dateOfBirth = watch("dateOfBirth");
+
+  useEffect(() => {
+    if (dateOfBirth) {
+      setDate(new Date(dateOfBirth));
     } else {
       setDate(undefined);
     }
-  }, [watch("dateOfBirth")]);
+  }, [dateOfBirth]);
+
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setValue("profilePicture", file, { shouldValidate: true });
+  };
 
   const handleRemoveImage = () => {
     setPreviewImage(null);
-    setValue("profilePicture", null);
+    setValue("profilePicture", undefined, { shouldValidate: true });
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-
   const onSubmit = async (data) => {
+    console.log("form data ทั้งก้อน:", data);
+    console.log("phoneNumber ตอน submit:", data.phoneNumber);
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -142,8 +156,30 @@ export default function Register() {
       router.push("/");
 
     } catch (error) {
+      const apiError = error.response?.data?.error;
+
+      if (apiError === "Username already in use") {
+        setError("username", {
+          type: "manual",
+          message: "Username already in use",
+        });
+        // ไม่ต้องโชว์ generic submit error ซ้ำ
+        setSubmitError(null);
+        return;
+      }
+
+      if (apiError === "Email already in use") {
+        setError("email", {
+          type: "manual",
+          message: "Email already in use",
+        });
+        setSubmitError(null);
+        return;
+      }
+
+      // กรณีอื่น ๆ ใช้ข้อความรวมด้านบนเหมือนเดิม
       const message =
-        error.response?.data?.error ||
+        apiError ||
         error.message ||
         "Register failed";
 
@@ -153,25 +189,6 @@ export default function Register() {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      alert("Please upload a valid image file (JPEG, PNG, GIF, WebP).");
-      return;
-    }
-
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert("The file is too large. Please upload an image smaller than 5MB.");
-      return;
-    }
-
-    // ✅ เก็บเป็น file เดียว ไม่ใช่ FileList
-    setValue("profilePicture", file, { shouldValidate: true });
-  };
 
   return (
     <div className="min-h-screen relative">
@@ -199,7 +216,6 @@ export default function Register() {
                   placeholder="Enter your first name"
                   register={register}
                   error={errors.firstName}
-                  required
                 />
 
                 <Input
@@ -208,7 +224,6 @@ export default function Register() {
                   placeholder="Enter your last name"
                   register={register}
                   error={errors.lastName}
-                  required
                 />
 
                 <Input
@@ -217,7 +232,11 @@ export default function Register() {
                   placeholder="Enter your username"
                   register={register}
                   error={errors.username}
-                  required
+                  onBlur={(e) => {
+                    const lower = e.target.value.toLowerCase();
+                    setValue("username", lower, { shouldValidate: true });
+                    register("username").onBlur(e);
+                  }}
                 />
 
                 <Input
@@ -227,7 +246,6 @@ export default function Register() {
                   placeholder="Enter your email"
                   register={register}
                   error={errors.email}
-                  required
                 />
 
                 <Input
@@ -237,7 +255,6 @@ export default function Register() {
                   placeholder="Enter your password"
                   register={register}
                   error={errors.password}
-                  required
                 />
 
                 <Input
@@ -247,7 +264,6 @@ export default function Register() {
                   placeholder="Confirm your password"
                   register={register}
                   error={errors.confirmPassword}
-                  required
                 />
 
                 <PhoneInput
@@ -257,33 +273,34 @@ export default function Register() {
                   placeholder="Enter your phone number"
                   error={errors.phoneNumber}
                   disableSearchIcon={true}
-                  required
+                  searchStyle={{ width: '100%', boxSizing: 'border-box' }}
                   country="th"
                 />
 
 
                 {/* Date of Birth - Popover + Calendar */}
-                <div className="w-full">
+                <div className="flex flex-col w-full gap-[4px]">
                   <label
                     htmlFor="dateOfBirth"
-                    className="block text-[16px] font-normal text-gray-900 mb-2"
+                    className="font-normal text-[16px] text-gray-900"
                   >
                     Date of Birth
                   </label>
+
                   <Popover>
                     <PopoverTrigger asChild>
                       <ButtonCalendar
-                      id="dateOfBirth"
+                        id="dateOfBirth"
                         variant="outline"
                         className={cn(
-                          "w-full h-[50px] justify-between text-left text-[16px] font-normal text-gray-900 hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500",
+                          "w-full h-[50px] justify-between text-left text-[16px] font-normal shadow-none text-gray-900 rounded-[4px] hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500",
                           "data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0 ",
                           !date && "text-muted-foreground",
                           errors.dateOfBirth && "border-red"
                         )}
                       >
 
-                        {date ? format(date, "PPP") : <span className="text-gray-600">Select your date of birth</span>}<CalendarIcon className="h-4 w-4 text-gray-500" />
+                        {date ? format(date, "PPP") : <label className="text-gray-600">Select your date of birth</label>}<CalendarIcon className="h-4 w-4 text-gray-500" />
                       </ButtonCalendar>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 bg-white shadow-md border ">
@@ -319,15 +336,16 @@ export default function Register() {
                   value={watch("country")}
                   onChange={(value) => setValue("country", value, { shouldValidate: true })}
                   error={errors.country}
-                  required
                 />
               </div>
             </section>
 
+
             {/* Profile Picture Section */}
-            <section className=" lg:gap-[40px] ">
-              <h5 className="headline-5 text-gray-600 pb-[24px]">Profile Picture</h5>
+            <section className=" lg:gap-[10px] flex flex-col justify-center items-center lg:items-start lg-justify-start">
+              <h5 className="text-[20px] font-medium lg:pl-4  text-gray-600">Profile Picture</h5>
               <div className="flex flex-col items-start w-[167px] h-[167px] ">
+
                 <label
                   htmlFor="profilePicture"
                   className={`
@@ -336,7 +354,7 @@ export default function Register() {
                   flex flex-col items-center justify-center cursor-pointer
                   transition-all duration-200 overflow-hidden 
                   ${errors.profilePicture
-                      ? 'border-red-500 bg-red-50'
+                      ? 'border-red bg-red-50'
                       : 'bg-gray-200 hover:border-gray-400'
                     }
                 `}
@@ -376,7 +394,7 @@ export default function Register() {
                   />
                 </label>
                 {errors.profilePicture && (
-                  <p className="mt-2 text-sm text-red-500">{errors.profilePicture.message}</p>
+                  <p className="mt-2 text-sm text-red">{errors.profilePicture.message}</p>
                 )}
               </div>
             </section>
@@ -389,8 +407,8 @@ export default function Register() {
             )}
 
             {/* Submit Button */}
-            <div className="contents lg:grid grid-cols-2 lg:gap-[40px]">
-              <Button buttonStyle="primary" buttonText={isSubmitting ? "Register..." : "Register"} type="submit" disabled={isSubmitting}  className=""/>
+            <div className="contents ">
+              <Button buttonStyle="primary" buttonText={isSubmitting ? "Register..." : "Register"} type="submit" disabled={isSubmitting} className="lg:w-[167px]" />
             </div>
           </form>
         </main>
