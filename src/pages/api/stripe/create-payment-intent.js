@@ -66,14 +66,17 @@ export default async function handler(req, res) {
       },
     });
 
-    // 4️⃣ update order
-    await supabaseAdmin
+    // 4️⃣ update order ให้ผูกกับ payment_intent_id
+    const { error: updateError } = await supabaseAdmin
       .from("orders")
       .update({
         payment_intent_id: paymentIntent.id,
-        payment_status: "pending",
       })
       .eq("id", orderId);
+
+    if (updateError) {
+      console.error("Failed to update order with payment_intent_id:", updateError);
+    }
 
     return res.status(200).json({
       clientSecret: paymentIntent.client_secret,

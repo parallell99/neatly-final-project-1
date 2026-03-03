@@ -28,6 +28,7 @@ export default function BookingPage() {
   const [additionalRequest, setAdditionalRequest] = useState("");
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
+  const [promotionId, setPromotionId] = useState(null);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
@@ -38,24 +39,75 @@ export default function BookingPage() {
   const [hasMarkedExpired, setHasMarkedExpired] = useState(false);
   const [guestData, setGuestData] = useState(null);
 
-  //ทดสอบ status
-  const [orderId, setOrderId] = useState(
-    "007d85da-d822-42c4-baa5-f1f7d14aca2e"
-  );
+  const [orderId, setOrderId] = useState(null);
 
-  console.log("BOOKING PAGE orderId:", orderId);
-  
+  useEffect(() => {
+    if (orderId) return;
 
-  const handlePromotionChange = ({ code, discount }) => {
+    const fetchLatestOrder = async () => {
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+        const res = await fetch("/api/booking/order-detail", {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : undefined,
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const latestOrderId = data?.order?.id;
+        if (latestOrderId) {
+          setOrderId(latestOrderId);
+        }
+      } catch (err) {
+        console.error("Failed to fetch latest order for user:", err);
+      }
+    };
+
+    fetchLatestOrder();
+  }, [orderId]);
+
+  const handlePromotionChange = ({ code, discount, promotionId }) => {
     setPromotionCode(code);
     setPromotionDiscount(discount);
+    setPromotionId(promotionId ?? null);
   };
 
   const handlePaymentConfirm = ({ success, paymentMethod: method, cardLastDigits: digits }) => {
     if (success) {
-      // Payment successful - show Payment Success UI
-      setPaymentMethod(method || "Credit Card");
-      setCardLastDigits(digits || "888");
+      const finalMethod = method || "Credit Card";
+      const finalDigits = digits || "888";
+
+      // เก็บวิธีจ่ายและเลขบัตรท้ายไว้ตาม orderId เพื่อใช้ในหน้า success (หลัง redirect)
+      if (typeof window !== "undefined" && orderId) {
+        try {
+          window.sessionStorage.setItem(
+            `booking:payment:${orderId}`,
+            JSON.stringify({
+              method: finalMethod,
+              cardLastDigits: finalDigits,
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }
+
+      // Payment successful - redirect to persistent success page
+      const finalOrderId = orderId;
+      if (finalOrderId) {
+        router.push(`/booking/${finalOrderId}/success`);
+        return;
+      }
+
+      // fallback: keep old in-page success behaviour
+      setPaymentMethod(finalMethod);
+      setCardLastDigits(finalDigits);
       setPaymentSuccess(true);
     } else {
       // Payment failed - show Payment Failed UI
@@ -102,6 +154,9 @@ export default function BookingPage() {
       if (typeof parsed.promotionDiscount === "number") {
         setPromotionDiscount(parsed.promotionDiscount);
       }
+      if (parsed.promotionId) {
+        setPromotionId(parsed.promotionId);
+      }
     } catch {
       // ignore parse errors
     }
@@ -118,6 +173,7 @@ export default function BookingPage() {
       additionalRequest,
       promotionCode,
       promotionDiscount,
+      promotionId,
     };
 
     window.sessionStorage.setItem(
@@ -131,6 +187,7 @@ export default function BookingPage() {
     additionalRequest,
     promotionCode,
     promotionDiscount,
+    promotionId,
   ]);
 
   // Scroll to top when step changes
@@ -218,25 +275,6 @@ export default function BookingPage() {
     return () => clearInterval(intervalId);
   }, [expiresAt, hasMarkedExpired, orderId]);
 
-  // Show Payment Success UI if payment succeeded
-  if (paymentSuccess) {
-    return (
-      <>
-        <Navbar />
-        <PaymentSuccess
-          orderId={orderId}
-          extras={extras}
-          promotionCode={promotionCode}
-          promotionDiscount={promotionDiscount}
-          paymentMethod={paymentMethod}
-          cardLastDigits={cardLastDigits}
-          onBackToHome={handleBackToHome}
-          onCheckBookingDetail={handleCheckBookingDetail}
-        />
-      </>
-    );
-  }
-
   // Show Payment Failed UI if payment failed
   if (paymentFailed) {
     return (
@@ -298,10 +336,12 @@ export default function BookingPage() {
                   promotionDiscount={promotionDiscount}
                   onPromotionChange={handlePromotionChange}
                   extras={extras}
+                  standards={standards}
                   user={user}
                   orderId={orderId}
                   guestData={guestData}
                   additionalRequest={additionalRequest}
+                  promotionId={promotionId}
                 />
               )}
             </div>
@@ -322,7 +362,7 @@ export default function BookingPage() {
         isOpen={showExpiredModal}
         onGoBack={() => {
           setShowExpiredModal(false);
-          router.push("/booking");
+          router.push("/search-rooms");
         }}
         onGoHome={() => {
           setShowExpiredModal(false);

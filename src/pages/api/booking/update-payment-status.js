@@ -35,8 +35,10 @@ export default async function handler(req, res) {
     })
     .eq("id", orderId)
     .eq("user_id", user.id)
+    // ป้องกันไม่ให้เปลี่ยนสถานะ order ที่จ่ายเงินแล้ว / ไม่ได้อยู่ในสถานะ pending
+    .eq("status", "pending")
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
     return res.status(500).json({ message: "Update failed" });
