@@ -182,20 +182,24 @@ export default function Navbar() {
                         <img src={getImageSrc(profileIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                         Profile
                       </Link>
-                      <Link 
-                        href="/payment-method" 
-                        className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
-                      >
-                        <img src={getImageSrc(paymentIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
-                        Payment Method
-                      </Link>
-                      <Link 
-                        href="/booking" 
-                        className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
-                      >
-                        <img src={getImageSrc(bookingIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
-                        Booking History
-                      </Link>
+                      {!isAgent && (
+                        <>
+                          <Link 
+                            href="/payment-method" 
+                            className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
+                          >
+                            <img src={getImageSrc(paymentIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                            Payment Method
+                          </Link>
+                          <Link 
+                            href="/booking" 
+                            className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
+                          >
+                            <img src={getImageSrc(bookingIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                            Booking History
+                          </Link>
+                        </>
+                      )}
                       {isAgent && (
                         <Link 
                           href="/admin/customer-booking" 
@@ -339,22 +343,26 @@ export default function Navbar() {
                   <img src={profileIcon?.src || profileIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                   Profile
                 </Link>
-                <Link 
-                  href="/payment-method" 
-                  className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
-                  onClick={toggleMenu}
-                >
-                  <img src={paymentIcon?.src || paymentIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
-                  Payment Method
-                </Link>
-                <Link 
-                  href="/booking" 
-                  className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
-                  onClick={toggleMenu}
-                >
-                  <img src={bookingIcon?.src || bookingIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
-                  Booking History
-                </Link>
+                {!isAgent && (
+                  <>
+                    <Link 
+                      href="/payment-method" 
+                      className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      <img src={paymentIcon?.src || paymentIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                      Payment Method
+                    </Link>
+                    <Link 
+                      href="/booking" 
+                      className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      <img src={bookingIcon?.src || bookingIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                      Booking History
+                    </Link>
+                  </>
+                )}
                 {isAgent && (
                   <Link 
                     href="/admin/customer-booking" 

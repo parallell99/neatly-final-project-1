@@ -31,13 +31,21 @@ export default function HeroSearch() {
   const router = useRouter();
   const today = getToday();
   const [heroBgUrl, setHeroBgUrl] = useState(null);
+  const [heroText, setHeroText] = useState("");
+  const [heroTextMobile, setHeroTextMobile] = useState("");
 
   useEffect(() => {
     fetch("/api/hotel-information")
       .then((res) => res.json())
       .then((json) => {
-        const url = json?.data?.hotelBgUrl ?? null;
-        setHeroBgUrl(url || null);
+        const d = json?.data;
+        if (d) {
+          setHeroBgUrl(d.hotelBgUrl ?? null);
+          const t = d.hotelMainText && String(d.hotelMainText).trim();
+          setHeroText(t || "");
+          const m = d.hotelMainTextMobile && String(d.hotelMainTextMobile).trim();
+          setHeroTextMobile(m || "");
+        }
       })
       .catch(() => {});
   }, []);
@@ -83,17 +91,56 @@ export default function HeroSearch() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/10"></div>
         </div>
-
-        {/* Content */}
-        <div className="relative z-10 top-10 w-full max-w-[1200px] mx-auto px-4 lg:px-8">
-          {/* Title */}
-          <h1 className="font-serif headline-3 text-white text-center mb-8 lg:mb-12 leading-tight pb-10">
-            A Best Place <br className="lg:hidden"/> for  Your <br className="max-lg:hidden"/>
-            Neatly Experience
+        <div>
+        {/* Title — แยกกล่อง ไม่ใช้ padding ของกล่องหลัก */}
+        <div className="relative z-10 top-10 w-full">
+          <h1 className="font-serif headline-3 text-white text-center mb-8 lg:mb-12 leading-tight pb-10 block">
+            {/* แสดงเป็น 3 บรรทัดเหมือนที่ส่งมาจาก hotel-information (คั่นด้วย Enter) */}
+            {/* Mobile */}
+            <span className="lg:hidden block">
+              {(heroTextMobile || heroText) ? (
+                (() => {
+                  const lines = (heroTextMobile || heroText).split("\n");
+                  const three = [lines[0] ?? "", lines[1] ?? "", lines[2] ?? ""];
+                  return three.map((line, i) => (
+                    <span key={i} className="block">
+                      {line}
+                    </span>
+                  ));
+                })()
+              ) : (
+                <>
+                  <span className="block">A Best Place</span>
+                  <span className="block">for Your Neatly</span>
+                  <span className="block">Experience</span>
+                </>
+              )}
+            </span>
+            {/* Desktop */}
+            <span className="hidden lg:block">
+              {heroText ? (
+                (() => {
+                  const lines = heroText.split("\n");
+                  const three = [lines[0] ?? "", lines[1] ?? "", lines[2] ?? ""];
+                  return three.map((line, i) => (
+                    <span key={i} className="block">
+                      {line}
+                    </span>
+                  ));
+                })()
+              ) : (
+                <>
+                  <span className="block">A Best Place for Your</span>
+                  <span className="block">Neatly Experience</span>
+                </>
+              )}
+            </span>
           </h1>
+        </div>
 
-          {/* Search Form */}
-          <div className="bg-white rounded-lg shadow-xl p-6 lg:p-8 max-w-2xl lg:max-w-5xl mx-auto">
+        {/* กล่องหลัก — Search Form มี padding แยกจาก Title */}
+        <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 lg:px-8">
+          <div className="bg-white rounded-lg shadow-xl p-6 lg:p-8 min-w-[343px] w-full max-w-2xl lg:w-[1120px] lg:max-w-[1120px] mx-auto">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:gap-4">
               {/* Check In */}
               <div className="flex-1 min-w-0">
@@ -198,6 +245,7 @@ export default function HeroSearch() {
               />
             </div>
           </div>
+        </div>
         </div>
       </section>
     </>

@@ -28,6 +28,7 @@ function generateUuid() {
  *   - hotel_logo_footter_url (text, nullable) — logo สำหรับ footer
  *   - hotel_bg_url (text, nullable) — รูปพื้นหลัง about/landing
  *   - hotel_phone (text, nullable), hotel_email (text, nullable), hotel_location (text, nullable) — contact
+ *   - hotel_main_text (text, nullable), hotel_main_text_mobile (text, nullable) — ข้อความบนรูป Hero (Desktop / Mobile)
  *   - created_at, update_at (timestampz) — โปรเจกต์ใช้ชื่อคอลัมน์ update_at
  */
 export default async function handler(req, res) {
@@ -45,6 +46,8 @@ export default async function handler(req, res) {
     hotelPhone: null,
     hotelEmail: null,
     hotelLocation: null,
+    hotelMainText: null,
+    hotelMainTextMobile: null,
   };
 
   try {
@@ -52,12 +55,12 @@ export default async function handler(req, res) {
       try {
         let row = null;
         let getError = null;
-        const selectWithContact = "hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url, hotel_phone, hotel_email, hotel_location";
+        const selectWithContact = "hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url, hotel_phone, hotel_email, hotel_location, hotel_main_text, hotel_main_text_mobile";
         let sel = supabaseAdmin.from("hotel_information").select(selectWithContact).limit(1).maybeSingle();
         const res1 = await sel;
         getError = res1.error;
         row = res1.data;
-        if (getError && ((getError.message || "").includes("hotel_logo_footter_url") || (getError.message || "").includes("hotel_logo_footer") || (getError.message || "").includes("hotel_bg_url") || (getError.message || "").includes("hotel_phone") || (getError.message || "").includes("hotel_email") || (getError.message || "").includes("hotel_location"))) {
+        if (getError && ((getError.message || "").includes("hotel_logo_footter_url") || (getError.message || "").includes("hotel_logo_footer") || (getError.message || "").includes("hotel_bg_url") || (getError.message || "").includes("hotel_phone") || (getError.message || "").includes("hotel_email") || (getError.message || "").includes("hotel_location") || (getError.message || "").includes("hotel_main_text") || (getError.message || "").includes("hotel_main_text_mobile"))) {
           const res2 = await supabaseAdmin.from("hotel_information").select("hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url").limit(1).maybeSingle();
           getError = res2.error;
           row = res2.data;
@@ -81,6 +84,8 @@ export default async function handler(req, res) {
             hotelPhone: row?.hotel_phone ?? defaults.hotelPhone ?? "",
             hotelEmail: row?.hotel_email ?? defaults.hotelEmail ?? "",
             hotelLocation: row?.hotel_location ?? defaults.hotelLocation ?? "",
+            hotelMainText: row?.hotel_main_text ?? defaults.hotelMainText ?? "",
+            hotelMainTextMobile: row?.hotel_main_text_mobile ?? defaults.hotelMainTextMobile ?? "",
           },
           rowExists,
         });
@@ -92,7 +97,7 @@ export default async function handler(req, res) {
 
     const body = typeof req.body === "object" && req.body !== null ? req.body : {};
     const buildPayload = (b) => {
-      const { hotelName, hotelDescription, hotelLogoUrl, hotelLogoFooterUrl, hotelBgUrl, hotelPhone, hotelEmail, hotelLocation } = b || {};
+      const { hotelName, hotelDescription, hotelLogoUrl, hotelLogoFooterUrl, hotelBgUrl, hotelPhone, hotelEmail, hotelLocation, hotelMainText, hotelMainTextMobile } = b || {};
       const payload = {
         hotel_name: hotelName != null ? String(hotelName) : undefined,
         hotel_description: hotelDescription != null ? String(hotelDescription) : undefined,
@@ -102,12 +107,14 @@ export default async function handler(req, res) {
         hotel_phone: hotelPhone !== undefined ? (hotelPhone || null) : undefined,
         hotel_email: hotelEmail !== undefined ? (hotelEmail || null) : undefined,
         hotel_location: hotelLocation !== undefined ? (hotelLocation || null) : undefined,
+        hotel_main_text: hotelMainText !== undefined ? (hotelMainText || null) : undefined,
+        hotel_main_text_mobile: hotelMainTextMobile !== undefined ? (hotelMainTextMobile || null) : undefined,
       };
       Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
       return payload;
     };
 
-    const selectCols = "hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url, hotel_phone, hotel_email, hotel_location";
+    const selectCols = "hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url, hotel_phone, hotel_email, hotel_location, hotel_main_text, hotel_main_text_mobile";
     const selectColsNoContact = "hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url";
 
     if (req.method === "POST") {
@@ -135,6 +142,8 @@ export default async function handler(req, res) {
         hotel_phone: payload.hotel_phone ?? null,
         hotel_email: payload.hotel_email ?? null,
         hotel_location: payload.hotel_location ?? null,
+        hotel_main_text: payload.hotel_main_text ?? null,
+        hotel_main_text_mobile: payload.hotel_main_text_mobile ?? null,
       };
       const baseFieldsNoContact = {
         hotel_name: baseFields.hotel_name,
@@ -157,7 +166,7 @@ export default async function handler(req, res) {
       if (result.error && ((result.error.message || "").toLowerCase().includes("column") || result.error.code === "PGRST204")) {
         result = await runInsert(baseFields);
       }
-      if (result.error && ((result.error.message || "").includes("hotel_phone") || (result.error.message || "").includes("hotel_email") || (result.error.message || "").includes("hotel_location") || result.error.code === "PGRST204")) {
+      if (result.error && ((result.error.message || "").includes("hotel_phone") || (result.error.message || "").includes("hotel_email") || (result.error.message || "").includes("hotel_location") || (result.error.message || "").includes("hotel_main_text") || (result.error.message || "").includes("hotel_main_text_mobile") || result.error.code === "PGRST204")) {
         result = await runInsert({ ...baseFieldsNoContact, created_at: now, update_at: now }, selectColsNoContact);
       }
       if (result.error && ((result.error.message || "").toLowerCase().includes("column") || (result.error.message || "").includes("hotel_logo_footter_url") || (result.error.message || "").includes("hotel_logo_footer") || (result.error.message || "").includes("hotel_bg_url") || result.error.code === "PGRST204")) {
@@ -193,6 +202,8 @@ export default async function handler(req, res) {
           hotelPhone: data?.hotel_phone ?? null,
           hotelEmail: data?.hotel_email ?? null,
           hotelLocation: data?.hotel_location ?? null,
+          hotelMainText: data?.hotel_main_text ?? null,
+          hotelMainTextMobile: data?.hotel_main_text_mobile ?? null,
         },
       });
     }
@@ -221,7 +232,7 @@ export default async function handler(req, res) {
         .select(selectCols)
         .maybeSingle();
 
-      if (result.error && ((result.error.message || "").includes("hotel_phone") || (result.error.message || "").includes("hotel_email") || (result.error.message || "").includes("hotel_location") || result.error.code === "PGRST204")) {
+      if (result.error && ((result.error.message || "").includes("hotel_phone") || (result.error.message || "").includes("hotel_email") || (result.error.message || "").includes("hotel_location") || (result.error.message || "").includes("hotel_main_text") || (result.error.message || "").includes("hotel_main_text_mobile") || result.error.code === "PGRST204")) {
         const pNoContact = {
           hotel_name: payload.hotel_name,
           hotel_description: payload.hotel_description,
@@ -288,6 +299,8 @@ export default async function handler(req, res) {
           hotelPhone: data?.hotel_phone ?? null,
           hotelEmail: data?.hotel_email ?? null,
           hotelLocation: data?.hotel_location ?? null,
+          hotelMainText: data?.hotel_main_text ?? null,
+          hotelMainTextMobile: data?.hotel_main_text_mobile ?? null,
         },
       });
     }

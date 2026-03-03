@@ -27,6 +27,8 @@ export default function HotelInformation() {
   const [hotelPhone, setHotelPhone] = useState("");
   const [hotelEmail, setHotelEmail] = useState("");
   const [hotelLocation, setHotelLocation] = useState("");
+  const [hotelMainText, setHotelMainText] = useState("");
+  const [hotelMainTextMobile, setHotelMainTextMobile] = useState("");
   const logoInputRef = useRef(null);
   const logoFooterInputRef = useRef(null);
   const bgInputRef = useRef(null);
@@ -53,6 +55,8 @@ export default function HotelInformation() {
           setHotelPhone(d.hotelPhone ?? "");
           setHotelEmail(d.hotelEmail ?? "");
           setHotelLocation(d.hotelLocation ?? "");
+          setHotelMainText(d.hotelMainText ?? "");
+          setHotelMainTextMobile(d.hotelMainTextMobile ?? "");
         }
         setRowExists(!!json?.rowExists);
       })
@@ -211,6 +215,8 @@ export default function HotelInformation() {
           hotelPhone: hotelPhone.trim() || null,
           hotelEmail: hotelEmail.trim() || null,
           hotelLocation: hotelLocation.trim() || null,
+          hotelMainText: hotelMainText.trim() || null,
+          hotelMainTextMobile: hotelMainTextMobile.trim() || null,
         }),
       });
 
@@ -237,6 +243,8 @@ export default function HotelInformation() {
       setHotelPhone(json?.data?.hotelPhone ?? hotelPhone);
       setHotelEmail(json?.data?.hotelEmail ?? hotelEmail);
       setHotelLocation(json?.data?.hotelLocation ?? hotelLocation);
+      setHotelMainText(json?.data?.hotelMainText ?? hotelMainText);
+      setHotelMainTextMobile(json?.data?.hotelMainTextMobile ?? hotelMainTextMobile);
       setRowExists(true);
       setSuccess(true);
     } catch (err) {
@@ -294,6 +302,30 @@ export default function HotelInformation() {
                 value={hotelName}
                 onChange={(e) => setHotelName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ข้อความบนรูป Hero — Desktop (hotel_main_text)</label>
+              <p className="text-xs text-gray-500 mb-2">ข้อความที่แสดงทับรูปพื้นหลัง (จอใหญ่) กด Enter ได้สำหรับขึ้นบรรทัดใหม่</p>
+              <textarea
+                value={hotelMainText ?? ""}
+                onChange={(e) => setHotelMainText(e.target.value)}
+                placeholder="A Best Place for Your Neatly Experience"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-y"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ข้อความบนรูป Hero — Mobile (hotel_main_text_mobile)</label>
+              <p className="text-xs text-gray-500 mb-2">ข้อความที่แสดงบนมือถือ ถ้าว่างจะใช้ข้อความ Desktop</p>
+              <textarea
+                value={hotelMainTextMobile ?? ""}
+                onChange={(e) => setHotelMainTextMobile(e.target.value)}
+                placeholder="ข้อความสั้นสำหรับมือถือ (ถ้าว่างใช้ข้อความ Desktop)"
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-y"
               />
             </div>
 
