@@ -26,6 +26,7 @@ async function createOrder({
   promotionId,
   additionalRequest,
   status,
+  expiresAt,
 }) {
   const query = `
     INSERT INTO orders (
@@ -39,9 +40,10 @@ async function createOrder({
       quantity,
       guest_id,
       promotion_id,
-      additional_request
+      additional_request,
+      expires_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     RETURNING *;
   `;
 
@@ -57,6 +59,7 @@ async function createOrder({
     guestId,
     promotionId,
     additionalRequest,
+    expiresAt,
   ];
 
   const { rows } = await connectionPool.query(query, values);

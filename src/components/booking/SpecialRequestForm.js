@@ -4,55 +4,131 @@ import React, { useState, useEffect } from "react";
 import Button from "@/components/ui/buttons/buttons";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
 
-const STANDARD_OPTIONS = [
-  { id: "early-checkin", label: "Early check-in" },
-  { id: "late-checkout", label: "Late check-out" },
-  { id: "non-smoking", label: "Non-smoking room" },
-  { id: "high-floor", label: "A room on the high floor" },
-  { id: "quiet", label: "A quiet room" },
-];
-
-const SPECIAL_OPTIONS = [
-  { id: "baby-cot", label: "Baby cot", price: 400 },
-  { id: "airport-transfer", label: "Airport transfer", price: 200 },
-  { id: "extra-bed", label: "Extra bed", price: 500 },
-  { id: "extra-pillows", label: "Extra pillows", price: 100 },
-  { id: "chargers", label: "Phone chargers and adapters", price: 100 },
-  { id: "breakfast", label: "Breakfast", price: 150 },
-];
-
 const inputBase =
   "w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white";
 const checkboxClass =
   "size-5 rounded border-[#D6D9E4] text-[#E76B39] focus:ring-[#E76B39]";
 
-export default function SpecialRequestForm({ orderId, onBack, onNext, onExtrasChange, extras = [] }) {
+export default function SpecialRequestForm({
+  orderId,
+  onBack,
+  onNext,
+  onExtrasChange,
+  onStandardsChange,
+  extras = [],
+  standards = [],
+  additionalRequest = "",
+  onAdditionalChange,
+}) {
   const [standard, setStandard] = useState({});
-  const [special, setSpecial] = useState({ "airport-transfer": true });
-  const [additionalRequest, setAdditionalRequest] = useState("");
+  const [special, setSpecial] = useState({});
+  const [specialOptions, setSpecialOptions] = useState([]);
+  const [standardOptions, setStandardOptions] = useState([]);
+
+  useEffect(() => {
+    const loadExtrasRequests = async () => {
+      try {
+        const res = await fetch("/api/booking/extras-requests");
+        if (!res.ok) {
+          return;
+        }
+        const data = await res.json();
+        const mapped = (data.extras ?? []).map((row) => ({
+          id: row.id,
+          label: row.name,
+          price: row.price,
+        }));
+        setSpecialOptions(mapped);
+      } catch (err) {
+        console.error("Failed to load extras requests:", err);
+      }
+    };
+
+    loadExtrasRequests();
+  }, []);
+
+  useEffect(() => {
+    const loadStandardsRequests = async () => {
+      try {
+        const res = await fetch("/api/booking/standard-requests");
+        if (!res.ok) {
+          return;
+        }
+        const data = await res.json();
+        const mapped = (data.standard ?? []).map((row) => ({
+          id: row.id,
+          label: row.name,
+        }));
+        setStandardOptions(mapped);
+      } catch (err) {
+        console.error("Failed to load standards requests:", err);
+      }
+    };
+
+    loadStandardsRequests();
+  }, []);
+
+  // sync standard checkboxes with persisted selected labels
+  useEffect(() => {
+    if (!standardOptions.length) return;
+
+    if (!standards || !standards.length) {
+      setStandard({});
+      return;
+    }
+
+    const next = {};
+    standardOptions.forEach((opt) => {
+      if (standards.includes(opt.label)) {
+        next[opt.id] = true;
+      }
+    });
+    setStandard(next);
+  }, [standardOptions, standards]);
+
+  // sync special (extras) checkboxes with persisted selected extras
+  useEffect(() => {
+    if (!specialOptions.length) return;
+
+    if (!extras || !extras.length) {
+      setSpecial({});
+      return;
+    }
+
+    const next = {};
+    specialOptions.forEach((opt) => {
+      if (extras.some((e) => e.label === opt.label)) {
+        next[opt.id] = true;
+      }
+    });
+    setSpecial(next);
+  }, [specialOptions, extras]);
 
   const toggleStandard = (id) => {
     const next = { ...standard, [id]: !standard[id] };
     setStandard(next);
+
+    if (onStandardsChange) {
+      const nextStandards = standardOptions
+        .filter((opt) => next[opt.id])
+        .map((opt) => opt.label);
+      onStandardsChange(nextStandards);
+    }
   };
 
   const toggleSpecial = (id) => {
     const next = { ...special, [id]: !special[id] };
     setSpecial(next);
-    const extras = SPECIAL_OPTIONS.filter((opt) => next[opt.id]).map((opt) => ({
-      label: opt.label,
-      price: opt.price,
-    }));
-    onExtrasChange?.(extras);
-  };
 
-  useEffect(() => {
-    const initial = SPECIAL_OPTIONS.filter((opt) => special[opt.id]).map((opt) => ({
-      label: opt.label,
-      price: opt.price,
-    }));
-    onExtrasChange?.(initial);
-  }, []);
+    const nextExtras = specialOptions
+      .filter((opt) => next[opt.id])
+      .map((opt) => ({
+        label: opt.label,
+        price: opt.price,
+      }));
+
+    onExtrasChange?.(nextExtras);
+  };
 
   return (
     <div>
@@ -64,7 +140,7 @@ export default function SpecialRequestForm({ orderId, onBack, onNext, onExtrasCh
           These requests are not confirmed (Depend on the available room)
         </p>
         <div className="flex flex-col gap-3">
-          {STANDARD_OPTIONS.map((opt) => (
+          {standardOptions.map((opt) => (
             <label
               key={opt.id}
               className="flex items-center gap-3 cursor-pointer font-sans text-base text-[#2A2E3F]"
@@ -84,12 +160,12 @@ export default function SpecialRequestForm({ orderId, onBack, onNext, onExtrasCh
 
       {/* Special Request */}
       <div className="mb-8">
-      <h2 className="headline-5 text-gray-600 mb-2">Special Request</h2>
+        <h2 className="headline-5 text-gray-600 mb-2">Special Request</h2>
         <p className="font-sans text-sm text-gray-600 mb-6">
           Additional charge may apply
         </p>
         <div className="flex flex-col gap-3">
-          {SPECIAL_OPTIONS.map((opt) => (
+          {specialOptions.map((opt) => (
             <label
               key={opt.id}
               className="flex items-center gap-3 cursor-pointer font-sans text-base text-[#2A2E3F]"
@@ -114,7 +190,7 @@ export default function SpecialRequestForm({ orderId, onBack, onNext, onExtrasCh
         </h3>
         <textarea
           value={additionalRequest}
-          onChange={(e) => setAdditionalRequest(e.target.value)}
+          onChange={(e) => onAdditionalChange?.(e.target.value)}
           placeholder="Enter any additional requests..."
           rows={5}
           className={`${inputBase} resize-y min-h-[120px]`}
@@ -141,7 +217,11 @@ export default function SpecialRequestForm({ orderId, onBack, onNext, onExtrasCh
 
       {/* Mobile */}
       <div className="lg:hidden">
-        <BookingDetailCard orderId={orderId} />
+        <BookingDetailCard
+          orderId={orderId}
+          extras={extras}
+          standards={standards}
+        />
       </div>
       <div className="lg:hidden flex items-center justify-between mt-6 ml-2">
         <button

@@ -22,7 +22,11 @@ export default function CreditCardCheckout({
   setSelectedCardId,
   onBack,
   onConfirm,
+  onCreateGuest,
   clientSecret,
+  onSaveAdditionalRequest,
+  onSaveRequests,
+  onUpdateOrderMeta,
 }) {
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
@@ -38,14 +42,13 @@ export default function CreditCardCheckout({
   const confirmStripePayment = async () => {
     if (!stripe || !clientSecret) return;
 
-    console.log("selectedCardId:", selectedCardId);
-    console.log("clientSecret:", clientSecret);
-    console.log("Intent ID:", clientSecret.split("_secret")[0]);
-    console.log("Stripe object:", stripe);
-
     setIsLoading(true);
 
     try {
+      if (onCreateGuest) {
+        await onCreateGuest();
+      }
+
       const { error, paymentIntent } =
         await stripe.confirmCardPayment(clientSecret, {
           payment_method: selectedCardId,
@@ -54,7 +57,40 @@ export default function CreditCardCheckout({
       if (error) {
         setErrorMessage(error.message);
         onConfirm?.({ success: false });
-      } else if (paymentIntent?.status === "succeeded") {
+        return;
+      }
+      if (paymentIntent?.status === "succeeded") {
+        try {
+          if (onSaveAdditionalRequest) {
+            await onSaveAdditionalRequest();
+          }
+        } catch (saveErr) {
+          console.error("Failed to save additional request:", saveErr);
+        }
+
+        try {
+          if (onSaveRequests) {
+            await onSaveRequests();
+          }
+        } catch (reqErr) {
+          console.error("Failed to save order requests:", reqErr);
+        }
+
+        try {
+          if (onUpdateOrderMeta) {
+            await onUpdateOrderMeta();
+          }
+        } catch (metaErr) {
+          console.error("Failed to update order meta:", metaErr);
+        }
+
+        // เตรียมเลขท้ายบัตร: เอาจาก paymentIntent ถ้าไม่มีใช้จาก savedCards
+        const selectedCard = savedCards.find((c) => c.id === selectedCardId);
+        const cardLastDigitsFromPI =
+          paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ?? "";
+        const cardLastDigits =
+          cardLastDigitsFromPI || selectedCard?.card?.last4 || "888";
+
         // อัปเดตสถานะ order ให้เหมือนกรณีชำระเงินสด
         try {
           const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -81,10 +117,12 @@ export default function CreditCardCheckout({
         onConfirm?.({
           success: true,
           paymentMethod: "Credit Card",
-          cardLastDigits:
-            paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ?? "",
+          cardLastDigits,
         });
       }
+    } catch (err) {
+      if (err?.message) setErrorMessage(err.message);
+      onConfirm?.({ success: false });
     } finally {
       setIsLoading(false);
     }
@@ -203,6 +241,10 @@ export default function CreditCardCheckout({
               orderId={orderId}
               onBack={onBack}
               onConfirm={onConfirm}
+              onCreateGuest={onCreateGuest}
+              onSaveAdditionalRequest={onSaveAdditionalRequest}
+              onSaveRequests={onSaveRequests}
+              onUpdateOrderMeta={onUpdateOrderMeta}
             />
           </div>
         </Elements>

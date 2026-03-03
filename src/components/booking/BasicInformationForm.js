@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import axios from "axios";
 import "react-datepicker/dist/react-datepicker.css";
 import { CalendarIcon } from "lucide-react";
 import Button from "@/components/ui/buttons/buttons";
@@ -14,35 +16,69 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/booking/popover";
+import PhoneInput from "@/components/ui/PhoneInput/PhoneInput";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/authentication";
+import { useRouter } from "next/router";
 
-
-export default function BasicInformationForm({ orderId, onNext }) {
-  const { user } = useAuth();
+export default function BasicInformationForm({
+  orderId,
+  onNext,
+  extras = [],
+  standards = [],
+}) {
+  const router = useRouter();
+  const { user: authUser, fetchUser } = useAuth();
   const [date, setDate] = useState(new Date());
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [country, setCountry] = useState("");
 
+  const handleNext = () => {
+    const phone = getValues("phoneNumber") ?? "";
+    onNext?.({
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email.trim(),
+      phone: String(phone).trim(),
+    });
+  };
+
+  const {
+    control,
+    formState: { errors },
+    setValue,
+    getValues,
+  } = useForm({
+    defaultValues: { phoneNumber: "" },
+  });
+
   useEffect(() => {
-    if (!user) return;
+    fetchUser();
+  }, [fetchUser]);
 
-    setFirstName(user.first_name ?? "");
-    setLastName(user.last_name ?? "");
-    setEmail(user.email ?? "");
-    setPhone(user.phone ?? "");
-    setCountry(user.country ?? "");
-
-    if (user.date_of_birth) {
-      const parsed = new Date(user.date_of_birth);
-      if (!Number.isNaN(parsed.getTime())) {
-        setDate(parsed);
-      }
-    }
-  }, [user]);
+  // โหลดข้อมูลจากตาราง users (GET /api/auth/user คืนค่า SELECT ... FROM users)
+  useEffect(() => {
+    if (!authUser) return;
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) return;
+    axios
+      .get("/api/auth/user", { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        const usersRow = res.data; // แถวจากตาราง users
+        setFirstName(usersRow.first_name ?? "");
+        setLastName(usersRow.last_name ?? "");
+        setEmail(usersRow.email ?? usersRow.username ?? "");
+        setCountry(usersRow.country ?? ""); // country จากตาราง users
+        if (usersRow.phone) setValue("phoneNumber", usersRow.phone);
+        if (usersRow.date_of_birth) {
+          const parsed = new Date(usersRow.date_of_birth);
+          if (!Number.isNaN(parsed.getTime())) setDate(parsed);
+        }
+      })
+      .catch(() => {});
+  }, [authUser, setValue]);
 
   return (
     <div>
@@ -65,7 +101,7 @@ export default function BasicInformationForm({ orderId, onNext }) {
             name="firstName"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
 
@@ -83,7 +119,7 @@ export default function BasicInformationForm({ orderId, onNext }) {
             name="lastName"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
 
@@ -101,27 +137,20 @@ export default function BasicInformationForm({ orderId, onNext }) {
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
+            className="w-full px-4 py-3 border border-gray-300 rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
           />
         </div>
 
         {/* Phone Number */}
-        <div>
-          <label
-            htmlFor="phone"
-            className="block text-4 font-400 text-[#2A2E3F] mb-2"
-          >
-            Phone number
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white"
-          />
-        </div>
+        <PhoneInput
+          label="Phone number"
+          name="phoneNumber"
+          control={control}
+          placeholder="Enter your phone number"
+          error={errors.phoneNumber}
+          disableSearchIcon={true}
+          country="th"
+        />
 
         {/* Date of Birth */}
         <div className="w-full space-y-2 flex flex-col">
@@ -134,7 +163,7 @@ export default function BasicInformationForm({ orderId, onNext }) {
               <ButtonCalendar
                 variant="outline"
                 className={cn(
-                  "w-full h-[50px] justify-start text-left font-normal border-gray-400",
+                  "w-full h-[50px] justify-start text-left font-normal border-gray-300 rounded-[4px]",
                   !date && "text-muted-foreground"
                 )}
               >
@@ -171,6 +200,7 @@ export default function BasicInformationForm({ orderId, onNext }) {
         <button
           type="button"
           className="text-[#E76B39] font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
+          onClick={() => router.back()}
         >
           Back
         </button>
@@ -179,18 +209,23 @@ export default function BasicInformationForm({ orderId, onNext }) {
           buttonStyle="primary"
           buttonText="Next"
           type="button"
-          onClick={onNext}
+          onClick={handleNext}
         />
       </div>
 
       {/* Mobile */}
       <div className="lg:hidden">
-        <BookingDetailCard orderId={orderId} />
+        <BookingDetailCard
+          orderId={orderId}
+          extras={extras}
+          standards={standards}
+        />
       </div>
       <div className="lg:hidden flex items-center justify-between mt-6 ml-2">
         <button
           type="button"
           className="text-orange-500 font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
+          onClick={() => router.back()}
         >
           Back
         </button>
@@ -200,7 +235,7 @@ export default function BasicInformationForm({ orderId, onNext }) {
           buttonText="Next"
           type="button"
           className="w-[101px] h-[48px]"
-          onClick={onNext}
+          onClick={handleNext}
         />
       </div>
     </div>

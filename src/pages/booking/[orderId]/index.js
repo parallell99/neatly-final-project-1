@@ -19,9 +19,11 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 );
 
-export default function BookingPage() {
+export default function BookingOrderPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { roomId, orderId: orderIdQuery } = router.query;
+
   const [currentStep, setCurrentStep] = useState(1);
   const [extras, setExtras] = useState([]);
   const [standards, setStandards] = useState([]);
@@ -33,111 +35,25 @@ export default function BookingPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
   const [cardLastDigits, setCardLastDigits] = useState("888");
-  const { roomId } = router.query;
+  const [orderId, setOrderId] = useState("");
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const [expiresAt, setExpiresAt] = useState(null);
   const [hasMarkedExpired, setHasMarkedExpired] = useState(false);
   const [guestData, setGuestData] = useState(null);
 
-  const [orderId, setOrderId] = useState(null);
-
   useEffect(() => {
-    if (orderId) return;
-
-    const fetchLatestOrder = async () => {
-      try {
-        const token =
-          typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-        const res = await fetch("/api/booking/order-detail", {
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-              }
-            : undefined,
-        });
-
-        if (!res.ok) return;
-
-        const data = await res.json();
-        const latestOrderId = data?.order?.id;
-        if (latestOrderId) {
-          setOrderId(latestOrderId);
-        }
-      } catch (err) {
-        console.error("Failed to fetch latest order for user:", err);
-      }
-    };
-
-    fetchLatestOrder();
-  }, [orderId]);
-
-  const handlePromotionChange = ({ code, discount, promotionId }) => {
-    setPromotionCode(code);
-    setPromotionDiscount(discount);
-    setPromotionId(promotionId ?? null);
-  };
-
-  const handlePaymentConfirm = ({ success, paymentMethod: method, cardLastDigits: digits }) => {
-    if (success) {
-      const finalMethod = method || "Credit Card";
-      const finalDigits = digits || "888";
-
-      // เก็บวิธีจ่ายและเลขบัตรท้ายไว้ตาม orderId เพื่อใช้ในหน้า success (หลัง redirect)
-      if (typeof window !== "undefined" && orderId) {
-        try {
-          window.sessionStorage.setItem(
-            `booking:payment:${orderId}`,
-            JSON.stringify({
-              method: finalMethod,
-              cardLastDigits: finalDigits,
-            })
-          );
-        } catch {
-          // ignore
-        }
-      }
-
-      // Payment successful - redirect to persistent success page
-      const finalOrderId = orderId;
-      if (finalOrderId) {
-        router.push(`/booking/${finalOrderId}/success`);
-        return;
-      }
-
-      // fallback: keep old in-page success behaviour
-      setPaymentMethod(finalMethod);
-      setCardLastDigits(finalDigits);
-      setPaymentSuccess(true);
-    } else {
-      // Payment failed - show Payment Failed UI
-      setPaymentFailed(true);
+    if (typeof orderIdQuery === "string") {
+      setOrderId(orderIdQuery);
     }
-  };
+  }, [orderIdQuery]);
 
-  const handleBackToHome = () => {
-    router.push("/");
-  };
-
-  const handleCheckBookingDetail = () => {
-    // Reset to step 1 and clear payment states
-    setPaymentFailed(false);
-    setPaymentSuccess(false);
-    setCurrentStep(1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleBackToPaymentDetail = () => {
-    setPaymentFailed(false);
-    setCurrentStep(3);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Restore step & basic state on refresh
+  // Restore state for this order on refresh
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!orderIdQuery || typeof orderIdQuery !== "string") return;
 
-    const raw = window.sessionStorage.getItem("booking:state:default");
+    const key = `booking:state:${orderIdQuery}`;
+    const raw = window.sessionStorage.getItem(key);
     if (!raw) return;
 
     try {
@@ -160,11 +76,12 @@ export default function BookingPage() {
     } catch {
       // ignore parse errors
     }
-  }, []);
+  }, [orderIdQuery]);
 
-  // Persist step & selections while user is on the page
+  // Persist state for this order while user is on the page
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!orderId || typeof orderId !== "string") return;
 
     const payload = {
       currentStep,
@@ -177,10 +94,11 @@ export default function BookingPage() {
     };
 
     window.sessionStorage.setItem(
-      "booking:state:default",
+      `booking:state:${orderId}`,
       JSON.stringify(payload)
     );
   }, [
+    orderId,
     currentStep,
     extras,
     standards,
@@ -190,12 +108,65 @@ export default function BookingPage() {
     promotionId,
   ]);
 
-  // Scroll to top when step changes
+  const handlePromotionChange = ({ code, discount, promotionId }) => {
+    setPromotionCode(code);
+    setPromotionDiscount(discount);
+    setPromotionId(promotionId ?? null);
+  };
+
+  const handlePaymentConfirm = ({
+    success,
+    paymentMethod: method,
+    cardLastDigits: digits,
+  }) => {
+    if (success) {
+      const finalMethod = method || "Credit Card";
+      const finalDigits = digits || "888";
+
+      // เก็บวิธีจ่ายและเลขบัตรท้ายไว้ตาม orderId เพื่อใช้ในหน้า success (หลัง redirect)
+      if (typeof window !== "undefined" && orderId) {
+        try {
+          window.sessionStorage.setItem(
+            `booking:payment:${orderId}`,
+            JSON.stringify({
+              method: finalMethod,
+              cardLastDigits: finalDigits,
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }
+
+      setPaymentMethod(method || "Credit Card");
+      setCardLastDigits(digits || "888");
+      setPaymentSuccess(true);
+    } else {
+      setPaymentFailed(true);
+    }
+  };
+
+  const handleBackToHome = () => {
+    router.push("/");
+  };
+
+  const handleCheckBookingDetail = () => {
+    setPaymentFailed(false);
+    setPaymentSuccess(false);
+    setCurrentStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleBackToPaymentDetail = () => {
+    setPaymentFailed(false);
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentStep]);
 
-  // 1) ดึง expires_at ครั้งแรกจาก server
   useEffect(() => {
     if (!orderId || expiresAt || hasMarkedExpired) return;
 
@@ -235,7 +206,6 @@ export default function BookingPage() {
     checkExpiration();
   }, [orderId, expiresAt, hasMarkedExpired]);
 
-  // 2) ใช้ real-time timer ฝั่ง client ตรวจว่าเลยเวลาแล้วหรือยัง
   useEffect(() => {
     if (!expiresAt || hasMarkedExpired) return;
 
@@ -275,16 +245,33 @@ export default function BookingPage() {
     return () => clearInterval(intervalId);
   }, [expiresAt, hasMarkedExpired, orderId]);
 
-  // Show Payment Failed UI if payment failed
+  if (paymentSuccess) {
+    return (
+      <>
+        <Navbar />
+        <PaymentSuccess
+          orderId={orderId}
+          extras={extras}
+          promotionCode={promotionCode}
+          promotionDiscount={promotionDiscount}
+          paymentMethod={paymentMethod}
+          cardLastDigits={cardLastDigits}
+          onBackToHome={handleBackToHome}
+          onCheckBookingDetail={handleCheckBookingDetail}
+        />
+      </>
+    );
+  }
+
   if (paymentFailed) {
     return (
       <>
         <Navbar />
         <Elements stripe={stripePromise}>
-        <PaymentFailed
-          onBackToPaymentDetail={handleBackToPaymentDetail}
-          orderId={orderId}
-        />
+          <PaymentFailed
+            onBackToPaymentDetail={handleBackToPaymentDetail}
+            orderId={orderId}
+          />
         </Elements>
       </>
     );
@@ -372,3 +359,4 @@ export default function BookingPage() {
     </div>
   );
 }
+
