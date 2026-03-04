@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Button from "@/components/ui/buttons/buttons";
 import CreditCardIcon from "@/assets/icons/credit.svg?url";
 import CheckoutConfirm from "@/components/booking/CheckoutConfirm";
+import BookingDetailCard from "@/components/booking/BookingDetailCard";
 import { useStripe, Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "axios";
@@ -27,6 +28,10 @@ export default function CreditCardCheckout({
   onSaveAdditionalRequest,
   onSaveRequests,
   onUpdateOrderMeta,
+  extras = [],
+  standards = [],
+  promotionCode = "",
+  promotionDiscount = 0,
 }) {
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
@@ -230,6 +235,7 @@ export default function CreditCardCheckout({
         </label>
       </div>
 
+      <div className="flex flex-col gap-10 mt-4">
       {(useNewCard || savedCards.length === 0) && clientSecret ? (
         <Elements
           stripe={stripePromise}
@@ -245,14 +251,28 @@ export default function CreditCardCheckout({
               onSaveAdditionalRequest={onSaveAdditionalRequest}
               onSaveRequests={onSaveRequests}
               onUpdateOrderMeta={onUpdateOrderMeta}
+              extras={extras}
+              standards={standards}
+              promotionCode={promotionCode}
+              promotionDiscount={promotionDiscount}
             />
           </div>
         </Elements>
       ) : (
-        <div className="flex items-center justify-between mt-8 pt-6">
+        <div className="flex flex-col items-center justify-between mt-8 pt-6">
           {errorMessage && (
             <p className="text-red-500 text-sm font-sans">{errorMessage}</p>
           )}
+          <div className="lg:hidden w-full mt-6">
+            <BookingDetailCard
+              orderId={orderId}
+              extras={extras}
+              standards={standards}
+              promotionCode={promotionCode}
+              promotionDiscount={promotionDiscount}
+            />
+          </div>
+          <div className="flex flex-row gap-22 mt-10 lg:gap-100">
           <button
             type="button"
             onClick={onBack}
@@ -267,6 +287,8 @@ export default function CreditCardCheckout({
             onClick={handleConfirmSavedCard}
             disabled={!stripe || isLoading}
           />
+          </div>
+          
         </div>
       )}
       {showReauth && (
@@ -314,6 +336,7 @@ export default function CreditCardCheckout({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
