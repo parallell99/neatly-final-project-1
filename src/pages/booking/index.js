@@ -29,6 +29,7 @@ export default function BookingPage() {
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
   const [promotionId, setPromotionId] = useState(null);
+  const [promotionId, setPromotionId] = useState(null);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
@@ -71,15 +72,77 @@ export default function BookingPage() {
 
     fetchLatestOrder();
   }, [orderId]);
+  const [orderId, setOrderId] = useState(null);
 
+  useEffect(() => {
+    if (orderId) return;
+
+    const fetchLatestOrder = async () => {
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+        const res = await fetch("/api/booking/order-detail", {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : undefined,
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const latestOrderId = data?.order?.id;
+        if (latestOrderId) {
+          setOrderId(latestOrderId);
+        }
+      } catch (err) {
+        console.error("Failed to fetch latest order for user:", err);
+      }
+    };
+
+    fetchLatestOrder();
+  }, [orderId]);
+
+  const handlePromotionChange = ({ code, discount, promotionId }) => {
   const handlePromotionChange = ({ code, discount, promotionId }) => {
     setPromotionCode(code);
     setPromotionDiscount(discount);
+    setPromotionId(promotionId ?? null);
     setPromotionId(promotionId ?? null);
   };
 
   const handlePaymentConfirm = ({ success, paymentMethod: method, cardLastDigits: digits }) => {
     if (success) {
+      const finalMethod = method || "Credit Card";
+      const finalDigits = digits || "888";
+
+      // เก็บวิธีจ่ายและเลขบัตรท้ายไว้ตาม orderId เพื่อใช้ในหน้า success (หลัง redirect)
+      if (typeof window !== "undefined" && orderId) {
+        try {
+          window.sessionStorage.setItem(
+            `booking:payment:${orderId}`,
+            JSON.stringify({
+              method: finalMethod,
+              cardLastDigits: finalDigits,
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }
+
+      // Payment successful - redirect to persistent success page
+      const finalOrderId = orderId;
+      if (finalOrderId) {
+        router.push(`/booking/${finalOrderId}/success`);
+        return;
+      }
+
+      // fallback: keep old in-page success behaviour
+      setPaymentMethod(finalMethod);
+      setCardLastDigits(finalDigits);
       const finalMethod = method || "Credit Card";
       const finalDigits = digits || "888";
 
@@ -132,6 +195,63 @@ export default function BookingPage() {
     setCurrentStep(3);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // Restore step & basic state on refresh
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const raw = window.sessionStorage.getItem("booking:state:default");
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+      if (Array.isArray(parsed.extras)) setExtras(parsed.extras);
+      if (Array.isArray(parsed.standards)) setStandards(parsed.standards);
+      if (typeof parsed.additionalRequest === "string") {
+        setAdditionalRequest(parsed.additionalRequest);
+      }
+      if (typeof parsed.promotionCode === "string") {
+        setPromotionCode(parsed.promotionCode);
+      }
+      if (typeof parsed.promotionDiscount === "number") {
+        setPromotionDiscount(parsed.promotionDiscount);
+      }
+      if (parsed.promotionId) {
+        setPromotionId(parsed.promotionId);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // Persist step & selections while user is on the page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const payload = {
+      currentStep,
+      extras,
+      standards,
+      additionalRequest,
+      promotionCode,
+      promotionDiscount,
+      promotionId,
+    };
+
+    window.sessionStorage.setItem(
+      "booking:state:default",
+      JSON.stringify(payload)
+    );
+  }, [
+    currentStep,
+    extras,
+    standards,
+    additionalRequest,
+    promotionCode,
+    promotionDiscount,
+    promotionId,
+  ]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -280,10 +400,12 @@ export default function BookingPage() {
                   onPromotionChange={handlePromotionChange}
                   extras={extras}
                   standards={standards}
+                  standards={standards}
                   user={user}
                   orderId={orderId}
                   guestData={guestData}
                   additionalRequest={additionalRequest}
+                  promotionId={promotionId}
                   promotionId={promotionId}
                 />
               )}
@@ -305,6 +427,7 @@ export default function BookingPage() {
         isOpen={showExpiredModal}
         onGoBack={() => {
           setShowExpiredModal(false);
+          router.push("/search-rooms");
           router.push("/search-rooms");
         }}
         onGoHome={() => {
