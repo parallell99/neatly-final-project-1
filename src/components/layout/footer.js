@@ -17,6 +17,7 @@ export default function Footer() {
   const [hotelPhone, setHotelPhone] = useState(DEFAULT_PHONE);
   const [hotelEmail, setHotelEmail] = useState(DEFAULT_EMAIL);
   const [hotelLocation, setHotelLocation] = useState(DEFAULT_ADDRESS);
+  const [hotelFooterDescription, setHotelFooterDescription] = useState("");
 
   // ข้อมูลจากตาราง hotel_information (API /api/hotel-information)
   useEffect(() => {
@@ -30,6 +31,7 @@ export default function Footer() {
           setHotelPhone(d.hotelPhone && String(d.hotelPhone).trim() ? d.hotelPhone.trim() : DEFAULT_PHONE);
           setHotelEmail(d.hotelEmail && String(d.hotelEmail).trim() ? d.hotelEmail.trim() : DEFAULT_EMAIL);
           setHotelLocation(d.hotelLocation && String(d.hotelLocation).trim() ? d.hotelLocation.trim() : DEFAULT_ADDRESS);
+          setHotelFooterDescription(d.hotelFooterDescription && String(d.hotelFooterDescription).trim() ? d.hotelFooterDescription.trim() : "");
         }
       })
       .catch(() => {});
@@ -50,7 +52,7 @@ export default function Footer() {
           </div>
           <h2 className="headline-5 mb-2">{hotelName}</h2>
           <p className="body-2">
-            The best hotel for rising your experience
+            {hotelFooterDescription || "The best hotel for rising your experience"}
           </p>
         </div>
 

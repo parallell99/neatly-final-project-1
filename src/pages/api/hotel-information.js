@@ -1,8 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 /**
- * Public GET: returns hotel name and logo URLs for footer/public use.
- * ตาราง hotel_information: uuid (PK), hotel_logo_footter_url สำหรับ logo footer
+ * Public GET: returns hotel info for landing/footer (name, logos, bg, hero text, contact, footer description).
+ * ตาราง hotel_information ควรมีคอลัมน์ตาม selectCols ด้านล่าง ถ้าไม่มีให้รัน SQL ใน docs/hotel_information-schema.md
  */
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -10,33 +10,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    let row = null;
-    let err = null;
-    const selectWithContact = "hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url, hotel_phone, hotel_email, hotel_location, hotel_main_text, hotel_main_text_mobile";
-    let r = await supabaseAdmin.from("hotel_information").select(selectWithContact).limit(1).maybeSingle();
-    err = r.error;
-    row = r.data;
-    if (err && ((r.error?.message || "").includes("hotel_logo_footter_url") || (r.error?.message || "").includes("hotel_bg_url") || (r.error?.message || "").includes("hotel_phone") || (r.error?.message || "").includes("hotel_email") || (r.error?.message || "").includes("hotel_location") || (r.error?.message || "").includes("hotel_main_text") || (r.error?.message || "").includes("hotel_main_text_mobile"))) {
-      r = await supabaseAdmin.from("hotel_information").select("hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url").limit(1).maybeSingle();
-      err = r.error;
-      row = r.data;
-    }
-    if (err && ((r.error?.message || "").includes("hotel_logo_footter_url") || (r.error?.message || "").includes("hotel_bg_url"))) {
-      r = await supabaseAdmin.from("hotel_information").select("hotel_name, hotel_description, hotel_logo_url").limit(1).maybeSingle();
-      err = r.error;
-      row = r.data;
-    }
-    if (err && (r.error?.message || "").includes("hotel_description")) {
-      r = await supabaseAdmin.from("hotel_information").select("hotel_name, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url").limit(1).maybeSingle();
-      err = r.error;
-      row = r.data;
-    }
-    if (err) throw err;
+    const selectCols =
+      "hotel_name, hotel_description, hotel_logo_url, hotel_logo_footter_url, hotel_bg_url, hotel_phone, hotel_email, hotel_location, hotel_main_text, hotel_footter_description";
+    const { data: row, error } = await supabaseAdmin
+      .from("hotel_information")
+      .select(selectCols)
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error("Could not load hotel_information");
 
     const footerUrl = row?.hotel_logo_footter_url ?? row?.hotel_logo_url ?? null;
     return res.status(200).json({
       data: {
-        hotelName: row?.hotel_name ?? "Neatly Hotel",
+        hotelName: row?.hotel_name ?? null,
         hotelDescription: row?.hotel_description ?? null,
         hotelLogoUrl: row?.hotel_logo_url ?? null,
         hotelLogoFooterUrl: footerUrl,
@@ -45,13 +31,13 @@ export default async function handler(req, res) {
         hotelEmail: row?.hotel_email ?? null,
         hotelLocation: row?.hotel_location ?? null,
         hotelMainText: row?.hotel_main_text ?? null,
-        hotelMainTextMobile: row?.hotel_main_text_mobile ?? null,
+        hotelFooterDescription: row?.hotel_footter_description ?? null,
       },
     });
   } catch (err) {
     console.error("[hotel-information] GET error:", err);
     return res.status(200).json({
-      data: { hotelName: "Neatly Hotel", hotelDescription: null, hotelLogoUrl: null, hotelLogoFooterUrl: null, hotelBgUrl: null, hotelPhone: null, hotelEmail: null, hotelLocation: null, hotelMainText: null, hotelMainTextMobile: null },
+      data: { hotelName: null, hotelDescription: null, hotelLogoUrl: null, hotelLogoFooterUrl: null, hotelBgUrl: null, hotelPhone: null, hotelEmail: null, hotelLocation: null, hotelMainText: null, hotelFooterDescription: null },
     });
   }
 }

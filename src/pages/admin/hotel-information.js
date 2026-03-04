@@ -28,7 +28,7 @@ export default function HotelInformation() {
   const [hotelEmail, setHotelEmail] = useState("");
   const [hotelLocation, setHotelLocation] = useState("");
   const [hotelMainText, setHotelMainText] = useState("");
-  const [hotelMainTextMobile, setHotelMainTextMobile] = useState("");
+  const [hotelFooterDescription, setHotelFooterDescription] = useState("");
   const logoInputRef = useRef(null);
   const logoFooterInputRef = useRef(null);
   const bgInputRef = useRef(null);
@@ -56,7 +56,7 @@ export default function HotelInformation() {
           setHotelEmail(d.hotelEmail ?? "");
           setHotelLocation(d.hotelLocation ?? "");
           setHotelMainText(d.hotelMainText ?? "");
-          setHotelMainTextMobile(d.hotelMainTextMobile ?? "");
+          setHotelFooterDescription(d.hotelFooterDescription ?? "");
         }
         setRowExists(!!json?.rowExists);
       })
@@ -216,7 +216,7 @@ export default function HotelInformation() {
           hotelEmail: hotelEmail.trim() || null,
           hotelLocation: hotelLocation.trim() || null,
           hotelMainText: hotelMainText.trim() || null,
-          hotelMainTextMobile: hotelMainTextMobile.trim() || null,
+          hotelFooterDescription: hotelFooterDescription.trim() || null,
         }),
       });
 
@@ -225,6 +225,15 @@ export default function HotelInformation() {
         if (res.status === 409) {
           setRowExists(true);
           setError(json?.error || "Data already exists. Refresh the page then try Update again.");
+          setSaving(false);
+          return;
+        }
+        if (res.status === 400 && json?.missingColumnsSql) {
+          setError(
+            (json?.error || "อัปเดตไม่ได้") +
+              "\n\nรัน SQL นี้ใน Supabase → SQL Editor:\n\n" +
+              json.missingColumnsSql
+          );
           setSaving(false);
           return;
         }
@@ -244,7 +253,7 @@ export default function HotelInformation() {
       setHotelEmail(json?.data?.hotelEmail ?? hotelEmail);
       setHotelLocation(json?.data?.hotelLocation ?? hotelLocation);
       setHotelMainText(json?.data?.hotelMainText ?? hotelMainText);
-      setHotelMainTextMobile(json?.data?.hotelMainTextMobile ?? hotelMainTextMobile);
+      setHotelFooterDescription(json?.data?.hotelFooterDescription ?? hotelFooterDescription);
       setRowExists(true);
       setSuccess(true);
     } catch (err) {
@@ -284,7 +293,7 @@ export default function HotelInformation() {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-700 text-sm">
+            <div className="mb-4 p-3 rounded bg-red-50 border border-red-200 text-red-700 text-sm whitespace-pre-line">
               {error}
             </div>
           )}
@@ -306,26 +315,15 @@ export default function HotelInformation() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ข้อความบนรูป Hero — Desktop (hotel_main_text)</label>
-              <p className="text-xs text-gray-500 mb-2">ข้อความที่แสดงทับรูปพื้นหลัง (จอใหญ่) กด Enter ได้สำหรับขึ้นบรรทัดใหม่</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Main text</label>
+              
               <textarea
                 value={hotelMainText ?? ""}
                 onChange={(e) => setHotelMainText(e.target.value)}
                 placeholder="A Best Place for Your Neatly Experience"
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-y"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ข้อความบนรูป Hero — Mobile (hotel_main_text_mobile)</label>
-              <p className="text-xs text-gray-500 mb-2">ข้อความที่แสดงบนมือถือ ถ้าว่างจะใช้ข้อความ Desktop</p>
-              <textarea
-                value={hotelMainTextMobile ?? ""}
-                onChange={(e) => setHotelMainTextMobile(e.target.value)}
-                placeholder="ข้อความสั้นสำหรับมือถือ (ถ้าว่างใช้ข้อความ Desktop)"
-                rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-y"
+                aria-label="Hero main text — saves to hotel_information.hotel_main_text"
               />
             </div>
 
@@ -342,9 +340,9 @@ export default function HotelInformation() {
             {/* Hotel contact information — from hotel_information.hotel_phone, hotel_email, hotel_location */}
             <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700">Hotel contact information</label>
-              <p className="text-xs text-gray-500 mb-2">Phone, email and address for the hotel.</p>
+              
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Phone (hotel_phone)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
                 <input
                   type="text"
                   value={hotelPhone ?? ""}
@@ -354,7 +352,7 @@ export default function HotelInformation() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Email (hotel_email)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
                 <input
                   type="email"
                   value={hotelEmail ?? ""}
@@ -364,7 +362,7 @@ export default function HotelInformation() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Location / Address (hotel_location)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Location</label>
                 <textarea
                   value={hotelLocation ?? ""}
                   onChange={(e) => setHotelLocation(e.target.value)}
@@ -372,6 +370,17 @@ export default function HotelInformation() {
                   className="w-full max-w-md px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   aria-label="Hotel location from hotel_location"
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Footer description</label>
+                <textarea
+                  value={hotelFooterDescription ?? ""}
+                  onChange={(e) => setHotelFooterDescription(e.target.value)}
+                  rows={3}
+                  className="w-full max-w-md px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  aria-label="Hotel footer description from hotel_footter_description"
+                />
+                
               </div>
             </div>
 
