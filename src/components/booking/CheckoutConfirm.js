@@ -14,6 +14,10 @@ export default function CheckoutConfirm({
   onSaveAdditionalRequest,
   onSaveRequests,
   onUpdateOrderMeta,
+  extras = [],
+  standards = [],
+  promotionCode = "",
+  promotionDiscount = 0,
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -118,8 +122,14 @@ export default function CheckoutConfirm({
       {errorMessage && (
         <p className="text-red-500 text-sm font-sans">{errorMessage}</p>
       )}
-      <div className="lg:hidden">
-        <BookingDetailCard orderId={orderId} />
+      <div className="lg:hidden mt-6">
+        <BookingDetailCard
+          orderId={orderId}
+          extras={extras}
+          standards={standards}
+          promotionCode={promotionCode}
+          promotionDiscount={promotionDiscount}
+        />
       </div>
       <div className="flex items-center justify-between mt-6 ml-2">
         <button
