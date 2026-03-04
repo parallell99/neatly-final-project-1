@@ -26,6 +26,8 @@ export default function BookingPage() {
   const [extras, setExtras] = useState([]);
   const [standards, setStandards] = useState([]);
   const [additionalRequest, setAdditionalRequest] = useState("");
+  const [standards, setStandards] = useState([]);
+  const [additionalRequest, setAdditionalRequest] = useState("");
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
   const [promotionId, setPromotionId] = useState(null);
@@ -253,6 +255,63 @@ export default function BookingPage() {
     promotionId,
   ]);
 
+  // Restore step & basic state on refresh
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const raw = window.sessionStorage.getItem("booking:state:default");
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+      if (Array.isArray(parsed.extras)) setExtras(parsed.extras);
+      if (Array.isArray(parsed.standards)) setStandards(parsed.standards);
+      if (typeof parsed.additionalRequest === "string") {
+        setAdditionalRequest(parsed.additionalRequest);
+      }
+      if (typeof parsed.promotionCode === "string") {
+        setPromotionCode(parsed.promotionCode);
+      }
+      if (typeof parsed.promotionDiscount === "number") {
+        setPromotionDiscount(parsed.promotionDiscount);
+      }
+      if (parsed.promotionId) {
+        setPromotionId(parsed.promotionId);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  // Persist step & selections while user is on the page
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const payload = {
+      currentStep,
+      extras,
+      standards,
+      additionalRequest,
+      promotionCode,
+      promotionDiscount,
+      promotionId,
+    };
+
+    window.sessionStorage.setItem(
+      "booking:state:default",
+      JSON.stringify(payload)
+    );
+  }, [
+    currentStep,
+    extras,
+    standards,
+    additionalRequest,
+    promotionCode,
+    promotionDiscount,
+    promotionId,
+  ]);
+
   // Scroll to top when step changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -374,6 +433,10 @@ export default function BookingPage() {
                   standards={standards}
                   onNext={(data) => {
                     setGuestData(data);
+                  extras={extras}
+                  standards={standards}
+                  onNext={(data) => {
+                    setGuestData(data);
                     setCurrentStep(2);
                   }}
                 />
@@ -385,7 +448,11 @@ export default function BookingPage() {
                   onNext={() => setCurrentStep(3)}
                   onExtrasChange={setExtras}
                   onStandardsChange={setStandards}
+                  onStandardsChange={setStandards}
                   extras={extras}
+                  standards={standards}
+                  additionalRequest={additionalRequest}
+                  onAdditionalChange={setAdditionalRequest}
                   standards={standards}
                   additionalRequest={additionalRequest}
                   onAdditionalChange={setAdditionalRequest}
@@ -412,6 +479,13 @@ export default function BookingPage() {
             </div>
 
             <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
+              <BookingDetailCard
+                orderId={orderId}
+                extras={extras}
+                standards={standards}
+                promotionCode={promotionCode}
+                promotionDiscount={promotionDiscount}
+              />
               <BookingDetailCard
                 orderId={orderId}
                 extras={extras}
