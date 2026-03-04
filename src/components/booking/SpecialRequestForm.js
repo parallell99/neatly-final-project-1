@@ -68,6 +68,42 @@ export default function SpecialRequestForm({
     loadStandardsRequests();
   }, []);
 
+  // sync standard checkboxes with persisted selected labels
+  useEffect(() => {
+    if (!standardOptions.length) return;
+
+    if (!standards || !standards.length) {
+      setStandard({});
+      return;
+    }
+
+    const next = {};
+    standardOptions.forEach((opt) => {
+      if (standards.includes(opt.label)) {
+        next[opt.id] = true;
+      }
+    });
+    setStandard(next);
+  }, [standardOptions, standards]);
+
+  // sync special (extras) checkboxes with persisted selected extras
+  useEffect(() => {
+    if (!specialOptions.length) return;
+
+    if (!extras || !extras.length) {
+      setSpecial({});
+      return;
+    }
+
+    const next = {};
+    specialOptions.forEach((opt) => {
+      if (extras.some((e) => e.label === opt.label)) {
+        next[opt.id] = true;
+      }
+    });
+    setSpecial(next);
+  }, [specialOptions, extras]);
+
   const toggleStandard = (id) => {
     const next = { ...standard, [id]: !standard[id] };
     setStandard(next);

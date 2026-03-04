@@ -34,7 +34,9 @@ export default function PaymentMethodForm({
   additionalRequest = "",
 }) {
   const [method, setMethod] = useState("credit-card");
-  const [promoInput, setPromoInput] = useState(promotionCode || "NEATLYNEW400");
+  const [promoInput, setPromoInput] = useState(promotionCode || "");
+  const [promoError, setPromoError] = useState("");
+  const [promoCorrect, setPromoCorrect] = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState(null);
@@ -45,12 +47,110 @@ export default function PaymentMethodForm({
   const extrasTotal = extras.reduce((sum, e) => sum + (e.price ?? 0), 0);
   const totalBaht = Math.max(0, ROOM_PRICE + extrasTotal - promotionDiscount);
   const amountSatang = Math.round(totalBaht * 100);
+  const storageKey =
+    typeof window !== "undefined" && orderId
+      ? `booking:payment:${orderId}`
+      : "booking:payment:default";
+
+  // Restore local payment-method UI state on refresh
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = window.sessionStorage.getItem(storageKey);
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.method === "credit-card" || parsed.method === "cash") {
+        setMethod(parsed.method);
+      }
+      if (typeof parsed.promoInput === "string") {
+        setPromoInput(parsed.promoInput);
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  // Persist local payment-method UI state
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const payload = {
+      method,
+      promoInput,
+    };
+    window.sessionStorage.setItem(storageKey, JSON.stringify(payload));
+  }, [method, promoInput, storageKey]);
 
   useEffect(() => {
-    if (promoInput === "NEATLYNEW400" && promotionDiscount === 0) {
-      onPromotionChange?.({ code: "NEATLYNEW400", discount: 400 });
-    }
-  }, []);
+    let cancelled = false;
+
+    const run = async () => {
+      const currentCode = promoInput.trim();
+
+      if (!currentCode) {
+        onPromotionChange?.({ code: "", discount: 0 });
+        setPromoError("");
+        setPromoCorrect("");
+        return;
+      }
+
+      try {
+        const params = new URLSearchParams();
+        params.set("code", currentCode);
+
+        const res = await fetch(`/api/booking/promotion?${params.toString()}`);
+
+        if (!res.ok) {
+          onPromotionChange?.({ code: "", discount: 0 });
+          setPromoError("*This promotional code is invalid or has expired");
+          setPromoCorrect("");
+          return;
+        }
+
+        const data = await res.json();
+
+        if (cancelled) return;
+
+        const promo = data?.promotion ?? null;
+        if (!promo) {
+          onPromotionChange?.({ code: "", discount: 0 });
+          setPromoError("*This promotional code is invalid or has expired");
+          setPromoCorrect("");
+          return;
+        }
+
+        const discountValue =
+          promo.fixed_amount ?? promo.amount ?? promo.discount ?? 0;
+
+        const discountNumber = Number(discountValue) || 0;
+
+        onPromotionChange?.({
+          code: promo.name ?? currentCode,
+          discount: discountNumber,
+        });
+
+        setPromoError("");
+        setPromoCorrect(
+          "This promotional code has been successfully applied."
+        );
+      } catch (err) {
+        console.error("Failed to load promotion:", err);
+        if (!cancelled) {
+          onPromotionChange?.({ code: "", discount: 0 });
+          setPromoError("This promotional code is invalid or has expired");
+          setPromoCorrect("");
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(run, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [promoInput]);
 
   const handleCreatePaymentIntent = async () => {
     if (clientSecret) return; // 🔥 กันยิงซ้ำ
@@ -271,6 +371,16 @@ export default function PaymentMethodForm({
             aria-label="Promotion code"
           />
         </div>
+        {promoError && (
+          <p className="mt-2 text-sm text-red-500">
+            {promoError}
+          </p>
+        )}
+        {promoCorrect && (
+          <p className="mt-2 text-sm text-[#00b300]">
+            {promoCorrect}
+          </p>
+        )}
       </div>
 
       {method === "credit-card" && clientSecret && (
