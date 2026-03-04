@@ -258,23 +258,6 @@ export default function BookingDetailCard({
                 </ul>
               </div>
             )}
-            {promotionCode && promoPercent > 0 && (
-              <div>
-                <ul className="list-disc list-inside text-sm text-white space-y-0.5">
-                  <li className="flex flex-row justify-between">
-                    {promotionCode}
-                    <div>
-                      {" "}
-                      -
-                      {promoPercent.toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                      })}
-                      %
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            )}
           </div>
         )}
 

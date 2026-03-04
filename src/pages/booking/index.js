@@ -133,63 +133,6 @@ export default function BookingPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Restore step & basic state on refresh
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const raw = window.sessionStorage.getItem("booking:state:default");
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed.currentStep) setCurrentStep(parsed.currentStep);
-      if (Array.isArray(parsed.extras)) setExtras(parsed.extras);
-      if (Array.isArray(parsed.standards)) setStandards(parsed.standards);
-      if (typeof parsed.additionalRequest === "string") {
-        setAdditionalRequest(parsed.additionalRequest);
-      }
-      if (typeof parsed.promotionCode === "string") {
-        setPromotionCode(parsed.promotionCode);
-      }
-      if (typeof parsed.promotionDiscount === "number") {
-        setPromotionDiscount(parsed.promotionDiscount);
-      }
-      if (parsed.promotionId) {
-        setPromotionId(parsed.promotionId);
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
-
-  // Persist step & selections while user is on the page
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const payload = {
-      currentStep,
-      extras,
-      standards,
-      additionalRequest,
-      promotionCode,
-      promotionDiscount,
-      promotionId,
-    };
-
-    window.sessionStorage.setItem(
-      "booking:state:default",
-      JSON.stringify(payload)
-    );
-  }, [
-    currentStep,
-    extras,
-    standards,
-    additionalRequest,
-    promotionCode,
-    promotionDiscount,
-    promotionId,
-  ]);
-
   // Scroll to top when step changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
