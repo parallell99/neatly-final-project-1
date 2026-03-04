@@ -35,8 +35,8 @@ export default async function handler(req, res) {
     })
     .eq("id", orderId)
     .eq("user_id", user.id)
-    // ป้องกันไม่ให้เปลี่ยนสถานะ order ที่จ่ายเงินแล้ว / ไม่ได้อยู่ในสถานะ pending
-    .eq("status", "pending")
+    // อัปเดตได้เฉพาะ order ที่ยังไม่จ่ายสำเร็จ (pending / awaiting_payment)
+    .in("status", ["pending", "awaiting_payment"])
     .select()
     .maybeSingle();
     .maybeSingle();
