@@ -97,25 +97,66 @@ export default function BookingDetailCard({
   const checkInStr = order?.check_in_date
     ? formatDateRange(order.check_in_date, order.check_out_date || order.check_in_date)
     : "—";
-    const roomLabel = room?.title ?? "—";
 
-    const roomPrice =
-      room?.price_per_night != null
-        ? Number(room.price_per_night).toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-          })
-        : order?.total_price != null
-          ? Number(order.total_price).toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-            })
-          : "—";
-    
-    const total =
-      order?.total_price != null
+  const roomLabel = room?.name ?? "—";
+
+  // ราคาห้องต่อคืน (ใช้ promotion_price_per_night ก่อน ถ้ามี)
+  const nightlyPrice =
+    room?.promotion_price_per_night != null
+      ? Number(room.promotion_price_per_night) || 0
+      : room?.price_per_night != null
+        ? Number(room.price_per_night) || 0
+        : 0;
+
+  // จำนวนคืนจาก check-in / check-out
+  let nights = 1;
+  if (order?.check_in_date && order?.check_out_date) {
+    const d1 = new Date(order.check_in_date);
+    const d2 = new Date(order.check_out_date);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const diff = Math.round((d2 - d1) / msPerDay);
+    if (Number.isFinite(diff) && diff > 0) {
+      nights = diff;
+    }
+  }
+
+  const quantity = order?.quantity != null ? Number(order.quantity) || 1 : 1;
+
+  // ราคาห้องรวมต่อการเข้าพัก (ต่อทุกคืน x จำนวนห้อง)
+  const baseRoomPrice =
+    nightlyPrice > 0 ? nightlyPrice * nights * quantity : 0;
+
+  const roomPrice =
+    baseRoomPrice > 0
+      ? baseRoomPrice.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+        })
+      : order?.total_price != null
         ? Number(order.total_price).toLocaleString("en-US", {
             minimumFractionDigits: 2,
           })
         : "—";
+
+  // ราคารวม extra requests
+  const extrasTotal = extras.reduce(
+    (sum, extra) => sum + (Number(extra.price ?? 0) || 0),
+    0
+  );
+
+  // ส่วนลดเป็นเปอร์เซ็นต์จาก promotion (discount_percentage)
+  const promoPercent = Number(promotionDiscount || 0) || 0;
+  const subtotal = baseRoomPrice + extrasTotal;
+  const discountAmount =
+    promoPercent > 0 ? (subtotal * promoPercent) / 100 : 0;
+
+  const totalNumber = Math.max(0, subtotal - discountAmount);
+
+  const total =
+    totalNumber > 0
+      ? totalNumber.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+        })
+      : "—";
 
   if (loading) {
     return (
@@ -173,7 +214,15 @@ export default function BookingDetailCard({
         {/* Room + Total */}
         <div className="pt-6 mt-4 mx-4 lg:mt-10 space-y-4">
           <div className="flex items-center justify-between pb-6">
-            <span className="font-sans text-base text-green-300">{roomLabel}</span>
+            <div className="flex flex-col">
+              <span className="font-sans text-base text-green-300">
+                {roomLabel}
+              </span>
+              <span className="font-sans text-xs text-green-200 mt-1">
+                {nights} night{nights > 1 ? "s" : ""} · {quantity} room
+                {quantity > 1 ? "s" : ""}
+              </span>
+            </div>
             <span className="font-sans text-base font-semibold">{roomPrice}</span>
           </div>
         </div>
@@ -209,7 +258,7 @@ export default function BookingDetailCard({
                 </ul>
               </div>
             )}
-            {promotionCode && (
+            {promotionCode && promoPercent > 0 && (
               <div>
                 <ul className="list-disc list-inside text-sm text-white space-y-0.5">
                   <li className="flex flex-row justify-between">
@@ -217,9 +266,10 @@ export default function BookingDetailCard({
                     <div>
                       {" "}
                       -
-                      {Number(promotionDiscount ?? 0).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
+                      {promoPercent.toLocaleString("en-US", {
+                        minimumFractionDigits: 0,
                       })}
+                      %
                     </div>
                   </li>
                 </ul>

@@ -15,6 +15,7 @@ function formatDateRange(checkIn, checkOut) {
 export default function PaymentSuccess({
   orderId,
   extras = [],
+  standards = [],
   promotionCode = "",
   promotionDiscount = 0,
   paymentMethod = "Credit Card",
@@ -26,6 +27,12 @@ export default function PaymentSuccess({
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [extrasState, setExtrasState] = useState(extras);
+  const [standardsState, setStandardsState] = useState(standards);
+  const [promoCodeState, setPromoCodeState] = useState(promotionCode);
+  const [promoDiscountState, setPromoDiscountState] = useState(promotionDiscount);
+  const [cardDigitsState, setCardDigitsState] = useState(cardLastDigits);
+  const [paymentMethodState, setPaymentMethodState] = useState(paymentMethod);
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -65,27 +72,119 @@ export default function PaymentSuccess({
     return () => { cancelled = true; };
   }, [orderId, user?.id]);
 
+  // โหลด standards / extras / promotion จาก sessionStorage เพื่อให้รีเฟรชแล้วยังเห็นข้อมูล
+  useEffect(() => {
+    if (typeof window === "undefined" || !orderId) return;
+
+    try {
+      const keyByOrder = `booking:state:${orderId}`;
+      const rawByOrder = window.sessionStorage.getItem(keyByOrder);
+      const rawDefault = window.sessionStorage.getItem("booking:state:default");
+      const raw = rawByOrder || rawDefault;
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw);
+
+      if (Array.isArray(parsed.extras)) setExtrasState(parsed.extras);
+      if (Array.isArray(parsed.standards)) setStandardsState(parsed.standards);
+      if (typeof parsed.promotionCode === "string") {
+        setPromoCodeState(parsed.promotionCode);
+      }
+      if (typeof parsed.promotionDiscount === "number") {
+        setPromoDiscountState(parsed.promotionDiscount);
+      }
+    } catch {
+      // ignore
+    }
+  }, [orderId]);
+
+  // โหลดข้อมูลการจ่ายเงิน (method + เลขบัตรท้าย) จาก sessionStorage ตาม orderId
+  useEffect(() => {
+    if (typeof window === "undefined" || !orderId) return;
+
+    try {
+      const key = `booking:payment:${orderId}`;
+      const raw = window.sessionStorage.getItem(key);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw);
+      if (parsed.cardLastDigits) {
+        setCardDigitsState(parsed.cardLastDigits);
+      }
+      if (parsed.method) {
+        setPaymentMethodState(parsed.method);
+      }
+    } catch {
+      // ignore
+    }
+  }, [orderId]);
+
   const checkInStr = order?.check_in_date
     ? formatDateRange(order.check_in_date, order.check_out_date || order.check_in_date)
     : "—";
-  const roomLabel = room?.title ?? "Superior Garden View Room";
-  const roomPrice =
-    room?.price_per_night != null
-      ? Number(room.price_per_night).toLocaleString("en-US", { minimumFractionDigits: 2 })
-      : order?.total_price != null
-        ? Number(order.total_price).toLocaleString("en-US", { minimumFractionDigits: 2 })
-        : "2,500.00";
-  const total =
-    order?.total_price != null
-      ? Number(order.total_price).toLocaleString("en-US", { minimumFractionDigits: 2 })
-      : (() => {
-        const exTotal = (extras || []).reduce((sum, e) => sum + (e.price ?? 0), 0);
-        const subtotal = 2500 + exTotal;
-        return Math.max(0, subtotal - (promotionDiscount || 0)).toLocaleString("en-US", { minimumFractionDigits: 2 });
-      })();
+  const roomLabel = room?.name ?? room?.title ?? "—";
 
-  const hasExtras = Array.isArray(extras) && extras.length > 0;
-  const hasPromo = promotionCode && promotionDiscount > 0;
+  // --- คำนวณแบบเดียวกับ BookingDetailCard (ใช้ promotion_price_per_night ก่อน) ---
+  const nightlyPrice =
+    room?.promotion_price_per_night != null
+      ? Number(room.promotion_price_per_night) || 0
+      : room?.price_per_night != null
+        ? Number(room.price_per_night) || 0
+        : 0;
+
+  let nights = 1;
+  if (order?.check_in_date && order?.check_out_date) {
+    const d1 = new Date(order.check_in_date);
+    const d2 = new Date(order.check_out_date);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const diff = Math.round((d2 - d1) / msPerDay);
+    if (Number.isFinite(diff) && diff > 0) {
+      nights = diff;
+    }
+  }
+
+  const quantity = order?.quantity != null ? Number(order.quantity) || 1 : 1;
+
+  const baseRoomPrice =
+    nightlyPrice > 0 ? nightlyPrice * nights * quantity : 0;
+
+  const roomPrice =
+    baseRoomPrice > 0
+      ? baseRoomPrice.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+        })
+      : order?.total_price != null
+        ? Number(order.total_price).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+          })
+        : "—";
+
+  const extrasTotal = (extrasState || []).reduce(
+    (sum, e) => sum + (Number(e.price ?? 0) || 0),
+    0
+  );
+
+  const promoPercent = Number(promoDiscountState || 0) || 0;
+  const subtotal = baseRoomPrice + extrasTotal;
+  const discountAmount =
+    promoPercent > 0 ? (subtotal * promoPercent) / 100 : 0;
+
+  const totalNumber = Math.max(0, subtotal - discountAmount);
+
+  const total =
+    totalNumber > 0
+      ? totalNumber.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+        })
+      : "—";
+
+  const hasExtras = Array.isArray(extrasState) && extrasState.length > 0;
+  const hasStandards = Array.isArray(standardsState) && standardsState.length > 0;
+  const hasPromo = promoCodeState && promoPercent > 0;
+
+  const cardLast3 = cardDigitsState
+    ? String(cardDigitsState).slice(-3)
+    : "";
 
   const handleBackToHome = () => {
     if (onBackToHome) {
@@ -132,7 +231,7 @@ export default function PaymentSuccess({
   }
 
   return (
-    <div className="flex flex-col items-center justify-between">
+    <div className="flex flex-col items-center justify-between gap-150">
       <div className="w-full flex flex-col items-center">
         <div className="bg-green-800 flex flex-col pt-10 lg:w-[738px] lg:h-[300px] lg:mt-15">
           <div className="flex-1 flex flex-col items-center justify-center">
@@ -175,9 +274,9 @@ export default function PaymentSuccess({
 
                 {/* Payment Details Section (Dark Green Background) */}
                 <div className="rounded-lg p-6 mb-6">
-                  {paymentMethod?.toLowerCase() !== "cash" && (
+                  {paymentMethodState?.toLowerCase() !== "cash" && (
                     <p className="font-sans text-base text-white mb-10">
-                      Payment success via {paymentMethod} - *{cardLastDigits}
+                      Payment success via {paymentMethodState} - ***{cardLast3}
                     </p>
                   )}
 
@@ -191,7 +290,24 @@ export default function PaymentSuccess({
                         {roomPrice}
                       </span>
                     </div>
-                    {hasExtras && extras.map((item) => (
+                    <div className="flex justify-between">
+                      <span className="font-sans text-sm text-green-200">
+                        {nights} night{nights > 1 ? "s" : ""} · {quantity} room
+                        {quantity > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    {hasStandards && (
+                      <div>
+                        {standardsState.map((label) => (
+                          <div key={label} className="flex justify-between">
+                            <span className="font-sans text-base text-white">
+                              {label}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {hasExtras && extrasState.map((item) => (
                       <div key={item.label ?? item.id ?? Math.random()} className="flex justify-between">
                         <span className="font-sans text-base text-white">
                           {item.label}
@@ -206,12 +322,14 @@ export default function PaymentSuccess({
                     {hasPromo && (
                       <div className="flex justify-between">
                         <span className="font-sans text-base text-white">
-                          Promotion Code
+                          {promoCodeState || "Promotion Code"}
                         </span>
                         <span className="font-sans text-base text-white font-semibold">
-                          -{promotionDiscount.toLocaleString("en-US", {
-                            minimumFractionDigits: 2,
+                          -
+                          {promoPercent.toLocaleString("en-US", {
+                            minimumFractionDigits: 0,
                           })}
+                          %
                         </span>
                       </div>
                     )}
@@ -236,7 +354,7 @@ export default function PaymentSuccess({
       </div>
 
       {/* Bottom Navigation (White Background) - Fixed at bottom */}
-      <div className="w-full bg-white rounded-lg p-6 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center lg:w-[550px] lg:mb-8 lg:mt-110 lg:gap-10">
+      <div className="w-full bg-white rounded-lg p-6 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center lg:w-[740px] lg:mb-8 lg:gap-10">
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap items-center gap-3 lg:gap-4">
             <button

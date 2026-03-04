@@ -12,6 +12,8 @@ export default function CheckoutConfirm({
   onConfirm,
   onCreateGuest,
   onSaveAdditionalRequest,
+  onSaveRequests,
+  onUpdateOrderMeta,
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -56,6 +58,22 @@ export default function CheckoutConfirm({
           }
         } catch (saveErr) {
           console.error("Failed to save additional request:", saveErr);
+        }
+
+        try {
+          if (onSaveRequests) {
+            await onSaveRequests();
+          }
+        } catch (reqErr) {
+          console.error("Failed to save order requests:", reqErr);
+        }
+
+        try {
+          if (onUpdateOrderMeta) {
+            await onUpdateOrderMeta();
+          }
+        } catch (metaErr) {
+          console.error("Failed to update order meta:", metaErr);
         }
 
         // อัปเดตสถานะ order ใน DB ให้เหมือน flow cash / saved card

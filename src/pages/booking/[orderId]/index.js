@@ -30,6 +30,7 @@ export default function BookingOrderPage() {
   const [additionalRequest, setAdditionalRequest] = useState("");
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
+  const [promotionId, setPromotionId] = useState(null);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
@@ -69,6 +70,9 @@ export default function BookingOrderPage() {
       if (typeof parsed.promotionDiscount === "number") {
         setPromotionDiscount(parsed.promotionDiscount);
       }
+      if (parsed.promotionId) {
+        setPromotionId(parsed.promotionId);
+      }
     } catch {
       // ignore parse errors
     }
@@ -86,6 +90,7 @@ export default function BookingOrderPage() {
       additionalRequest,
       promotionCode,
       promotionDiscount,
+      promotionId,
     };
 
     window.sessionStorage.setItem(
@@ -100,11 +105,13 @@ export default function BookingOrderPage() {
     additionalRequest,
     promotionCode,
     promotionDiscount,
+    promotionId,
   ]);
 
-  const handlePromotionChange = ({ code, discount }) => {
+  const handlePromotionChange = ({ code, discount, promotionId }) => {
     setPromotionCode(code);
     setPromotionDiscount(discount);
+    setPromotionId(promotionId ?? null);
   };
 
   const handlePaymentConfirm = ({
@@ -113,6 +120,24 @@ export default function BookingOrderPage() {
     cardLastDigits: digits,
   }) => {
     if (success) {
+      const finalMethod = method || "Credit Card";
+      const finalDigits = digits || "888";
+
+      // เก็บวิธีจ่ายและเลขบัตรท้ายไว้ตาม orderId เพื่อใช้ในหน้า success (หลัง redirect)
+      if (typeof window !== "undefined" && orderId) {
+        try {
+          window.sessionStorage.setItem(
+            `booking:payment:${orderId}`,
+            JSON.stringify({
+              method: finalMethod,
+              cardLastDigits: finalDigits,
+            })
+          );
+        } catch {
+          // ignore
+        }
+      }
+
       setPaymentMethod(method || "Credit Card");
       setCardLastDigits(digits || "888");
       setPaymentSuccess(true);
@@ -298,10 +323,12 @@ export default function BookingOrderPage() {
                   promotionDiscount={promotionDiscount}
                   onPromotionChange={handlePromotionChange}
                   extras={extras}
+                  standards={standards}
                   user={user}
                   orderId={orderId}
                   guestData={guestData}
                   additionalRequest={additionalRequest}
+                  promotionId={promotionId}
                 />
               )}
             </div>
@@ -322,7 +349,7 @@ export default function BookingOrderPage() {
         isOpen={showExpiredModal}
         onGoBack={() => {
           setShowExpiredModal(false);
-          router.push("/booking");
+          router.push("/search-rooms");
         }}
         onGoHome={() => {
           setShowExpiredModal(false);

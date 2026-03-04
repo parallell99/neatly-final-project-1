@@ -50,6 +50,9 @@ async function createOrder(user, payload) {
   const qty = Number(quantity || 1);
   const totalPrice = Number(nightlyPrice) * nights * qty;
 
+  // กำหนดเวลาหมดอายุสำหรับการชำระเงิน 5 นาทีหลังจากสร้าง order
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
   const order = await orderRepository.createOrder({
     userId: user.id,
     email: user.email ?? null,
@@ -62,6 +65,7 @@ async function createOrder(user, payload) {
     promotionId: promotion_id,
     additionalRequest: additional_request,
     status: "pending",
+    expiresAt,
   });
 
   return order;

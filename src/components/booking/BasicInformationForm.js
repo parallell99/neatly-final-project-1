@@ -19,6 +19,7 @@ import {
 import PhoneInput from "@/components/ui/PhoneInput/PhoneInput";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/authentication";
+import { useRouter } from "next/router";
 
 export default function BasicInformationForm({
   orderId,
@@ -26,6 +27,7 @@ export default function BasicInformationForm({
   extras = [],
   standards = [],
 }) {
+  const router = useRouter();
   const { user: authUser, fetchUser } = useAuth();
   const [date, setDate] = useState(new Date());
   const [firstName, setFirstName] = useState("");
@@ -198,6 +200,7 @@ export default function BasicInformationForm({
         <button
           type="button"
           className="text-[#E76B39] font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
+          onClick={() => router.back()}
         >
           Back
         </button>
@@ -222,6 +225,7 @@ export default function BasicInformationForm({
         <button
           type="button"
           className="text-orange-500 font-sans text-base font-medium hover:text-[#C14817] transition-colors px-0 hover:cursor-pointer"
+          onClick={() => router.back()}
         >
           Back
         </button>
