@@ -29,18 +29,13 @@ export default function PaymentMethodForm({
   onPromotionChange,
   extras = [],
   standards = [],
-  standards = [],
   user,
   orderId,
   guestData,
   additionalRequest = "",
   promotionId = null,
-  promotionId = null,
 }) {
   const [method, setMethod] = useState("credit-card");
-  const [promoInput, setPromoInput] = useState(promotionCode || "");
-  const [promoError, setPromoError] = useState("");
-  const [promoCorrect, setPromoCorrect] = useState("");
   const [promoInput, setPromoInput] = useState(promotionCode || "");
   const [promoError, setPromoError] = useState("");
   const [promoCorrect, setPromoCorrect] = useState("");
@@ -57,22 +52,12 @@ export default function PaymentMethodForm({
   const subtotal = ROOM_PRICE + extrasTotal;
   const promoAmount = promoPercent > 0 ? (subtotal * promoPercent) / 100 : 0;
   const totalBaht = Math.max(0, subtotal - promoAmount);
-  // มอง promotionDiscount เป็นเปอร์เซ็นต์ (discount_percentage)
-  const promoPercent = Number(promotionDiscount || 0) || 0;
-  const subtotal = ROOM_PRICE + extrasTotal;
-  const promoAmount = promoPercent > 0 ? (subtotal * promoPercent) / 100 : 0;
-  const totalBaht = Math.max(0, subtotal - promoAmount);
   const amountSatang = Math.round(totalBaht * 100);
   const storageKey =
     typeof window !== "undefined" && orderId
       ? `booking:payment:${orderId}`
       : "booking:payment:default";
-  const storageKey =
-    typeof window !== "undefined" && orderId
-      ? `booking:payment:${orderId}`
-      : "booking:payment:default";
 
-  // Restore local payment-method UI state on refresh
   // Restore local payment-method UI state on refresh
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -178,6 +163,8 @@ export default function PaymentMethodForm({
       clearTimeout(timeoutId);
     };
   }, [promoInput]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     const raw = window.sessionStorage.getItem(storageKey);
     if (!raw) return;
@@ -351,8 +338,6 @@ export default function PaymentMethodForm({
 
   const [guestId, setGuestId] = useState(null);
 
-  const [guestId, setGuestId] = useState(null);
-
   const handleCreateGuest = async () => {
     if (!guestData?.first_name || !guestData?.last_name || !guestData?.email || !guestData?.phone) {
       throw new Error("Guest information is required");
@@ -378,15 +363,6 @@ export default function PaymentMethodForm({
       const text = await res.text();
       throw new Error(text || "Failed to create guest");
     }
-
-    const data = await res.json();
-    const createdGuestId = data?.guest?.id ?? null;
-    if (createdGuestId) {
-      setGuestId(createdGuestId);
-    }
-
-    // คืน guestId เพื่อให้ caller ใช้ได้ทันที (ไม่ต้องรอ state update)
-    return createdGuestId;
 
     const data = await res.json();
     const createdGuestId = data?.guest?.id ?? null;
@@ -494,76 +470,6 @@ export default function PaymentMethodForm({
     return res.json();
   };
 
-  const handleSaveRequests = async () => {
-    if (!orderId) return;
-
-    const hasStandards = Array.isArray(standards) && standards.length > 0;
-    const extraLabels = Array.isArray(extras)
-      ? extras.map((e) => e.label).filter(Boolean)
-      : [];
-
-    if (!hasStandards && extraLabels.length === 0) return;
-
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("Unauthorized");
-
-    const res = await fetch("/api/booking/order-requests", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        orderId,
-        standards,
-        extras: extraLabels,
-      }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Failed to save order requests");
-    }
-
-    return res.json();
-  };
-
-  const handleUpdateOrderMeta = async (overrideGuestId) => {
-    if (!orderId) return;
-
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("Unauthorized");
-
-    const effectiveGuestId = overrideGuestId ?? guestId;
-
-    // ไม่มี guestId / promotionId ก็ไม่ต้องเรียก
-    if (!effectiveGuestId && !promotionId) return;
-
-    const body = {
-      orderId,
-      totalPrice: totalBaht,
-    };
-
-    if (effectiveGuestId) body.guestId = effectiveGuestId;
-    if (promotionId) body.promotionId = promotionId;
-
-    const res = await fetch("/api/booking/update-order-meta", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text || "Failed to update order meta");
-    }
-
-    return res.json();
-  };
-
   const handleCashConfirm = async () => {
     try {
       if (!user) {
@@ -571,7 +477,6 @@ export default function PaymentMethodForm({
         return;
       }
 
-      const createdGuestId = await handleCreateGuest();
       const createdGuestId = await handleCreateGuest();
 
       try {
@@ -653,16 +558,6 @@ export default function PaymentMethodForm({
     }
   };
 
-  // สำหรับจ่ายด้วยบัตร เราอยากให้สร้าง guest แล้วอัปเดต meta ทันที
-  const handleCreateGuestAndUpdateOrder = async () => {
-    const createdGuestId = await handleCreateGuest();
-    try {
-      await handleUpdateOrderMeta(createdGuestId);
-    } catch (metaErr) {
-      console.error("Update order meta error (credit card):", metaErr);
-    }
-  };
-
   return (
     <div>
       {/* Payment method tabs */}
@@ -718,16 +613,6 @@ export default function PaymentMethodForm({
             {promoCorrect}
           </p>
         )}
-        {promoError && (
-          <p className="mt-2 text-sm text-red-500">
-            {promoError}
-          </p>
-        )}
-        {promoCorrect && (
-          <p className="mt-2 text-sm text-[#00b300]">
-            {promoCorrect}
-          </p>
-        )}
       </div>
 
       {method === "credit-card" && clientSecret && (
@@ -747,10 +632,7 @@ export default function PaymentMethodForm({
             onBack={onBack}
             onConfirm={onConfirm}
             onCreateGuest={handleCreateGuestAndUpdateOrder}
-            onCreateGuest={handleCreateGuestAndUpdateOrder}
             onSaveAdditionalRequest={handleSaveAdditionalRequest}
-            onSaveRequests={handleSaveRequests}
-            onUpdateOrderMeta={handleUpdateOrderMeta}
             onSaveRequests={handleSaveRequests}
             onUpdateOrderMeta={handleUpdateOrderMeta}
           />

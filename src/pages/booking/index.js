@@ -26,11 +26,8 @@ export default function BookingPage() {
   const [extras, setExtras] = useState([]);
   const [standards, setStandards] = useState([]);
   const [additionalRequest, setAdditionalRequest] = useState("");
-  const [standards, setStandards] = useState([]);
-  const [additionalRequest, setAdditionalRequest] = useState("");
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
-  const [promotionId, setPromotionId] = useState(null);
   const [promotionId, setPromotionId] = useState(null);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -74,77 +71,15 @@ export default function BookingPage() {
 
     fetchLatestOrder();
   }, [orderId]);
-  const [orderId, setOrderId] = useState(null);
 
-  useEffect(() => {
-    if (orderId) return;
-
-    const fetchLatestOrder = async () => {
-      try {
-        const token =
-          typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-        const res = await fetch("/api/booking/order-detail", {
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-              }
-            : undefined,
-        });
-
-        if (!res.ok) return;
-
-        const data = await res.json();
-        const latestOrderId = data?.order?.id;
-        if (latestOrderId) {
-          setOrderId(latestOrderId);
-        }
-      } catch (err) {
-        console.error("Failed to fetch latest order for user:", err);
-      }
-    };
-
-    fetchLatestOrder();
-  }, [orderId]);
-
-  const handlePromotionChange = ({ code, discount, promotionId }) => {
   const handlePromotionChange = ({ code, discount, promotionId }) => {
     setPromotionCode(code);
     setPromotionDiscount(discount);
-    setPromotionId(promotionId ?? null);
     setPromotionId(promotionId ?? null);
   };
 
   const handlePaymentConfirm = ({ success, paymentMethod: method, cardLastDigits: digits }) => {
     if (success) {
-      const finalMethod = method || "Credit Card";
-      const finalDigits = digits || "888";
-
-      // เก็บวิธีจ่ายและเลขบัตรท้ายไว้ตาม orderId เพื่อใช้ในหน้า success (หลัง redirect)
-      if (typeof window !== "undefined" && orderId) {
-        try {
-          window.sessionStorage.setItem(
-            `booking:payment:${orderId}`,
-            JSON.stringify({
-              method: finalMethod,
-              cardLastDigits: finalDigits,
-            })
-          );
-        } catch {
-          // ignore
-        }
-      }
-
-      // Payment successful - redirect to persistent success page
-      const finalOrderId = orderId;
-      if (finalOrderId) {
-        router.push(`/booking/${finalOrderId}/success`);
-        return;
-      }
-
-      // fallback: keep old in-page success behaviour
-      setPaymentMethod(finalMethod);
-      setCardLastDigits(finalDigits);
       const finalMethod = method || "Credit Card";
       const finalDigits = digits || "888";
 
@@ -433,10 +368,6 @@ export default function BookingPage() {
                   standards={standards}
                   onNext={(data) => {
                     setGuestData(data);
-                  extras={extras}
-                  standards={standards}
-                  onNext={(data) => {
-                    setGuestData(data);
                     setCurrentStep(2);
                   }}
                 />
@@ -448,11 +379,7 @@ export default function BookingPage() {
                   onNext={() => setCurrentStep(3)}
                   onExtrasChange={setExtras}
                   onStandardsChange={setStandards}
-                  onStandardsChange={setStandards}
                   extras={extras}
-                  standards={standards}
-                  additionalRequest={additionalRequest}
-                  onAdditionalChange={setAdditionalRequest}
                   standards={standards}
                   additionalRequest={additionalRequest}
                   onAdditionalChange={setAdditionalRequest}
@@ -467,25 +394,16 @@ export default function BookingPage() {
                   onPromotionChange={handlePromotionChange}
                   extras={extras}
                   standards={standards}
-                  standards={standards}
                   user={user}
                   orderId={orderId}
                   guestData={guestData}
                   additionalRequest={additionalRequest}
-                  promotionId={promotionId}
                   promotionId={promotionId}
                 />
               )}
             </div>
 
             <div className="hidden lg:block lg:sticky lg:top-8 h-fit">
-              <BookingDetailCard
-                orderId={orderId}
-                extras={extras}
-                standards={standards}
-                promotionCode={promotionCode}
-                promotionDiscount={promotionDiscount}
-              />
               <BookingDetailCard
                 orderId={orderId}
                 extras={extras}
@@ -501,7 +419,6 @@ export default function BookingPage() {
         isOpen={showExpiredModal}
         onGoBack={() => {
           setShowExpiredModal(false);
-          router.push("/search-rooms");
           router.push("/search-rooms");
         }}
         onGoHome={() => {

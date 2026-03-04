@@ -40,13 +40,6 @@ export default function BookingDetailCard({
   promotionCode = "",
   promotionDiscount = 0,
 }) {
-export default function BookingDetailCard({
-  orderId,
-  standards = [],
-  extras = [],
-  promotionCode = "",
-  promotionDiscount = 0,
-}) {
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -133,65 +126,6 @@ export default function BookingDetailCard({
   const baseRoomPrice =
     nightlyPrice > 0 ? nightlyPrice * nights * quantity : 0;
 
-  const roomLabel = room?.name ?? "—";
-
-  // ราคาห้องต่อคืน (ใช้ promotion_price_per_night ก่อน ถ้ามี)
-  const nightlyPrice =
-    room?.promotion_price_per_night != null
-      ? Number(room.promotion_price_per_night) || 0
-      : room?.price_per_night != null
-        ? Number(room.price_per_night) || 0
-        : 0;
-
-  // จำนวนคืนจาก check-in / check-out
-  let nights = 1;
-  if (order?.check_in_date && order?.check_out_date) {
-    const d1 = new Date(order.check_in_date);
-    const d2 = new Date(order.check_out_date);
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const diff = Math.round((d2 - d1) / msPerDay);
-    if (Number.isFinite(diff) && diff > 0) {
-      nights = diff;
-    }
-  }
-
-  const quantity = order?.quantity != null ? Number(order.quantity) || 1 : 1;
-
-  // ราคาห้องรวมต่อการเข้าพัก (ต่อทุกคืน x จำนวนห้อง)
-  const baseRoomPrice =
-    nightlyPrice > 0 ? nightlyPrice * nights * quantity : 0;
-
-  const roomPrice =
-    baseRoomPrice > 0
-      ? baseRoomPrice.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-        })
-      : order?.total_price != null
-        ? Number(order.total_price).toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-          })
-        : "—";
-
-  // ราคารวม extra requests
-  const extrasTotal = extras.reduce(
-    (sum, extra) => sum + (Number(extra.price ?? 0) || 0),
-    0
-  );
-
-  // ส่วนลดเป็นเปอร์เซ็นต์จาก promotion (discount_percentage)
-  const promoPercent = Number(promotionDiscount || 0) || 0;
-  const subtotal = baseRoomPrice + extrasTotal;
-  const discountAmount =
-    promoPercent > 0 ? (subtotal * promoPercent) / 100 : 0;
-
-  const totalNumber = Math.max(0, subtotal - discountAmount);
-
-  const total =
-    totalNumber > 0
-      ? totalNumber.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-        })
-      : "—";
   const roomPrice =
     baseRoomPrice > 0
       ? baseRoomPrice.toLocaleString("en-US", {

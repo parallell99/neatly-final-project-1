@@ -37,10 +37,7 @@ export default async function handler(req, res) {
     .eq("user_id", user.id)
     // อัปเดตได้เฉพาะ order ที่ยังไม่จ่ายสำเร็จ (pending / awaiting_payment)
     .in("status", ["pending", "awaiting_payment"])
-    // อัปเดตได้เฉพาะ order ที่ยังไม่จ่ายสำเร็จ (pending / awaiting_payment)
-    .in("status", ["pending", "awaiting_payment"])
     .select()
-    .maybeSingle();
     .maybeSingle();
 
   if (error) {
