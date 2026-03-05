@@ -31,7 +31,7 @@ export default function AdminRouteGuard({ children }) {
   if (getUserLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100" role="status" aria-label="Loading">
-        <p className="text-gray-600">Loading...</p>
+        <p className="text-gray-600">Admin guard is Loading...</p>
       </div>
     );
   }

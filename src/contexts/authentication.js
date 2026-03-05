@@ -19,6 +19,7 @@ function AuthProvider({ children }) {
     if (typeof window === "undefined") return;
 
     const token = localStorage.getItem("token");
+    console.log("Token :",JSON.parse(atob(token.split(".")[1])))
     if (!token) {
       setState((prev) => ({
         ...prev,
@@ -55,11 +56,6 @@ function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
-      setState((prev) => ({ ...prev, getUserLoading: false }));
-      return;
-    }
     fetchUser();
   }, [fetchUser]);
 
