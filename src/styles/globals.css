@@ -608,3 +608,18 @@ body {
   animation: chatbot-typing 0.6s ease-in-out infinite;
 }
 
+/* Hide donut chart center text (Room Availability) */
+.donutchart-room-availability-innertext {
+  display: none;
+}
+
+/* Utility: hide scrollbars but keep scroll behavior */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+

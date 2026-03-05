@@ -85,7 +85,7 @@ export default function UserProfile() {
         const userId = user?.id;
         if (!userId) throw new Error("User id not found");
         const fileExt = selectedFile.name.split(".").pop();
-        const filePath = `users/${userId}/avatar.${fileExt}`;
+        const filePath = `users/${userId}/avatar.${fileExt}?v=${Date.now()}`;
         const { error: uploadError } = await supabase.storage
           .from("nealty-profile-image")
           .upload(filePath, selectedFile, { upsert: true });
