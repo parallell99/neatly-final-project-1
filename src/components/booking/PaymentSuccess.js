@@ -151,12 +151,12 @@ export default function PaymentSuccess({
   const roomPrice =
     baseRoomPrice > 0
       ? baseRoomPrice.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-        })
+        minimumFractionDigits: 2,
+      })
       : order?.total_price != null
         ? Number(order.total_price).toLocaleString("en-US", {
-            minimumFractionDigits: 2,
-          })
+          minimumFractionDigits: 2,
+        })
         : "—";
 
   const extrasTotal = (extrasState || []).reduce(
@@ -174,8 +174,8 @@ export default function PaymentSuccess({
   const total =
     totalNumber > 0
       ? totalNumber.toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-        })
+        minimumFractionDigits: 2,
+      })
       : "—";
 
   const hasExtras = Array.isArray(extrasState) && extrasState.length > 0;
@@ -231,9 +231,9 @@ export default function PaymentSuccess({
   }
 
   return (
-    <div className="flex flex-col items-center justify-between gap-150">
+    <div className="w-full min-h-screen bg-[#F7F7FB] flex flex-col items-center lg:py-10">
       <div className="w-full flex flex-col items-center">
-        <div className="bg-green-800 flex flex-col pt-10 lg:w-[738px] lg:h-[300px] lg:mt-15">
+        <div className="bg-green-800 flex flex-col pt-10 lg:w-[738px] lg:mt-15">
           <div className="flex-1 flex flex-col items-center justify-center">
             <div className="w-full flex flex-col">
               {/* Header Section */}
@@ -275,7 +275,7 @@ export default function PaymentSuccess({
                 {/* Payment Details Section (Dark Green Background) */}
                 <div className="rounded-lg p-6 mb-6">
                   {paymentMethodState?.toLowerCase() !== "cash" && (
-                    <p className="font-sans text-base text-white mb-10">
+                    <p className="font-sans text-base text-white mb-10 text-end">
                       Payment success via {paymentMethodState} - ***{cardLast3}
                     </p>
                   )}
@@ -353,10 +353,10 @@ export default function PaymentSuccess({
         </div>
       </div>
 
-      {/* Bottom Navigation (White Background) - Fixed at bottom */}
-      <div className="w-full bg-white rounded-lg p-6 flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center lg:w-[740px] lg:mb-8 lg:gap-10">
+      {/* Bottom Navigation (White Background)*/}
+      <div className="w-full max-w-[738px] rounded-lg p-6 mt-12 flex flex-col gap-8 mx-4 lg:mx-0 lg:flex-row lg:justify-between lg:items-center lg:mb-12 lg:gap-10">
         <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-3 lg:gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 lg:gap-4">
             <button
               type="button"
               onClick={handleCheckBookingDetail}

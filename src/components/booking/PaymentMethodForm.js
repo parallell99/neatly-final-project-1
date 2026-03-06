@@ -6,6 +6,7 @@ import CreditCardIcon from "@/assets/icons/credit.svg";
 import CashIcon from "@/assets/icons/cash.svg";
 import CashHandIcon from "@/assets/icons/cash-hand.svg";
 import CreditCardCheckout from "@/components/booking/CreditCardCheckout";
+import BookingDetailCard from "@/components/booking/BookingDetailCard";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import axios from "axios";
@@ -356,6 +357,7 @@ export default function PaymentMethodForm({
         last_name: guestData.last_name,
         email: guestData.email,
         phone: guestData.phone,
+        ...(guestData.country != null && guestData.country !== "" && { country: guestData.country }),
       }),
     });
 
@@ -635,6 +637,10 @@ export default function PaymentMethodForm({
             onSaveAdditionalRequest={handleSaveAdditionalRequest}
             onSaveRequests={handleSaveRequests}
             onUpdateOrderMeta={handleUpdateOrderMeta}
+            extras={extras}
+            standards={standards}
+            promotionCode={promotionCode}
+            promotionDiscount={promotionDiscount}
           />
         </Elements>
       )}
@@ -655,6 +661,19 @@ export default function PaymentMethodForm({
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Mobile: BookingDetailCard โชว์เฉพาะ cash (ฝั่ง credit card มีการ์ดใน CheckoutConfirm/CreditCardCheckout แล้ว) */}
+      {method === "cash" && (
+        <div className="lg:hidden mt-6">
+          <BookingDetailCard
+            orderId={orderId}
+            extras={extras}
+            standards={standards}
+            promotionCode={promotionCode}
+            promotionDiscount={promotionDiscount}
+          />
         </div>
       )}
 

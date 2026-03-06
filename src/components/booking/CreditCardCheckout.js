@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Button from "@/components/ui/buttons/buttons";
 import CreditCardIcon from "@/assets/icons/credit.svg?url";
 import CheckoutConfirm from "@/components/booking/CheckoutConfirm";
+import BookingDetailCard from "@/components/booking/BookingDetailCard";
 import { useStripe, Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "axios";
@@ -27,6 +28,10 @@ export default function CreditCardCheckout({
   onSaveAdditionalRequest,
   onSaveRequests,
   onUpdateOrderMeta,
+  extras = [],
+  standards = [],
+  promotionCode = "",
+  promotionDiscount = 0,
 }) {
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
@@ -84,14 +89,20 @@ export default function CreditCardCheckout({
           console.error("Failed to update order meta:", metaErr);
         }
 
-        // เตรียมเลขท้ายบัตร: เอาจาก paymentIntent ถ้าไม่มีใช้จาก savedCards
+        // เตรียมเลขท้ายบัตรและแบรนด์: เอาจาก paymentIntent ถ้าไม่มีใช้จาก savedCards
         const selectedCard = savedCards.find((c) => c.id === selectedCardId);
-        const cardLastDigitsFromPI =
-          paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ?? "";
+        const charge = paymentIntent?.charges?.data?.[0];
+        const cardDetails = charge?.payment_method_details?.card;
+
+        const cardLastDigitsFromPI = cardDetails?.last4 ?? "";
         const cardLastDigits =
           cardLastDigitsFromPI || selectedCard?.card?.last4 || "888";
 
-        // อัปเดตสถานะ order ให้เหมือนกรณีชำระเงินสด
+        const cardBrandFromPI = cardDetails?.brand ?? "";
+        const cardBrand =
+          cardBrandFromPI || selectedCard?.card?.brand || "card";
+
+        // อัปเดตสถานะ order ให้เหมือนกรณีชำระเงินสด พร้อมเก็บเลขท้ายบัตรและแบรนด์
         try {
           const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
           if (token && orderId) {
@@ -101,6 +112,8 @@ export default function CreditCardCheckout({
                 orderId,
                 status: "paid",
                 paymentMethod: "card",
+                cardLast4: cardLastDigits,
+                cardBrand,
               },
               {
                 headers: {
@@ -118,6 +131,7 @@ export default function CreditCardCheckout({
           success: true,
           paymentMethod: "Credit Card",
           cardLastDigits,
+          cardBrand,
         });
       }
     } catch (err) {
@@ -230,6 +244,7 @@ export default function CreditCardCheckout({
         </label>
       </div>
 
+      <div className="flex flex-col gap-10 mt-4">
       {(useNewCard || savedCards.length === 0) && clientSecret ? (
         <Elements
           stripe={stripePromise}
@@ -245,14 +260,28 @@ export default function CreditCardCheckout({
               onSaveAdditionalRequest={onSaveAdditionalRequest}
               onSaveRequests={onSaveRequests}
               onUpdateOrderMeta={onUpdateOrderMeta}
+              extras={extras}
+              standards={standards}
+              promotionCode={promotionCode}
+              promotionDiscount={promotionDiscount}
             />
           </div>
         </Elements>
       ) : (
-        <div className="flex items-center justify-between mt-8 pt-6">
+        <div className="flex flex-col items-center justify-between mt-8 pt-6">
           {errorMessage && (
             <p className="text-red-500 text-sm font-sans">{errorMessage}</p>
           )}
+          <div className="lg:hidden w-full mt-6">
+            <BookingDetailCard
+              orderId={orderId}
+              extras={extras}
+              standards={standards}
+              promotionCode={promotionCode}
+              promotionDiscount={promotionDiscount}
+            />
+          </div>
+          <div className="flex flex-row gap-22 mt-10 lg:gap-100">
           <button
             type="button"
             onClick={onBack}
@@ -267,6 +296,8 @@ export default function CreditCardCheckout({
             onClick={handleConfirmSavedCard}
             disabled={!stripe || isLoading}
           />
+          </div>
+          
         </div>
       )}
       {showReauth && (
@@ -314,6 +345,7 @@ export default function CreditCardCheckout({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

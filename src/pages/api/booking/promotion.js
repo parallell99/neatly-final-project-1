@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   const { data, error } = await supabaseAdmin
-    .from("promotion")
+    .from("promotions")
     .select("*")
     .eq("name", trimmed)
     .maybeSingle();

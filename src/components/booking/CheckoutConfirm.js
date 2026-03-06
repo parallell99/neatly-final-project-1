@@ -14,6 +14,10 @@ export default function CheckoutConfirm({
   onSaveAdditionalRequest,
   onSaveRequests,
   onUpdateOrderMeta,
+  extras = [],
+  standards = [],
+  promotionCode = "",
+  promotionDiscount = 0,
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -47,10 +51,18 @@ export default function CheckoutConfirm({
       }
 
       if (paymentIntent?.status === "succeeded") {
+        const charge = paymentIntent?.charges?.data?.[0];
+        const cardDetails = charge?.payment_method_details?.card;
+
         const cardLastDigits =
-          paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ??
+          cardDetails?.last4 ??
           paymentIntent?.payment_method?.card?.last4 ??
           "4242";
+
+        const cardBrand =
+          cardDetails?.brand ??
+          paymentIntent?.payment_method?.card?.brand ??
+          "card";
 
         try {
           if (onSaveAdditionalRequest) {
@@ -86,6 +98,8 @@ export default function CheckoutConfirm({
                 orderId,
                 status: "paid",
                 paymentMethod: "card",
+                cardLast4: cardLastDigits,
+                cardBrand,
               },
               {
                 headers: {
@@ -103,6 +117,7 @@ export default function CheckoutConfirm({
           success: true,
           paymentMethod: "Credit Card",
           cardLastDigits,
+          cardBrand,
         });
       }
     } catch (err) {
@@ -118,8 +133,14 @@ export default function CheckoutConfirm({
       {errorMessage && (
         <p className="text-red-500 text-sm font-sans">{errorMessage}</p>
       )}
-      <div className="lg:hidden">
-        <BookingDetailCard orderId={orderId} />
+      <div className="lg:hidden mt-6">
+        <BookingDetailCard
+          orderId={orderId}
+          extras={extras}
+          standards={standards}
+          promotionCode={promotionCode}
+          promotionDiscount={promotionDiscount}
+        />
       </div>
       <div className="flex items-center justify-between mt-6 ml-2">
         <button

@@ -42,6 +42,7 @@ export default function BasicInformationForm({
       last_name: lastName.trim(),
       email: email.trim(),
       phone: String(phone).trim(),
+      country: country?.trim() ?? "",
     });
   };
 
