@@ -23,7 +23,6 @@ async function createOrder({
   totalPrice,
   quantity,
   guestId,
-  promotionId,
   additionalRequest,
   status,
   expiresAt,
@@ -39,11 +38,10 @@ async function createOrder({
       email,
       quantity,
       guest_id,
-      promotion_id,
       additional_request,
       expires_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     RETURNING *;
   `;
 
@@ -57,7 +55,6 @@ async function createOrder({
     email,
     quantity,
     guestId,
-    promotionId,
     additionalRequest,
     expiresAt,
   ];

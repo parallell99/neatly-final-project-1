@@ -29,6 +29,7 @@ export default function BookingPage() {
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
   const [promotionId, setPromotionId] = useState(null);
+  const [appliedPromotions, setAppliedPromotions] = useState([]);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
@@ -40,6 +41,26 @@ export default function BookingPage() {
   const [guestData, setGuestData] = useState(null);
 
   const [orderId, setOrderId] = useState(null);
+
+  // Reset promotion state when starting a new booking (roomId changes)
+  useEffect(() => {
+    if (!roomId) return;
+
+    setPromotionCode("");
+    setPromotionDiscount(0);
+    setPromotionId(null);
+    setAppliedPromotions([]);
+
+    if (typeof window !== "undefined") {
+      try {
+        // This page uses booking:state:default on refresh; clear promo fields so they don't bleed into next booking
+        window.sessionStorage.removeItem("booking:state:default");
+        window.sessionStorage.removeItem("booking:payment:default");
+      } catch {
+        // ignore
+      }
+    }
+  }, [roomId]);
 
   useEffect(() => {
     if (orderId) return;
@@ -72,10 +93,11 @@ export default function BookingPage() {
     fetchLatestOrder();
   }, [orderId]);
 
-  const handlePromotionChange = ({ code, discount, promotionId }) => {
-    setPromotionCode(code);
-    setPromotionDiscount(discount);
-    setPromotionId(promotionId ?? null);
+  const handlePromotionChange = ({ code, discount, promotionId: pid, promotions }) => {
+    if (typeof code === "string") setPromotionCode(code);
+    if (typeof discount === "number") setPromotionDiscount(discount);
+    setPromotionId(pid ?? null);
+    if (Array.isArray(promotions)) setAppliedPromotions(promotions);
   };
 
   const handlePaymentConfirm = ({ success, paymentMethod: method, cardLastDigits: digits }) => {
@@ -134,14 +156,20 @@ export default function BookingPage() {
   };
 
   // Restore step & basic state on refresh
+  // Important: only restore if it's for the same roomId, otherwise old booking state leaks into new booking.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!roomId) return;
 
     const raw = window.sessionStorage.getItem("booking:state:default");
     if (!raw) return;
 
     try {
       const parsed = JSON.parse(raw);
+      if (parsed.roomId && String(parsed.roomId) !== String(roomId)) {
+        return;
+      }
+
       if (parsed.currentStep) setCurrentStep(parsed.currentStep);
       if (Array.isArray(parsed.extras)) setExtras(parsed.extras);
       if (Array.isArray(parsed.standards)) setStandards(parsed.standards);
@@ -157,16 +185,20 @@ export default function BookingPage() {
       if (parsed.promotionId) {
         setPromotionId(parsed.promotionId);
       }
+      if (Array.isArray(parsed.appliedPromotions) && parsed.appliedPromotions.length > 0) {
+        setAppliedPromotions(parsed.appliedPromotions);
+      }
     } catch {
       // ignore parse errors
     }
-  }, []);
+  }, [roomId]);
 
   // Persist step & selections while user is on the page
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const payload = {
+      roomId,
       currentStep,
       extras,
       standards,
@@ -174,6 +206,7 @@ export default function BookingPage() {
       promotionCode,
       promotionDiscount,
       promotionId,
+      appliedPromotions,
     };
 
     window.sessionStorage.setItem(
@@ -188,63 +221,7 @@ export default function BookingPage() {
     promotionCode,
     promotionDiscount,
     promotionId,
-  ]);
-
-  // Restore step & basic state on refresh
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const raw = window.sessionStorage.getItem("booking:state:default");
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed.currentStep) setCurrentStep(parsed.currentStep);
-      if (Array.isArray(parsed.extras)) setExtras(parsed.extras);
-      if (Array.isArray(parsed.standards)) setStandards(parsed.standards);
-      if (typeof parsed.additionalRequest === "string") {
-        setAdditionalRequest(parsed.additionalRequest);
-      }
-      if (typeof parsed.promotionCode === "string") {
-        setPromotionCode(parsed.promotionCode);
-      }
-      if (typeof parsed.promotionDiscount === "number") {
-        setPromotionDiscount(parsed.promotionDiscount);
-      }
-      if (parsed.promotionId) {
-        setPromotionId(parsed.promotionId);
-      }
-    } catch {
-      // ignore parse errors
-    }
-  }, []);
-
-  // Persist step & selections while user is on the page
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const payload = {
-      currentStep,
-      extras,
-      standards,
-      additionalRequest,
-      promotionCode,
-      promotionDiscount,
-      promotionId,
-    };
-
-    window.sessionStorage.setItem(
-      "booking:state:default",
-      JSON.stringify(payload)
-    );
-  }, [
-    currentStep,
-    extras,
-    standards,
-    additionalRequest,
-    promotionCode,
-    promotionDiscount,
-    promotionId,
+    appliedPromotions,
   ]);
 
   // Scroll to top when step changes
@@ -392,6 +369,7 @@ export default function BookingPage() {
                   promotionCode={promotionCode}
                   promotionDiscount={promotionDiscount}
                   onPromotionChange={handlePromotionChange}
+                  appliedPromotions={appliedPromotions}
                   extras={extras}
                   standards={standards}
                   user={user}

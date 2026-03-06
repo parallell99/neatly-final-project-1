@@ -32,6 +32,7 @@ export default function CreditCardCheckout({
   standards = [],
   promotionCode = "",
   promotionDiscount = 0,
+  promotionIds = [],
 }) {
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
@@ -114,6 +115,7 @@ export default function CreditCardCheckout({
                 paymentMethod: "card",
                 cardLast4: cardLastDigits,
                 cardBrand,
+                promotionIds,
               },
               {
                 headers: {

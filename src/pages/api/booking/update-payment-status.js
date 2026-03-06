@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ message: "Invalid user" });
   }
 
-  const { orderId, status, paymentMethod, cardLast4, cardBrand } = req.body;
+  const { orderId, status, paymentMethod, cardLast4, cardBrand, promotionIds: promotionIdsRaw } = req.body;
 
   const update = {
     status,
@@ -52,6 +52,33 @@ export default async function handler(req, res) {
 
   if (error) {
     return res.status(500).json({ message: "Update failed" });
+  }
+
+  if (status === "paid") {
+    const promotionIdsArray = Array.isArray(promotionIdsRaw)
+      ? promotionIdsRaw.filter((id) => id != null)
+      : [];
+
+    const promoIdsToInsert =
+      promotionIdsArray.length > 0
+        ? promotionIdsArray
+        : data?.promotion_id
+          ? [data.promotion_id]
+          : [];
+
+    if (promoIdsToInsert.length > 0) {
+    try {
+        const rows = promoIdsToInsert.map((pid) => ({
+          user_id: user.id,
+          promotion_id: pid,
+          order_id: data.id,
+          used_at: new Date().toISOString(),
+        }));
+        await supabaseAdmin.from("promotion_usages").insert(rows);
+    } catch (usageErr) {
+      console.error("Failed to record promotion usage:", usageErr);
+    }
+  }
   }
 
   return res.status(200).json({ order: data });

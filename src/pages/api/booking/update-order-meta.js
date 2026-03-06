@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ message: "Invalid user" });
     }
 
-    const { orderId, guestId, promotionId, totalPrice } = req.body ?? {};
+    const { orderId, guestId, totalPrice } = req.body ?? {};
 
     if (!orderId) {
       return res.status(400).json({ message: "Missing orderId" });
@@ -44,7 +44,6 @@ export default async function handler(req, res) {
 
     const update = {};
     if (guestId) update.guest_id = guestId;
-    if (promotionId) update.promotion_id = promotionId;
     if (typeof totalPrice === "number") update.total_price = totalPrice;
 
     if (Object.keys(update).length === 0) {

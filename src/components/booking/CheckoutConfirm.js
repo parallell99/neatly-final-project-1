@@ -18,6 +18,7 @@ export default function CheckoutConfirm({
   standards = [],
   promotionCode = "",
   promotionDiscount = 0,
+  promotionIds = [],
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -100,6 +101,7 @@ export default function CheckoutConfirm({
                 paymentMethod: "card",
                 cardLast4: cardLastDigits,
                 cardBrand,
+                promotionIds,
               },
               {
                 headers: {
