@@ -223,69 +223,9 @@ export default function BookingDetailCard({
                 {quantity > 1 ? "s" : ""}
               </span>
             </div>
-            <div className="flex flex-col">
-              <span className="font-sans text-base text-green-300">
-                {roomLabel}
-              </span>
-              <span className="font-sans text-xs text-green-200 mt-1">
-                {nights} night{nights > 1 ? "s" : ""} · {quantity} room
-                {quantity > 1 ? "s" : ""}
-              </span>
-            </div>
             <span className="font-sans text-base font-semibold">{roomPrice}</span>
           </div>
         </div>
-
-        {/* Requests summary (live selections + promotion) */}
-        {(standards.length > 0 || extras.length > 0 || !!promotionCode) && (
-          <div className="mx-4 mb-4 space-y-3">
-            {standards.length > 0 && (
-              <div>
-                <ul className="list-disc list-inside text-sm text-white space-y-0.5">
-                  {standards.map((label) => (
-                    <li key={label} className="flex">
-                      {label}
-                      </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {extras.length > 0 && (
-              <div>
-                <ul className="list-disc list-inside text-sm text-white space-y-0.5">
-                  {extras.map((extra) => (
-                    <li key={extra.label} className="flex flex-row justify-between">
-                      {extra.label} 
-                      <div>
-                        {" "}
-                      {Number(extra.price ?? 0).toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                      })}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {promotionCode && promoPercent > 0 && (
-              <div>
-                <ul className="list-disc list-inside text-sm text-white space-y-0.5">
-                  <li className="flex flex-row justify-between">
-                    {promotionCode}
-                    <div>
-                      {" "}
-                      -
-                      {promoPercent.toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                      })}
-                      %
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Requests summary (live selections + promotion) */}
         {(standards.length > 0 || extras.length > 0 || !!promotionCode) && (

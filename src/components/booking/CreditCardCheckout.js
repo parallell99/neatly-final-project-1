@@ -89,14 +89,20 @@ export default function CreditCardCheckout({
           console.error("Failed to update order meta:", metaErr);
         }
 
-        // เตรียมเลขท้ายบัตร: เอาจาก paymentIntent ถ้าไม่มีใช้จาก savedCards
+        // เตรียมเลขท้ายบัตรและแบรนด์: เอาจาก paymentIntent ถ้าไม่มีใช้จาก savedCards
         const selectedCard = savedCards.find((c) => c.id === selectedCardId);
-        const cardLastDigitsFromPI =
-          paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ?? "";
+        const charge = paymentIntent?.charges?.data?.[0];
+        const cardDetails = charge?.payment_method_details?.card;
+
+        const cardLastDigitsFromPI = cardDetails?.last4 ?? "";
         const cardLastDigits =
           cardLastDigitsFromPI || selectedCard?.card?.last4 || "888";
 
-        // อัปเดตสถานะ order ให้เหมือนกรณีชำระเงินสด
+        const cardBrandFromPI = cardDetails?.brand ?? "";
+        const cardBrand =
+          cardBrandFromPI || selectedCard?.card?.brand || "card";
+
+        // อัปเดตสถานะ order ให้เหมือนกรณีชำระเงินสด พร้อมเก็บเลขท้ายบัตรและแบรนด์
         try {
           const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
           if (token && orderId) {
@@ -106,6 +112,8 @@ export default function CreditCardCheckout({
                 orderId,
                 status: "paid",
                 paymentMethod: "card",
+                cardLast4: cardLastDigits,
+                cardBrand,
               },
               {
                 headers: {
@@ -123,6 +131,7 @@ export default function CreditCardCheckout({
           success: true,
           paymentMethod: "Credit Card",
           cardLastDigits,
+          cardBrand,
         });
       }
     } catch (err) {

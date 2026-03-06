@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     // ==============================
     // 4️⃣ Validate body
     // ==============================
-    const { first_name, last_name, email, phone } = req.body ?? {};
+    const { first_name, last_name, email, phone, country } = req.body ?? {};
 
     if (!first_name || !last_name || !email || !phone) {
       return res.status(400).json({
@@ -64,15 +64,20 @@ export default async function handler(req, res) {
     // 5️⃣ Insert ด้วย service_role
     // (bypass RLS)
     // ==============================
+    const insertPayload = {
+      user_id: user.id,
+      first_name: String(first_name).trim(),
+      last_name: String(last_name).trim(),
+      email: String(email).trim(),
+      phone: String(phone).trim(),
+    };
+    if (country != null && String(country).trim() !== "") {
+      insertPayload.country = String(country).trim();
+    }
+
     const { data: guest, error } = await supabaseAdmin
       .from("guests")
-      .insert({
-        user_id: user.id,
-        first_name: String(first_name).trim(),
-        last_name: String(last_name).trim(),
-        email: String(email).trim(),
-        phone: String(phone).trim(),
-      })
+      .insert(insertPayload)
       .select()
       .single();
 

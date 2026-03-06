@@ -275,7 +275,7 @@ export default function PaymentSuccess({
                 {/* Payment Details Section (Dark Green Background) */}
                 <div className="rounded-lg p-6 mb-6">
                   {paymentMethodState?.toLowerCase() !== "cash" && (
-                    <p className="font-sans text-base text-white mb-10">
+                    <p className="font-sans text-base text-white mb-10 text-end">
                       Payment success via {paymentMethodState} - ***{cardLast3}
                     </p>
                   )}

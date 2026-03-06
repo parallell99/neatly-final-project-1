@@ -51,10 +51,18 @@ export default function CheckoutConfirm({
       }
 
       if (paymentIntent?.status === "succeeded") {
+        const charge = paymentIntent?.charges?.data?.[0];
+        const cardDetails = charge?.payment_method_details?.card;
+
         const cardLastDigits =
-          paymentIntent?.charges?.data?.[0]?.payment_method_details?.card?.last4 ??
+          cardDetails?.last4 ??
           paymentIntent?.payment_method?.card?.last4 ??
           "4242";
+
+        const cardBrand =
+          cardDetails?.brand ??
+          paymentIntent?.payment_method?.card?.brand ??
+          "card";
 
         try {
           if (onSaveAdditionalRequest) {
@@ -90,6 +98,8 @@ export default function CheckoutConfirm({
                 orderId,
                 status: "paid",
                 paymentMethod: "card",
+                cardLast4: cardLastDigits,
+                cardBrand,
               },
               {
                 headers: {
@@ -107,6 +117,7 @@ export default function CheckoutConfirm({
           success: true,
           paymentMethod: "Credit Card",
           cardLastDigits,
+          cardBrand,
         });
       }
     } catch (err) {
