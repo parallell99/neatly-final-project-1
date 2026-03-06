@@ -31,6 +31,7 @@ export default function BookingOrderPage() {
   const [promotionCode, setPromotionCode] = useState("");
   const [promotionDiscount, setPromotionDiscount] = useState(0);
   const [promotionId, setPromotionId] = useState(null);
+  const [appliedPromotions, setAppliedPromotions] = useState([]);
   const [paymentFailed, setPaymentFailed] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Credit Card");
@@ -73,6 +74,9 @@ export default function BookingOrderPage() {
       if (parsed.promotionId) {
         setPromotionId(parsed.promotionId);
       }
+      if (Array.isArray(parsed.appliedPromotions) && parsed.appliedPromotions.length > 0) {
+        setAppliedPromotions(parsed.appliedPromotions);
+      }
     } catch {
       // ignore parse errors
     }
@@ -91,6 +95,7 @@ export default function BookingOrderPage() {
       promotionCode,
       promotionDiscount,
       promotionId,
+      appliedPromotions,
     };
 
     window.sessionStorage.setItem(
@@ -106,12 +111,14 @@ export default function BookingOrderPage() {
     promotionCode,
     promotionDiscount,
     promotionId,
+    appliedPromotions,
   ]);
 
-  const handlePromotionChange = ({ code, discount, promotionId }) => {
-    setPromotionCode(code);
-    setPromotionDiscount(discount);
-    setPromotionId(promotionId ?? null);
+  const handlePromotionChange = ({ code, discount, promotionId: pid, promotions }) => {
+    if (typeof code === "string") setPromotionCode(code);
+    if (typeof discount === "number") setPromotionDiscount(discount);
+    setPromotionId(pid ?? null);
+    if (Array.isArray(promotions)) setAppliedPromotions(promotions);
   };
 
   const handlePaymentConfirm = ({
@@ -322,6 +329,7 @@ export default function BookingOrderPage() {
                   promotionCode={promotionCode}
                   promotionDiscount={promotionDiscount}
                   onPromotionChange={handlePromotionChange}
+                  appliedPromotions={appliedPromotions}
                   extras={extras}
                   standards={standards}
                   user={user}

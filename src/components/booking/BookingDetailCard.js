@@ -258,21 +258,20 @@ export default function BookingDetailCard({
                 </ul>
               </div>
             )}
-            {promotionCode && promoPercent > 0 && (
-              <div>
-                <ul className="list-disc list-inside text-sm text-white space-y-0.5">
-                  <li className="flex flex-row justify-between">
-                    {promotionCode}
-                    <div>
-                      {" "}
-                      -
-                      {promoPercent.toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                      })}
-                      %
-                    </div>
-                  </li>
-                </ul>
+            {promotionCode && discountAmount > 0 && (
+              <div className="text-sm text-white">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="wrap-break-word">{promotionCode}</p>
+                  </div>
+                  <p className="shrink-0 text-right tabular-nums">
+                    -THB{" "}
+                    {Number(discountAmount || 0).toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
               </div>
             )}
           </div>

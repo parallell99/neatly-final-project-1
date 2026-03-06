@@ -320,16 +320,16 @@ export default function PaymentSuccess({
                       </div>
                     ))}
                     {hasPromo && (
-                      <div className="flex justify-between">
-                        <span className="font-sans text-base text-white">
+                      <div className="flex justify-between gap-4">
+                        <span className="font-sans text-base text-white min-w-0 wrap-break-word">
                           {promoCodeState || "Promotion Code"}
                         </span>
-                        <span className="font-sans text-base text-white font-semibold">
-                          -
-                          {promoPercent.toLocaleString("en-US", {
-                            minimumFractionDigits: 0,
+                        <span className="font-sans text-base text-white font-semibold shrink-0 text-right tabular-nums">
+                          -THB{" "}
+                          {Number(discountAmount || 0).toLocaleString("en-US", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
                           })}
-                          %
                         </span>
                       </div>
                     )}
