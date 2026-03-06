@@ -18,15 +18,15 @@ async function handler(req, res) {
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+  const tomorrowStr = toLocalDateString(tomorrow);
 
   const sevenDaysAgo = new Date(today);
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
+  const sevenDaysAgoStr = toLocalDateString(sevenDaysAgo);
 
   const fourteenDaysAgo = new Date(today);
   fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-  const fourteenDaysAgoStr = fourteenDaysAgo.toISOString().slice(0, 10);
+  const fourteenDaysAgoStr = toLocalDateString(fourteenDaysAgo);
 
   try {
     const { data: paidOrders, error: paidError } = await supabaseAdmin
@@ -152,6 +152,14 @@ async function handler(req, res) {
     console.error("[booking/notifications] ERROR:", err);
     return res.status(500).json({ error: err.message || "Failed to load notifications" });
   }
+}
+
+function toLocalDateString(d) {
+  if (!d || !(d instanceof Date) || Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function formatCheckInDate(dateStr) {

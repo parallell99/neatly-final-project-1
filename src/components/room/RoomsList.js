@@ -202,9 +202,15 @@ export default function RoomsList() {
     setOpen(true);
   };
 
-  // รับ params จาก SearchSection เมื่อกด Search
-  const handleSearch = (params) => {
-    setSearchParams(params);
+  // รับจาก SearchSection: (data, params) ตอนโหลดจาก URL หรือ (params) ตอนกด Search
+  const handleSearch = (first, second) => {
+    if (second !== undefined) {
+      const list = Array.isArray(first) ? first : [];
+      setRoomsList(list.filter((room) => Number(room?.available_rooms) > 0));
+      setSearchParams(second);
+    } else {
+      setSearchParams(first);
+    }
   };
 
   const isListLoading = loading || searchLoading;

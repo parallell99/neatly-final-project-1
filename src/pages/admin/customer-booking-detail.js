@@ -128,14 +128,23 @@ export default function CustomerBookingDetail() {
                 <DetailRow label="Booking date" value={formatDate(detail.bookingDate)} />
               </div>
 
-              {/* Payment Summary (below details, in its own box) */}
-              <div className="mt-8 pt-8">
-                <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
-                  {detail.paymentMethod && detail.paymentMethod !== "—" && (
-                    <p className="text-sm text-gray-500 mb-4 text-right">
-                      Payment success via {detail.paymentMethod} - *{detail.cardLast4}
+              {/* Payment success – separate card */}
+              {detail.paymentMethod && detail.paymentMethod !== "—" && (
+                <div className="mt-8 pt-8">
+                  <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
+                    <p className="text-sm text-gray-500 text-right">
+                      Payment success
+                      {detail.paymentMethod === "Credit Card" && detail.cardLast4
+                        ? ` · via credit card - *${String(detail.cardLast4).slice(-3)}`
+                        : " ·via - Cash"}
                     </p>
-                  )}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Summary (below details, in its own box) */}
+              <div className={detail.paymentMethod && detail.paymentMethod !== "—" ? "mt-6" : "mt-8 pt-8"}>
+                <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
                   <div className="space-y-3 text-gray-700">
                     <div className="flex justify-between gap-4">
                       <span>{detail.roomTypeName}</span>

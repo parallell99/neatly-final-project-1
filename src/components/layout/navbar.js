@@ -45,6 +45,24 @@ export default function Navbar() {
   }, []);
 
   const NOTIFICATION_READ_KEY = "neatly_admin_orders_read_at";
+  const USER_NOTIFICATIONS_VIEWED_COUNT_KEY = "neatly_user_notifications_viewed_count";
+
+  const getUserNotificationsViewedCount = () => {
+    if (typeof window === "undefined") return 0;
+    try {
+      return parseInt(window.localStorage.getItem(USER_NOTIFICATIONS_VIEWED_COUNT_KEY), 10) || 0;
+    } catch (_) {
+      return 0;
+    }
+  };
+
+  const markUserNotificationsViewed = () => {
+    if (typeof window !== "undefined" && userNotifications.length > 0) {
+      try {
+        window.localStorage.setItem(USER_NOTIFICATIONS_VIEWED_COUNT_KEY, String(userNotifications.length));
+      } catch (_) {}
+    }
+  };
 
   const markNotificationsRead = () => {
     const now = new Date().toISOString();
@@ -247,14 +265,18 @@ export default function Navbar() {
                   </Popover.Portal>
                 </Popover.Root>
               ) : (
-                <Popover.Root>
+                <Popover.Root
+                  onOpenChange={(open) => {
+                    if (open) markUserNotificationsViewed();
+                  }}
+                >
                   <Popover.Trigger asChild>
                     <button
                       className="p-2 relative hover:opacity-80 transition-opacity"
                       aria-label="Notifications"
                     >
                       <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
-                      {userNotifications.length > 0 && (
+                      {userNotifications.length > 0 && userNotifications.length > getUserNotificationsViewedCount() && (
                         <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
                           {userNotifications.length > 99 ? "99+" : userNotifications.length}
                         </span>
@@ -267,9 +289,6 @@ export default function Navbar() {
                       sideOffset={8}
                       align="end"
                     >
-                      <div className="p-3 border-b border-gray-100">
-                        <p className="text-gray-800 font-sans text-sm font-semibold">Notifications</p>
-                      </div>
                       <div className="divide-y divide-gray-100">
                         {userNotifications.length === 0 ? (
                           <p className="p-4 text-gray-500 font-sans text-sm">No notifications yet.</p>
@@ -437,11 +456,14 @@ export default function Navbar() {
                   aria-expanded={isUserNotiOpen}
                   onClick={() => {
                     setIsMenuOpen(false);
-                    setIsUserNotiOpen((prev) => !prev);
+                    setIsUserNotiOpen((prev) => {
+                      if (!prev) markUserNotificationsViewed();
+                      return !prev;
+                    });
                   }}
                 >
                   <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
-                  {userNotifications.length > 0 && (
+                  {userNotifications.length > 0 && userNotifications.length > getUserNotificationsViewedCount() && (
                     <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
                       {userNotifications.length > 99 ? "99+" : userNotifications.length}
                     </span>
