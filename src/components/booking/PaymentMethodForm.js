@@ -357,6 +357,7 @@ export default function PaymentMethodForm({
         last_name: guestData.last_name,
         email: guestData.email,
         phone: guestData.phone,
+        ...(guestData.country != null && guestData.country !== "" && { country: guestData.country }),
       }),
     });
 
