@@ -19,7 +19,6 @@ const tabBase =
 const tabActive = "border-[#E76B39] text-orange-500 bg-white";
 const tabInactive = "border-[#E4E6ED] text-gray-600 bg-white hover:border-gray-400";
 
-const ROOM_PRICE = 2500;
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 export default function PaymentMethodForm({
@@ -35,11 +34,18 @@ export default function PaymentMethodForm({
   guestData,
   additionalRequest = "",
   promotionId = null,
+  appliedPromotions: initialAppliedPromotions = [],
 }) {
   const [method, setMethod] = useState("credit-card");
-  const [promoInput, setPromoInput] = useState(promotionCode || "");
+  const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState("");
   const [promoCorrect, setPromoCorrect] = useState("");
+  const [appliedPromotions, setAppliedPromotions] = useState(() =>
+    Array.isArray(initialAppliedPromotions) && initialAppliedPromotions.length > 0
+      ? initialAppliedPromotions
+      : []
+  );
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState(null);
@@ -47,13 +53,118 @@ export default function PaymentMethodForm({
 
   const hasCreatedPI = useRef(false);
 
-  const extrasTotal = extras.reduce((sum, e) => sum + (e.price ?? 0), 0);
-  // มอง promotionDiscount เป็นเปอร์เซ็นต์ (discount_percentage)
-  const promoPercent = Number(promotionDiscount || 0) || 0;
-  const subtotal = ROOM_PRICE + extrasTotal;
-  const promoAmount = promoPercent > 0 ? (subtotal * promoPercent) / 100 : 0;
-  const totalBaht = Math.max(0, subtotal - promoAmount);
-  const amountSatang = Math.round(totalBaht * 100);
+  const [order, setOrder] = useState(null);
+  const [room, setRoom] = useState(null);
+
+  useEffect(() => {
+    if (!orderId) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const token =
+          typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const params = new URLSearchParams();
+        params.set("orderId", String(orderId));
+
+        const res = await fetch(`/api/booking/order-detail?${params.toString()}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+        setOrder(data?.order ?? null);
+        setRoom(data?.room ?? null);
+      } catch (err) {
+        console.error("Failed to load order detail for promotion subtotal:", err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [orderId]);
+
+  const extrasTotal = extras.reduce((sum, e) => sum + (Number(e.price ?? 0) || 0), 0);
+
+  // === ใช้ subtotal แบบเดียวกับ BookingDetailCard ===
+  const nightlyPrice =
+    room?.promotion_price_per_night != null
+      ? Number(room.promotion_price_per_night) || 0
+      : room?.price_per_night != null
+        ? Number(room.price_per_night) || 0
+        : 0;
+
+  let nights = 1;
+  if (order?.check_in_date && order?.check_out_date) {
+    const d1 = new Date(order.check_in_date);
+    const d2 = new Date(order.check_out_date);
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const diff = Math.round((d2 - d1) / msPerDay);
+    if (Number.isFinite(diff) && diff > 0) nights = diff;
+  }
+
+  const quantity = order?.quantity != null ? Number(order.quantity) || 1 : 1;
+  const baseRoomPrice =
+    nightlyPrice > 0
+      ? nightlyPrice * nights * quantity
+      : order?.total_price != null
+        ? Number(order.total_price) || 0
+        : 0;
+  const subtotal = baseRoomPrice + extrasTotal;
+
+  // คิดส่วนลดแบบ percentage / อื่น ๆ ก่อน แล้วค่อย fixed เป็นลำดับสุดท้ายเสมอ
+  const percentPromos = appliedPromotions.filter(
+    (p) => (p.discount_type || "percent").toLowerCase() !== "fixed"
+  );
+  const fixedPromos = appliedPromotions.filter(
+    (p) => (p.discount_type || "percent").toLowerCase() === "fixed"
+  );
+
+  const percentDiscount = percentPromos.reduce((sum, p) => {
+    const val = Number(p.discount_value) ?? 0;
+    const pct =
+      p.discount_percentage != null ? Number(p.discount_percentage) : val;
+    if (!Number.isFinite(pct) || pct <= 0) return sum;
+    return sum + (subtotal * pct) / 100;
+  }, 0);
+
+  const subtotalAfterPercent = Math.max(0, subtotal - percentDiscount);
+
+  const fixedDiscount = fixedPromos.reduce((sum, p) => {
+    const val = Number(p.discount_value) ?? 0;
+    if (!Number.isFinite(val) || val <= 0) return sum;
+    const remaining = Math.max(0, subtotalAfterPercent - sum);
+    return sum + Math.min(val, remaining);
+  }, 0);
+
+  const totalDiscountAmount = percentDiscount + fixedDiscount;
+  const totalDiscountAmountRounded = Math.round(totalDiscountAmount * 100) / 100;
+  const totalBaht = Math.max(0, subtotal - totalDiscountAmountRounded);
+  const totalDiscountPercent = subtotal > 0 ? (totalDiscountAmountRounded / subtotal) * 100 : 0;
+  const promotionIds = appliedPromotions.map((p) => p.id).filter(Boolean);
+  const firstPromotionId = promotionIds[0] ?? null;
+
+  useEffect(() => {
+    onPromotionChange?.({
+      code: appliedPromotions.length ? appliedPromotions.map((p) => p.name || p.code).join(", ") : "",
+      discount: totalDiscountPercent,
+      promotionId: firstPromotionId,
+      promotions: appliedPromotions,
+      totalDiscountAmount: totalDiscountAmountRounded,
+      totalDiscountPercent,
+      promotionIds,
+    });
+  }, [appliedPromotions, totalDiscountAmountRounded, totalDiscountPercent, firstPromotionId]);
+
+  useEffect(() => {
+    if (Array.isArray(initialAppliedPromotions) && initialAppliedPromotions.length > 0 && appliedPromotions.length === 0) {
+      setAppliedPromotions(initialAppliedPromotions);
+    }
+  }, [initialAppliedPromotions]);
+
   const storageKey =
     typeof window !== "undefined" && orderId
       ? `booking:payment:${orderId}`
@@ -89,186 +200,93 @@ export default function PaymentMethodForm({
     window.sessionStorage.setItem(storageKey, JSON.stringify(payload));
   }, [method, promoInput, storageKey]);
 
-  useEffect(() => {
-    let cancelled = false;
+  const handleApplyPromo = async () => {
+    const currentCode = promoInput.trim();
+    if (!currentCode) {
+      setPromoError("Enter a promotion code");
+      return;
+    }
 
-    const run = async () => {
-      const currentCode = promoInput.trim();
+    const alreadyApplied = appliedPromotions.some(
+      (p) => (p.code && p.code.toLowerCase() === currentCode.toLowerCase()) || p.name?.toLowerCase() === currentCode.toLowerCase()
+    );
+    if (alreadyApplied) {
+      setPromoError("This code is already applied");
+      setPromoCorrect("");
+      return;
+    }
 
-      if (!currentCode) {
-        onPromotionChange?.({ code: "", discount: 0 });
-        setPromoError("");
-        setPromoCorrect("");
-        return;
-      }
-
-      try {
-        const params = new URLSearchParams();
-        params.set("code", currentCode);
-
-        const res = await fetch(`/api/booking/promotion?${params.toString()}`);
-
-        if (!res.ok) {
-          onPromotionChange?.({ code: "", discount: 0 });
-          setPromoError("*This promotional code is invalid or has expired");
-          setPromoCorrect("");
-          return;
-        }
-
-        const data = await res.json();
-
-        if (cancelled) return;
-
-        const promo = data?.promotion ?? null;
-        if (!promo) {
-          onPromotionChange?.({ code: "", discount: 0 });
-          setPromoError("*This promotional code is invalid or has expired");
-          setPromoCorrect("");
-          return;
-        }
-
-        // ใช้เปอร์เซ็นต์จาก discount_percentage เป็นหลัก
-        const discountValue =
-          promo.discount_percentage ??
-          promo.fixed_amount ??
-          promo.amount ??
-          promo.discount ??
-          0;
-
-        const discountNumber = Number(discountValue) || 0;
-
-        onPromotionChange?.({
-          code: promo.name ?? currentCode,
-          discount: discountNumber,
-          promotionId: promo.id ?? null,
-        });
-
-        setPromoError("");
-        setPromoCorrect(
-          "This promotional code has been successfully applied."
-        );
-      } catch (err) {
-        console.error("Failed to load promotion:", err);
-        if (!cancelled) {
-          onPromotionChange?.({ code: "", discount: 0 });
-          setPromoError("This promotional code is invalid or has expired");
-          setPromoCorrect("");
-        }
-      }
-    };
-
-    const timeoutId = setTimeout(run, 400);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [promoInput]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = window.sessionStorage.getItem(storageKey);
-    if (!raw) return;
+    setIsApplyingPromo(true);
+    setPromoError("");
+    setPromoCorrect("");
 
     try {
-      const parsed = JSON.parse(raw);
-      if (parsed.method === "credit-card" || parsed.method === "cash") {
-        setMethod(parsed.method);
+      const params = new URLSearchParams();
+      params.set("code", currentCode);
+      params.set("subtotal", String(subtotal));
+      const appliedIds = appliedPromotions.map((p) => p.id).filter(Boolean);
+      if (appliedIds.length > 0) {
+        params.set("appliedPromotionIds", appliedIds.join(","));
       }
-      if (typeof parsed.promoInput === "string") {
-        setPromoInput(parsed.promoInput);
-      }
-    } catch {
-      // ignore
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey]);
 
-  // Persist local payment-method UI state
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const payload = {
-      method,
-      promoInput,
-    };
-    window.sessionStorage.setItem(storageKey, JSON.stringify(payload));
-  }, [method, promoInput, storageKey]);
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  useEffect(() => {
-    let cancelled = false;
+      const res = await fetch(`/api/booking/promotion?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
 
-    const run = async () => {
-      const currentCode = promoInput.trim();
-
-      if (!currentCode) {
-        onPromotionChange?.({ code: "", discount: 0 });
-        setPromoError("");
+      if (!res.ok) {
+        setPromoError(data?.message || "*This promotional code is invalid or has expired");
         setPromoCorrect("");
         return;
       }
 
-      try {
-        const params = new URLSearchParams();
-        params.set("code", currentCode);
-
-        const res = await fetch(`/api/booking/promotion?${params.toString()}`);
-
-        if (!res.ok) {
-          onPromotionChange?.({ code: "", discount: 0 });
-          setPromoError("*This promotional code is invalid or has expired");
-          setPromoCorrect("");
-          return;
-        }
-
-        const data = await res.json();
-
-        if (cancelled) return;
-
-        const promo = data?.promotion ?? null;
-        if (!promo) {
-          onPromotionChange?.({ code: "", discount: 0 });
-          setPromoError("*This promotional code is invalid or has expired");
-          setPromoCorrect("");
-          return;
-        }
-
-        // ใช้เปอร์เซ็นต์จาก discount_percentage เป็นหลัก
-        const discountValue =
-          promo.discount_percentage ??
-          promo.fixed_amount ??
-          promo.amount ??
-          promo.discount ??
-          0;
-
-        const discountNumber = Number(discountValue) || 0;
-
-        onPromotionChange?.({
-          code: promo.name ?? currentCode,
-          discount: discountNumber,
-          promotionId: promo.id ?? null,
-        });
-
-        setPromoError("");
-        setPromoCorrect(
-          "This promotional code has been successfully applied."
-        );
-      } catch (err) {
-        console.error("Failed to load promotion:", err);
-        if (!cancelled) {
-          onPromotionChange?.({ code: "", discount: 0 });
-          setPromoError("This promotional code is invalid or has expired");
-          setPromoCorrect("");
-        }
+      const promo = data?.promotion;
+      if (!promo) {
+        setPromoError("*This promotional code is invalid or has expired");
+        setPromoCorrect("");
+        return;
       }
-    };
 
-    const timeoutId = setTimeout(run, 400);
+      const normalized = {
+        id: promo.id,
+        code: promo.code || currentCode,
+        name: promo.name || promo.code || currentCode,
+        discount_type: promo.discount_type || "percent",
+        discount_value: Number(promo.discount_value) || 0,
+        discount_percentage: promo.discount_percentage != null ? Number(promo.discount_percentage) : null,
+        is_stackable: promo.is_stackable === true,
+      };
 
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [promoInput]);
+      if (!normalized.is_stackable) {
+        setAppliedPromotions([normalized]);
+      } else {
+        const hasNonStackable = appliedPromotions.some((p) => !p.is_stackable);
+        if (hasNonStackable) {
+          setPromoError("This promotion cannot be combined with other promotions.");
+          return;
+        }
+        setAppliedPromotions((prev) => [...prev, normalized]);
+      }
+
+      setPromoInput("");
+      setPromoCorrect("Promotion code applied.");
+    } catch (err) {
+      console.error("Failed to apply promotion:", err);
+      setPromoError("This promotional code is invalid or has expired");
+      setPromoCorrect("");
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = (id) => {
+    setAppliedPromotions((prev) => prev.filter((p) => p.id !== id));
+    setPromoError("");
+    setPromoCorrect("");
+  };
 
   const handleCreatePaymentIntent = async () => {
     if (clientSecret) return; // 🔥 กันยิงซ้ำ
@@ -444,16 +462,14 @@ export default function PaymentMethodForm({
 
     const effectiveGuestId = overrideGuestId ?? guestId;
 
-    // ไม่มี guestId / promotionId ก็ไม่ต้องเรียก
-    if (!effectiveGuestId && !promotionId) return;
+    // ไม่มี guestId และไม่มี totalPrice ที่เป็นตัวเลข ไม่ต้องเรียก
+    const hasGuest = !!effectiveGuestId;
+    const hasTotal = typeof totalBaht === "number" && !Number.isNaN(totalBaht);
+    if (!hasGuest && !hasTotal) return;
 
-    const body = {
-      orderId,
-      totalPrice: totalBaht,
-    };
-
-    if (effectiveGuestId) body.guestId = effectiveGuestId;
-    if (promotionId) body.promotionId = promotionId;
+    const body = { orderId };
+    if (hasTotal) body.totalPrice = totalBaht;
+    if (hasGuest) body.guestId = effectiveGuestId;
 
     const res = await fetch("/api/booking/update-order-meta", {
       method: "PATCH",
@@ -499,18 +515,6 @@ export default function PaymentMethodForm({
         console.error("Update order meta error:", metaErr);
       }
 
-      try {
-        await handleSaveRequests();
-      } catch (reqErr) {
-        console.error("Save requests error:", reqErr);
-      }
-
-      try {
-        await handleUpdateOrderMeta(createdGuestId);
-      } catch (metaErr) {
-        console.error("Update order meta error:", metaErr);
-      }
-
       const token = localStorage.getItem("token");
 
       const res = await fetch("/api/booking/update-payment-status", {
@@ -522,8 +526,8 @@ export default function PaymentMethodForm({
         body: JSON.stringify({
           orderId,
           status: "paid",
-          status: "paid",
           paymentMethod: "cash",
+          promotionIds,
         }),
       });
 
@@ -594,17 +598,55 @@ export default function PaymentMethodForm({
         >
           Promotion Code
         </label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <input
             id="promoCode"
             type="text"
             value={promoInput}
-            onChange={(e) => setPromoInput(e.target.value)}
+            onChange={(e) => {
+              setPromoInput(e.target.value);
+              setPromoError("");
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleApplyPromo();
+              }
+            }}
             placeholder="Enter promotion code"
             className={inputBase}
             aria-label="Promotion code"
+            disabled={isApplyingPromo}
+          />
+          <Button
+            type="button"
+            buttonStyle="secondary"
+            buttonText={isApplyingPromo ? "Applying..." : "Apply"}
+            onClick={handleApplyPromo}
+            disabled={isApplyingPromo || !promoInput.trim()}
+            className="shrink-0"
           />
         </div>
+        {appliedPromotions.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {appliedPromotions.map((p) => (
+              <span
+                key={p.id}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-800 font-sans text-sm"
+              >
+                <span>{p.name || p.code}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemovePromo(p.id)}
+                  className="text-green-700 hover:text-green-900 font-medium"
+                  aria-label={`Remove ${p.name || p.code}`}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
         {promoError && (
           <p className="mt-2 text-sm text-red-500">
             {promoError}
@@ -641,6 +683,7 @@ export default function PaymentMethodForm({
             standards={standards}
             promotionCode={promotionCode}
             promotionDiscount={promotionDiscount}
+            promotionIds={promotionIds}
           />
         </Elements>
       )}

@@ -16,7 +16,6 @@ async function createOrder(user, payload) {
     check_out_date,
     quantity = 1,
     guest_id = null,
-    promotion_id = null,
     additional_request = null,
   } = payload || {};
 
@@ -62,7 +61,6 @@ async function createOrder(user, payload) {
     totalPrice,
     quantity: qty,
     guestId: guest_id,
-    promotionId: promotion_id,
     additionalRequest: additional_request,
     status: "pending",
     expiresAt,
