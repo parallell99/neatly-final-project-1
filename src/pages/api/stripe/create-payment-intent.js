@@ -1,5 +1,6 @@
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import connectionPool from "@/utils/db";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -52,6 +53,18 @@ export default async function handler(req, res) {
         .from("orders")
         .update({ customer_id: customerId })
         .eq("id", orderId);
+    }
+
+    // ผูก stripe_customer_id กับ user เพื่อให้ครั้งถัดไปโหลดบัตรที่บันทึกได้
+    if (order.user_id && customerId) {
+      try {
+        await connectionPool.query(
+          `UPDATE users SET stripe_customer_id = $1 WHERE id = $2`,
+          [customerId, order.user_id]
+        );
+      } catch (userUpdateErr) {
+        console.error("Failed to update user stripe_customer_id:", userUpdateErr);
+      }
     }
 
     // 3️⃣ สร้าง PaymentIntent

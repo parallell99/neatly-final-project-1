@@ -11,12 +11,14 @@ import RoomNPropertyLogo from "@/assets/icons/room.svg"
 import AnalyticDashboard from "@/assets/icons/analytic.svg"
 import ChatbotSetupLogo from "@/assets/icons/chat.svg"
 import LogoutLogo from "@/assets/icons/logout.svg"
+import PromotionIcon from "@/assets/icons/ticket-percent.svg"
 
 const menuItems = [
   { id: "customer-booking", label: "Customer Booking", icon: CustomerBookingLogo, href: "/admin/customer-booking" },
   { id: "room-management", label: "Room Management", icon: RoomManagementLogo, href: "/admin/room-management" },
   { id: "hotel-information", label: "Hotel Infomation", icon: HotelInformationLogo, href: "/admin/hotel-information" },
   { id: "room-property", label: "Room & Property", icon: RoomNPropertyLogo, href: "/admin/room-property" },
+  { id: "promotions", label: "Promotions", icon: PromotionIcon, href: "/admin/promotion" },
   { id: "analytics", label: "Analytics Dashboard", icon: AnalyticDashboard, href: "/admin/analytics" },
   { id: "chatbot", label: "Chatbot Setup", icon: ChatbotSetupLogo, href: "/admin/chatbot" },
 ]
