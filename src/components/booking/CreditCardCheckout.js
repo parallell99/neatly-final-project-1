@@ -266,6 +266,7 @@ export default function CreditCardCheckout({
               standards={standards}
               promotionCode={promotionCode}
               promotionDiscount={promotionDiscount}
+              promotionIds={promotionIds}
             />
           </div>
         </Elements>
