@@ -21,7 +21,7 @@ const stripePromise = loadStripe(
 
 export default function BookingPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [extras, setExtras] = useState([]);
   const [standards, setStandards] = useState([]);
@@ -102,6 +102,9 @@ export default function BookingPage() {
 
   const handlePaymentConfirm = ({ success, paymentMethod: method, cardLastDigits: digits }) => {
     if (success) {
+      // อัปเดต user ใน context (เช่น stripe_customer_id หลังจ่ายบัตรใหม่) เพื่อครั้งถัดไปโหลดบัตรที่บันทึกได้
+      fetchUser?.();
+
       const finalMethod = method || "Credit Card";
       const finalDigits = digits || "888";
 

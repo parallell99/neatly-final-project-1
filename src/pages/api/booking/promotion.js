@@ -44,6 +44,10 @@ export default async function handler(req, res) {
       return res.status(404).json({ message: "This promotional code is invalid or has expired" });
     }
 
+    if (promotion.is_active === false) {
+      return res.status(400).json({ message: "This promotion is no longer available." });
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
