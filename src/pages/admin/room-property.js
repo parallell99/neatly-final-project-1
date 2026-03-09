@@ -101,16 +101,16 @@ export default function RoomProperty() {
                 <div className="overflow-x-auto border border-gray-200 rounded-lg">
                   <table className="w-full border-collapse bg-white">
                     <thead>
-                      <tr className="text-left text-gray-700 font-medium bg-gray-50 border-b border-gray-200">
-                        <th className="px-4 py-3 border-b border-gray-200 w-[100px]">Image</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Room type</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Price</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Promotion Price</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Adults</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Kids</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Bed Type</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Room Size</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Total Room</th>
+                      <tr className="text-left text-gray-700 font-medium bg-gray-300 border-b border-gray-200">
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300 w-[100px]">Image</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Room type</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Price</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Promotion Price</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Adults</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Kids</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Bed Type</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Room Size</th>
+                        <th className="px-4 py-3 border-b border-gray-200 bg-gray-300">Total Room</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -139,26 +139,26 @@ export default function RoomProperty() {
                             <td className="px-4 py-3 text-gray-900 font-medium">
                               <Link
                                 href={`/admin/edit-room?id=${room.id}`}
-                                className="text-orange-600 hover:text-orange-700 hover:underline"
+                                className="text-gray-900 hover:text-gray-800 hover:underline"
                               >
                                 {room.name ?? room.title ?? "—"}
                               </Link>
                             </td>
-                            <td className="px-4 py-3 text-gray-700">{formatPrice(room.price_per_night)}</td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-gray-900">{formatPrice(room.price_per_night)}</td>
+                            <td className="px-4 py-3 text-gray-900">
                               {room.promotion_price != null ? formatPrice(room.promotion_price) : (room.price_per_night != null ? formatPrice(Number(room.price_per_night) - 500) : "—")}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-gray-900">
                               {room.room_guest_adult != null ? String(room.room_guest_adult) : "2"}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-gray-900">
                               {room.room_guest_kid != null ? String(room.room_guest_kid) : "0"}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">{room.bed_type?.name ?? "—"}</td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-gray-900">{room.bed_type?.name ?? "—"}</td>
+                            <td className="px-4 py-3 text-gray-900">
                               {room.room_size != null ? `${room.room_size} sqm` : "—"}
                             </td>
-                            <td className="px-4 py-3 text-gray-700">
+                            <td className="px-4 py-3 text-gray-900">
                               {String(room.total_rooms ?? room.totalRooms ?? "0")}
                             </td>
                           </tr>

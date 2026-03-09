@@ -90,10 +90,18 @@ export default function CustomerBookingDetail() {
     );
   }
 
-  const roomPrice = "2,500.00";
-  const airportTransfer = "200.00";
-  const promotionDiscount = "-400.00";
-  const totalDisplay = detail.totalPrice != null ? formatPrice(detail.totalPrice) : "2,300.00";
+  const roomSubtotalDisplay = detail.roomSubtotal != null ? formatPrice(detail.roomSubtotal) : "—";
+  const totalDisplay = detail.totalPrice != null ? formatPrice(detail.totalPrice) : "—";
+  const extras = Array.isArray(detail.extras) ? detail.extras : [];
+  const roomSubtotalNum = Number(detail.roomSubtotal) || 0;
+  const extrasTotalNum = Number(detail.extrasTotal) || 0;
+  const subtotalBeforeDiscount = roomSubtotalNum + extrasTotalNum;
+  const totalNum = Number(detail.totalPrice) || 0;
+  // ส่วนลดที่ทำให้ Total ตรงกับที่จอง (กรณีมีโปรโมชันแต่ไม่มี promotion_id หรือคำนวณไม่ตรง)
+  const impliedDiscount = Math.max(0, subtotalBeforeDiscount - totalNum);
+  const promotionDiscountFromApi = Number(detail.promotionDiscount) || 0;
+  const promotionDiscountAmount = impliedDiscount > 0 ? impliedDiscount : promotionDiscountFromApi;
+  const promotionLabel = detail.promotionName ?? detail.promotionCode ?? "Promotion / Discount";
 
   return (
     <div className="flex">
@@ -148,16 +156,20 @@ export default function CustomerBookingDetail() {
                   <div className="space-y-3 text-gray-700">
                     <div className="flex justify-between gap-4">
                       <span>{detail.roomTypeName}</span>
-                      <span className="font-medium">{roomPrice}</span>
+                      <span className="font-medium">{roomSubtotalDisplay}</span>
                     </div>
-                    <div className="flex justify-between gap-4">
-                      <span>Airport transfer</span>
-                      <span className="font-medium">{airportTransfer}</span>
-                    </div>
-                    <div className="flex justify-between gap-4">
-                      <span>Promotion Code</span>
-                      <span className="font-medium">{promotionDiscount}</span>
-                    </div>
+                    {extras.map((extra, i) => (
+                      <div key={i} className="flex justify-between gap-4">
+                        <span>{extra.name}</span>
+                        <span className="font-medium">{formatPrice(extra.price)}</span>
+                      </div>
+                    ))}
+                    {promotionDiscountAmount > 0 && (
+                      <div className="flex justify-between gap-4">
+                        <span>{promotionLabel}</span>
+                        <span className="font-medium">-{formatPrice(promotionDiscountAmount)}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-baseline">
                     <span className="font-semibold text-gray-900">Total</span>

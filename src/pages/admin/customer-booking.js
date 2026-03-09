@@ -96,14 +96,14 @@ export default function CustomerBooking() {
                 <div className="overflow-x-auto border border-gray-200 rounded">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="text-left text-gray-700 font-medium">
-                        <th className="px-3 py-4 border-b border-gray-200 bg-white w-[180px]">Customer name</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-white w-[180px]">Guest(s)</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-white w-[180px]">Room type</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-white w-[180px]">Amount</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-white w-[180px]">Bed Type</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-white w-[180px]">Check-in</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-white w-[180px]">Check-out</th>
+                      <tr className="text-left text-gray-700 font-medium bg-gray-300">
+                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Customer name</th>
+                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Guest(s)</th>
+                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Room type</th>
+                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Amount</th>
+                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Bed Type</th>
+                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Check-in</th>
+                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Check-out</th>
                       </tr>
                     </thead>
                     
@@ -122,12 +122,12 @@ export default function CustomerBooking() {
                                 {row.customerName}
                               </Link>
                             </td>
-                            <td className="px-3 py-4 text-gray-700">{row.guests}</td>
-                            <td className="px-3 py-4 text-gray-700">{row.roomType}</td>
-                            <td className="px-3 py-4 text-gray-700">{row.amount}</td>
-                            <td className="px-3 py-4 text-gray-700">{row.bedType}</td>
-                            <td className="px-3 py-4 text-gray-700">{formatTableDate(row.checkIn)}</td>
-                            <td className="px-3 py-4 text-gray-700">{formatTableDate(row.checkOut)}</td>
+                            <td className="px-3 py-4 text-gray-900">{row.guests}</td>
+                            <td className="px-3 py-4 text-gray-900">{row.roomType}</td>
+                            <td className="px-3 py-4 text-gray-900">{row.amount}</td>
+                            <td className="px-3 py-4 text-gray-900">{row.bedType}</td>
+                            <td className="px-3 py-4 text-gray-900">{formatTableDate(row.checkIn)}</td>
+                            <td className="px-3 py-4 text-gray-900">{formatTableDate(row.checkOut)}</td>
                           </tr>
                         ))
                       )}

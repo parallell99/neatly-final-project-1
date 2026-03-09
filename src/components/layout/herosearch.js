@@ -101,7 +101,7 @@ export default function HeroSearch() {
                     .split("\n")
                     .slice(0, 3)
                     .map((line, i) => (
-                      <span key={i} className="block">
+                      <span key={i} className="block w-[325px]">
                         {line || "\u00A0"}
                       </span>
                     ))
@@ -113,7 +113,7 @@ export default function HeroSearch() {
                     .split("\n")
                     .slice(0, 3)
                     .map((line, i) => (
-                      <span key={i} className="block">
+                      <span key={i} className="block w-[900px]">
                         {line || "\u00A0"}
                       </span>
                     ))

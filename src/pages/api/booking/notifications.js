@@ -103,6 +103,7 @@ async function handler(req, res) {
           message: "We receive your refund request. You will receive an email with details and refund within 48 hours.",
           imageUrl: getImageUrl(order.room_type_id),
           orderId: order.id,
+          sortAt: order.updated_at || order.created_at,
         });
       }
     });
@@ -122,6 +123,7 @@ async function handler(req, res) {
           imageUrl: getImageUrl(order.room_type_id),
           orderId: order.id,
           checkInDate: order.check_in_date,
+          sortAt: order.created_at || order.check_in_date,
         });
       }
     });
@@ -139,13 +141,17 @@ async function handler(req, res) {
           message: `Your payment was successful for ${roomName}. Check-in: ${order.check_in_date ? String(order.check_in_date).slice(0, 10) : "—"}.`,
           imageUrl: getImageUrl(order.room_type_id),
           orderId: order.id,
+          sortAt: order.created_at,
         });
       }
     });
 
-    // ลำดับ: refund_request ก่อน → หลังนั้น payment_success → แล้ว check_in_reminder
-    const typeOrder = { refund_request: 0, payment_success: 1, check_in_reminder: 2 };
-    notifications.sort((a, b) => (typeOrder[a.type] ?? 3) - (typeOrder[b.type] ?? 3));
+    // ลำดับ: แจ้งเตือนล่าสุดอยู่ข้างบน (เรียงตาม sortAt ใหม่ไปเก่า)
+    notifications.sort((a, b) => {
+      const tA = a.sortAt ? new Date(a.sortAt).getTime() : 0;
+      const tB = b.sortAt ? new Date(b.sortAt).getTime() : 0;
+      return tB - tA;
+    });
 
     return res.status(200).json({ notifications });
   } catch (err) {

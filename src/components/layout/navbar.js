@@ -215,7 +215,7 @@ export default function Navbar() {
                 >
                   <Popover.Trigger asChild>
                     <button
-                      className="p-2 relative hover:opacity-80 transition-opacity"
+                      className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
                       aria-label="Notifications"
                     >
                       <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
@@ -272,7 +272,7 @@ export default function Navbar() {
                 >
                   <Popover.Trigger asChild>
                     <button
-                      className="p-2 relative hover:opacity-80 transition-opacity"
+                      className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
                       aria-label="Notifications"
                     >
                       <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
@@ -422,7 +422,7 @@ export default function Navbar() {
               <>
                 <button
                   type="button"
-                  className="p-2 relative hover:opacity-80 transition-opacity"
+                  className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
                   aria-label="Notifications"
                   aria-expanded={isAgentNotiOpen}
                   onClick={() => {
@@ -451,7 +451,7 @@ export default function Navbar() {
               <>
                 <button
                   type="button"
-                  className="p-2 relative hover:opacity-80 transition-opacity"
+                  className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
                   aria-label="Notifications"
                   aria-expanded={isUserNotiOpen}
                   onClick={() => {
