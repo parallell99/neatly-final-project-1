@@ -24,17 +24,41 @@ const BOOKING_TRENDS_PERIODS = [
  * @param {(value: string) => void} props.onPeriodChange
  * @param {Array<{ day: string, percent: number, sampleCount?: number }>} props.data
  * @param {boolean} props.loading
+ * @param {boolean} props.useLive
+ * @param {() => void} props.onToggleLive
  */
-function BookingTrendsByDayCard({ periodId, onPeriodChange, data, loading }) {
+function BookingTrendsByDayCard({
+  periodId,
+  onPeriodChange,
+  data,
+  loading,
+  useLive,
+  onToggleLive,
+}) {
   const chartData = data;
 
   return (
     <article className="flex flex-col gap-[24px]" aria-labelledby="booking-trends-title">
       <header className="flex justify-between items-start xl:pb-[32px]">
-        <h2 id="booking-trends-title" className="headline-5 text-gray-600">
-          Booking Trends by Day
-        </h2>
-{/*period selection */}
+        <div className="flex items-center gap-[8px]">
+          <h2 id="booking-trends-title" className="headline-5 text-gray-600">
+            Booking Trends by Day
+          </h2>
+          {typeof useLive === "boolean" && typeof onToggleLive === "function" && (
+            <button
+              type="button"
+              onClick={onToggleLive}
+              className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors ${
+                useLive
+                  ? "bg-green-50 border-green-400 text-green-700"
+                  : "bg-gray-100 border-gray-300 text-gray-500"
+              }`}
+            >
+              {useLive ? "● Live DB" : "○ Mock"}
+            </button>
+          )}
+        </div>
+        {/*period selection */}
         <Select value={periodId} onValueChange={onPeriodChange}>
           <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900" aria-label="Select period">
             <SelectValue placeholder="Select period" />
@@ -121,7 +145,7 @@ const BOOKING_TRENDS_SKELETON_DATA = [
 function BookingTrendsByDaySkeleton() {
   return (
     <div className="w-full min-h-[200px]" aria-label="Loading booking trends by day chart">
-      <ResponsiveContainer width="100%" height={187}>
+      <ResponsiveContainer width="100%" height={235}>
         <BarChart
           data={BOOKING_TRENDS_SKELETON_DATA}
           margin={{ top: 8, right: 8, left: 45, bottom: 0 }}
