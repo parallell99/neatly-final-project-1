@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
 import DashboardTopCard from "@/components/dashboard/dashboardTopCard";
 import RoomAvailabilityCard from "@/components/dashboard/RoomAvailability";
@@ -20,6 +21,15 @@ import Wallet from "@/assets/icons/wallet.svg";
 
 import { format, startOfDay, addDays, differenceInDays } from "date-fns";
 import { MOCK_ORDERS } from "@/utils/DashboardMockData/order";
+import { useTrafficRealtime } from "@/hooks/useTrafficRealtime";
+
+function createSlug(title) {
+  if (!title || typeof title !== "string") return "";
+  return title
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
 
 //Dashboard top card-----------------------------------------------------Dashboard top card Data
 const dashboardStats = [
@@ -392,102 +402,7 @@ function fetchCheckInCheckOutAverages() {
     });
 }
 
-// ── Website traffic mock ────────────────────────────────────────
-const WEBSITE_TRAFFIC_MOCK = {
-    realtime: {
-        all: [
-            { label: "12:00 AM", value: 5 },
-            { label: "04:00 AM", value: 18 },
-            { label: "08:00 AM", value: 32 },
-            { label: "12:00 PM", value: 48 },
-            { label: "04:00 PM", value: 72 },
-            { label: "08:00 PM", value: 65 },
-        ],
-        homepage: [
-            { label: "12:00 AM", value: 3 },
-            { label: "04:00 AM", value: 10 },
-            { label: "08:00 AM", value: 20 },
-            { label: "12:00 PM", value: 34 },
-            { label: "04:00 PM", value: 56 },
-            { label: "08:00 PM", value: 50 },
-        ],
-        rooms: [
-            { label: "12:00 AM", value: 1 },
-            { label: "04:00 AM", value: 5 },
-            { label: "08:00 AM", value: 12 },
-            { label: "12:00 PM", value: 20 },
-            { label: "04:00 PM", value: 30 },
-            { label: "08:00 PM", value: 28 },
-        ],
-        booking: [
-            { label: "12:00 AM", value: 0 },
-            { label: "04:00 AM", value: 2 },
-            { label: "08:00 AM", value: 6 },
-            { label: "12:00 PM", value: 14 },
-            { label: "04:00 PM", value: 24 },
-            { label: "08:00 PM", value: 22 },
-        ],
-        blog: [
-            { label: "12:00 AM", value: 1 },
-            { label: "04:00 AM", value: 1 },
-            { label: "08:00 AM", value: 3 },
-            { label: "12:00 PM", value: 6 },
-            { label: "04:00 PM", value: 10 },
-            { label: "08:00 PM", value: 9 },
-        ],
-    },
-    yesterday: {
-        all: [
-            { label: "12:00 AM", value: 8 },
-            { label: "06:00 AM", value: 20 },
-            { label: "12:00 PM", value: 60 },
-            { label: "06:00 PM", value: 80 },
-            { label: "11:59 PM", value: 40 },
-        ],
-    },
-    last_7_days: {
-        all: [
-            { label: "Day 1", value: 120 },
-            { label: "Day 2", value: 90 },
-            { label: "Day 3", value: 140 },
-            { label: "Day 4", value: 110 },
-            { label: "Day 5", value: 150 },
-            { label: "Day 6", value: 130 },
-            { label: "Day 7", value: 160 },
-        ],
-    },
-    last_30_days: {
-        all: [
-            { label: "Week 1", value: 420 },
-            { label: "Week 2", value: 380 },
-            { label: "Week 3", value: 460 },
-            { label: "Week 4", value: 510 },
-        ],
-    },
-};
-
-function fetchWebsiteTraffic(periodId, pageId) {
-    // ในโปรดักชันจะเป็นการเรียก API จริง เช่น:
-    // return axios.get("/api/admin/analytics/traffic", { params: { period, page }});
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const periodData = WEBSITE_TRAFFIC_MOCK[periodId] ?? WEBSITE_TRAFFIC_MOCK.realtime;
-            const pageKey = pageId === "all" ? "all" : pageId;
-            const data =
-                periodData[pageKey] ??
-                periodData.all ??
-                [];
-
-            resolve({
-                data,
-                meta: {
-                    period: periodId,
-                    page: pageId,
-                },
-            });
-        }, 500);
-    });
-}
+// ── Website traffic (live via Supabase + API route) ─────────────
 
 function transformOccupancyGuest(apiResponse) {
     // overall line
@@ -573,10 +488,11 @@ function AnalyticDashboard() {
     const [checkTimeData, setCheckTimeData] = useState(null);
     const [checkTimeLoading, setCheckTimeLoading] = useState(true);
     // ── Website traffic ------------------------------------------------------------------------------
-    const [trafficPeriod, setTrafficPeriod] = useState("realtime");
+    const [trafficPeriod, setTrafficPeriod] = useState("last_7_days");
     const [trafficPage, setTrafficPage] = useState("all");
     const [trafficData, setTrafficData] = useState([]);
     const [trafficLoading, setTrafficLoading] = useState(true);
+    const [trafficRoomOptions, setTrafficRoomOptions] = useState([]);
 
     useEffect(() => {
         setRoomLoading(true);
@@ -617,12 +533,52 @@ function AnalyticDashboard() {
             .finally(() => setCheckTimeLoading(false));
     }, []);
 
+    const fetchTrafficData = useCallback(async () => {
+        try {
+            const token =
+                typeof window !== "undefined"
+                    ? window.localStorage.getItem("token")
+                    : null;
+console.log("tokenForTraffic", token)
+            const res = await axios.get("/api/traffic", {
+                params: { period: trafficPeriod, page: trafficPage },
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+            });
+
+            const data = res.data;
+            setTrafficData(Array.isArray(data) ? data : []);
+        } catch {
+            setTrafficData([]);
+        } finally {
+            setTrafficLoading(false);
+        }
+    }, [trafficPeriod, trafficPage]);
+
     useEffect(() => {
         setTrafficLoading(true);
-        fetchWebsiteTraffic(trafficPeriod, trafficPage)
-            .then((res) => setTrafficData(res.data))
-            .finally(() => setTrafficLoading(false));
-    }, [trafficPeriod, trafficPage]);
+        fetchTrafficData();
+    }, [fetchTrafficData]);
+
+    useTrafficRealtime(trafficPeriod, fetchTrafficData);
+    
+
+    useEffect(() => {
+        fetch("/api/rooms/rooms-all")
+            .then((res) => res.json())
+            .then((json) => {
+                const list = json?.data ?? [];
+                const options = list
+                    .map((r) => {
+                        const name = r.name ?? r.title ?? "";
+                        const slug = createSlug(name);
+                        if (!slug) return null;
+                        return { id: `room:${slug}`, label: name || "Room" };
+                    })
+                    .filter(Boolean);
+                setTrafficRoomOptions(options);
+            })
+            .catch(() => setTrafficRoomOptions([]));
+    }, []);
 
     return (
         <div className="flex flex-col xl:flex-row">
@@ -647,7 +603,7 @@ function AnalyticDashboard() {
                     </h5>
                 </header>
 
-                <main className="flex flex-col bg-gray-100 gap-[24px] xl:px-[60px] xl:py-[40px]">
+                <main className="flex flex-col bg-gray-100 gap-[24px] xl:px-[60px] xl:py-[40px] pb-[119px]">
                     {/*upper card */}
                     <section className="grid grid-cols-1 xl:grid-cols-4 p-[16px] xl:p-0 gap-[16px] xl:gap-[8px] ">
                         {dashboardStats.map((stat) => {
@@ -721,6 +677,7 @@ function AnalyticDashboard() {
                             onPeriodChange={setTrafficPeriod}
                             data={trafficData}
                             loading={trafficLoading}
+                            roomOptions={trafficRoomOptions}
                         />
                     </section>
                 </main>
