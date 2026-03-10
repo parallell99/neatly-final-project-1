@@ -170,11 +170,19 @@ const BOOKING_TRENDS_MOCK = {
 };
 
 function transformBookingTrends(apiResponse) {
-    return apiResponse.byDayOfWeek.map((item) => ({
-        day: DAY_LABELS[item.dayOfWeek],
-        percent: item.avgOccupancyPercent,
-        sampleCount: item.sampleCount,
-    }));
+    const totalRooms = apiResponse?.totalRooms ?? 0;
+    return apiResponse.byDayOfWeek.map((item) => {
+        const percent = item.avgOccupancyPercent;
+        const rooms =
+            totalRooms > 0 ? Math.round((percent / 100) * totalRooms) : 0;
+        return {
+            day: DAY_LABELS[item.dayOfWeek],
+            percent,
+            sampleCount: item.sampleCount,
+            rooms,
+            totalRooms,
+        };
+    });
 }
 
 function fetchBookingTrends(period) {
