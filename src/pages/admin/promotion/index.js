@@ -287,17 +287,17 @@ export default function PromotionPage() {
             {/* Usage Stats */}
             <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Total Promotions</p>
+                <p className="text-sm text-gray-700">Total Promotions</p>
                 <p className="text-xl font-semibold text-gray-900">{list.length}</p>
               </div>
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Active Promotions</p>
-                <p className="text-xl font-semibold text-green-700">
+                <p className="text-sm text-gray-700">Active Promotions</p>
+                <p className="text-xl font-semibold text-green-600">
                   {list.filter((p) => !isUnusable(p)).length}
                 </p>
               </div>
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-500">Total Usages</p>
+                <p className="text-sm text-gray-700">Total Usages</p>
                 <p className="text-xl font-semibold text-gray-900">
                   {Object.values(usageStats).reduce((a, b) => a + b, 0)}
                 </p>
@@ -314,7 +314,6 @@ export default function PromotionPage() {
                       <tr className="text-left text-gray-700 font-medium bg-gray-50 border-b border-gray-200">
                         <th className="px-4 py-3 border-b border-gray-200">Code</th>
                         <th className="px-4 py-3 border-b border-gray-200">Name</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Status</th>
                         <th className="px-4 py-3 border-b border-gray-200">Discount</th>
                         <th className="px-4 py-3 border-b border-gray-200">Min Spend</th>
                         <th className="px-4 py-3 border-b border-gray-200">Start</th>
@@ -322,6 +321,7 @@ export default function PromotionPage() {
                         <th className="px-4 py-3 border-b border-gray-200">Used</th>
                         <th className="px-4 py-3 border-b border-gray-200">Per User Limit</th>
                         <th className="px-4 py-3 border-b border-gray-200">Global Limit</th>
+                        <th className="px-4 py-3 border-b border-gray-200">Status</th>
                         <th className="px-4 py-3 border-b border-gray-200"></th>
                       </tr>
                     </thead>
@@ -354,11 +354,6 @@ export default function PromotionPage() {
                               {p.name ?? "—"}
                             </td>
                             <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-sm font-medium ${p.is_active === false ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
-                                {p.is_active !== false ? "Enabled" : "Disabled"}
-                              </span>
-                            </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDiscount(p)}
                             </td>
                             <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
@@ -378,6 +373,11 @@ export default function PromotionPage() {
                             </td>
                             <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
                               {p.global_usage_limit != null ? String(p.global_usage_limit) : "—"}
+                            </td>
+                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                              <span className={`inline-block px-2.5 py-1 rounded-full text-sm font-medium ${p.is_active === false ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
+                                {p.is_active !== false ? "Enabled" : "Disabled"}
+                              </span>
                             </td>
                             <td className={`px-4 py-3 ${expired ? "text-gray-400" : ""}`}>
                               <div className="flex gap-2">
