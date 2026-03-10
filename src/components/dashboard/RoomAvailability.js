@@ -41,7 +41,7 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
 
   return (
     <article
-      className="flex flex-col gap-[24px]"
+      className="flex flex-col gap-[24px] xl:h-full"
       aria-labelledby="room-availability-title"
     >
       <header className="flex justify-between items-center">
@@ -66,20 +66,20 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
         </Select>
       </header>
 
-      <div className="flex flex-row items-center gap-[20px] xl:items-end [&_*[tabindex]:focus]:outline-none">
+      <div className="flex flex-row items-center gap-[20px] xl:items-center xl:justify-center xl:h-full [&_*[tabindex]:focus]:outline-none">
         {loading ? (
           <RoomAvailabilitySkeleton />
         ) : (
           <>
-            <div className="xl:flex-1 xl:w-[full] xl:h-[full] w-[120px] h-[120px] shrink-0 ">
+            <div className="w-[120px] h-[120px] xl:w-[260px] xl:h-[260px] xl:flex-none">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={chartData}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius={36}
-                    outerRadius={56}
+                    innerRadius="65%"
+                    outerRadius="100%"
                     cx="50%"
                     cy="50%"
                     paddingAngle={0}
@@ -94,17 +94,17 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
               </ResponsiveContainer>
             </div>
 
-            <ul className="flex flex-col gap-3 xl:flex-1">
+            <ul className="flex flex-col gap-3 w-[160px] shrink-0 xl:self-end">
               {data.map((item) => (
                 <li key={item.id} className="flex items-center gap-2">
                   <span
-                    className={`w-3 h-3 rounded-sm shrink-0 ${item.color}`}
+                    className={`w-3 h-3 rounded-sm ${item.color}`}
                     aria-hidden
                   />
                   <span className="body-2 text-gray-700">
                     {item.label}:{" "}
                     <span className="font-medium">
-                      {item.count} Rooms ({item.percent}%)
+                      {item.count} Rooms
                     </span>
                   </span>
                 </li>
@@ -130,7 +130,7 @@ function RoomAvailabilitySkeleton() {
     <>
       {/* Donut skeleton ขนาดเท่า chart จริง */}
       <div
-        className="xl:flex-1 xl:w-[full] xl:h-[full] w-[120px] h-[120px] shrink-0 "
+        className="w-[120px] h-[120px] xl:w-[260px] xl:h-[260px] xl:flex-none"
         aria-label="Loading chart"
       >
         <ResponsiveContainer width="100%" height="100%">
@@ -139,8 +139,8 @@ function RoomAvailabilitySkeleton() {
               data={ROOM_AVAILABILITY_SKELETON_CHART}
               dataKey="value"
               nameKey="name"
-              innerRadius={36}
-              outerRadius={56}
+              innerRadius="65%"
+              outerRadius="100%"
               cx="50%"
               cy="50%"
               paddingAngle={0}
@@ -157,7 +157,7 @@ function RoomAvailabilitySkeleton() {
 
       {/* Legend skeleton: โครงเหมือนของจริง แต่ตัวเลขเป็น skeleton */}
       <ul
-        className="flex flex-col gap-3 xl:flex-1"
+        className="flex flex-col gap-3 w-[160px] shrink-0 xl:self-end"
         aria-busy="true"
         aria-label="Loading legend"
       >

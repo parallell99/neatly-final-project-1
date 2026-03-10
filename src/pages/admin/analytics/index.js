@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
+import AdminMobileNav from "@/components/layout/AdminMobileNav";
 import DashboardTopCard from "@/components/dashboard/dashboardTopCard";
 import RoomAvailabilityCard from "@/components/dashboard/RoomAvailability";
 import BookingTrendsByDayCard from "@/components/dashboard/BookingTrendsByDay";
@@ -10,9 +11,6 @@ import RevenueTrendCard from "@/components/dashboard/RevenueTrend";
 import OccupancyGuestCard from "@/components/dashboard/OccupancyGuest";
 import CheckInCheckOutTimesCard from "@/components/dashboard/CheckInCheckOutTimes";
 import WebsiteTrafficCard from "@/components/dashboard/WebsiteTraffic";
-
-import LogoNav from "@/assets/logo/logo-nav-dashboard.svg";
-import Hamburger from "@/assets/icons/hamburger-dashboard.svg";
 
 import Cart from "@/assets/icons/cart.svg";
 import Booking from "@/assets/icons/booking.svg";
@@ -183,6 +181,18 @@ function fetchBookingTrends(period) {
     return new Promise((resolve) => {
         setTimeout(() => resolve(BOOKING_TRENDS_MOCK[period]), 500);
     });
+}
+
+async function fetchBookingTrendsLive(period) {
+  const token =
+    typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+
+  const res = await axios.get("/api/admin/analytics/booking-trends", {
+    params: { period },
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  return res.data;
 }
 
 // ── Revenue Trend mock ─────────────────────────────────────────
@@ -459,10 +469,11 @@ function AnalyticDashboard() {
     const [roomPeriod, setRoomPeriod] = useState("month");
     const [roomData, setRoomData] = useState([]);
     const [roomLoading, setRoomLoading] = useState(true);
-    // ── Booking Trends mock  transform ---------------------------------------------------------------
+    // ── Booking Trends (mock + live) ---------------------------------------------------------------
     const [bookingPeriod, setBookingPeriod] = useState("month");
     const [bookingData, setBookingData] = useState([]);
     const [bookingLoading, setBookingLoading] = useState(true);
+    const [bookingUseLive, setBookingUseLive] = useState(false);
     // ── Revenue Trend (date range, mock API) --------------------------------------------------------
     const [revenueDateFrom, setRevenueDateFrom] = useState(
         () => new Date(currentYear, 0, 1)
@@ -502,11 +513,33 @@ function AnalyticDashboard() {
     }, [roomPeriod]);
 
     useEffect(() => {
-        setBookingLoading(true);
-        fetchBookingTrends(bookingPeriod)
-            .then((res) => setBookingData(transformBookingTrends(res)))
-            .finally(() => setBookingLoading(false));
-    }, [bookingPeriod]);
+        let cancelled = false;
+
+        async function loadBookingTrends() {
+            try {
+                setBookingLoading(true);
+
+                const res = bookingUseLive
+                    ? await fetchBookingTrendsLive(bookingPeriod)
+                    : await fetchBookingTrends(bookingPeriod);
+
+                if (cancelled || !res) return;
+                setBookingData(transformBookingTrends(res));
+            } catch {
+                if (cancelled) return;
+                setBookingData([]);
+            } finally {
+                if (cancelled) return;
+                setBookingLoading(false);
+            }
+        }
+
+        loadBookingTrends();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [bookingPeriod, bookingUseLive]);
 
     useEffect(() => {
         setRevenueLoading(true);
@@ -539,7 +572,6 @@ function AnalyticDashboard() {
                 typeof window !== "undefined"
                     ? window.localStorage.getItem("token")
                     : null;
-console.log("tokenForTraffic", token)
             const res = await axios.get("/api/traffic", {
                 params: { period: trafficPeriod, page: trafficPage },
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -582,19 +614,11 @@ console.log("tokenForTraffic", token)
 
     return (
         <div className="flex flex-col xl:flex-row">
-            <div className="hidden xl:block  sticky">
+            <div className="hidden xl:block">
                 <SideBarAdmin />
             </div>
 
-            <nav className="flex flex-row xl:hidden justify-between bg-green-800 py-[11.5px] px-[16px]">
-                <div className="flex flex-row items-end gap-[3px]">
-                    <LogoNav className="h-fit w-fit" aria-hidden />
-                    <span className="body-3 text-green-400">
-                        Admin Panel Control
-                    </span>
-                </div>
-                <Hamburger className="h-fit w-fit" aria-hidden />
-            </nav>
+            <AdminMobileNav />
 
             <div className="xl:flex xl:flex-col xl:w-full">
                 <header className="flex bg-white border border-b border-gray-300 p-[16px]">
@@ -615,7 +639,7 @@ console.log("tokenForTraffic", token)
 
                     {/*room availability and booking trend*/}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-[24px] xl:gap-[8px]">
-                        <section className="rounded-[8px] border border-gray-300 p-[16px] xl:pt-[32px] xl:pr-[40px] xl:pl-[40px] xl:pb-[10px] bg-white flex flex-col gap-[8px] relative">
+                        <section className="rounded-[8px] border border-gray-300 p-[16px] xl:pt-[24px] xl:pr-[40px] xl:pl-[40px] xl:pb-[24px] bg-white flex flex-col gap-[8px] relative">
                             <RoomAvailabilityCard
                                 periodId={roomPeriod}
                                 onPeriodChange={setRoomPeriod}
@@ -624,12 +648,14 @@ console.log("tokenForTraffic", token)
                             />
                         </section>
                         {/*booking trend */}
-                        <section className="rounded-[8px] border border-gray-300 p-[16px] xl:pt-[32px] xl:pr-[40px] xl:pl-[40px] xl:pb-[10px] bg-white flex flex-col gap-[8px] relative">
+                        <section className="rounded-[8px] border border-gray-300 p-[16px] xl:pt-[24px] xl:pr-[40px] xl:pl-[40px] xl:pb-[24px] bg-white flex flex-col gap-[8px] relative">
                             <BookingTrendsByDayCard
                                 periodId={bookingPeriod}
                                 onPeriodChange={setBookingPeriod}
                                 data={bookingData}
                                 loading={bookingLoading}
+                                useLive={bookingUseLive}
+                                onToggleLive={() => setBookingUseLive((prev) => !prev)}
                             />
                         </section>
                     </div>
