@@ -28,14 +28,18 @@ export async function getTrafficChart(period, page) {
     pathFilter,
   });
 
-  if (!error && Array.isArray(data)) return data;
-
-  if (error) {
-    // eslint-disable-next-line no-console
-    console.error("get_traffic_chart error:", error);
+  let result;
+  if (!error && Array.isArray(data)) {
+    result = data;
+  } else {
+    if (error) {
+      // eslint-disable-next-line no-console
+      console.error("get_traffic_chart error:", error);
+    }
+    result = await fetchTrafficFallback(config, pathFilter);
   }
 
-  return fetchTrafficFallback(config, pathFilter);
+  return fillMissingDaysForPeriod(result, period);
 }
 
 /**
@@ -90,6 +94,42 @@ async function fetchTrafficFallback(config, pathFilter) {
 }
 
 export const trafficService = { getTrafficChart };
+
+/**
+ * Fill missing dates with value 0 for last_7_days and last_30_days.
+ * @param {Array<{ label: string, value: number }>} data
+ * @param {string} period
+ * @returns {Array<{ label: string, value: number }>}
+ */
+function fillMissingDaysForPeriod(data, period) {
+  if (period !== "last_7_days" && period !== "last_30_days") {
+    return data;
+  }
+
+  const numDays = period === "last_7_days" ? 7 : 30;
+  const valueByLabel = new Map();
+  for (const d of data) {
+    const label = String(d.label).slice(0, 10);
+    valueByLabel.set(label, (valueByLabel.get(label) ?? 0) + d.value);
+  }
+
+  const now = new Date();
+  const start = new Date(now);
+  start.setUTCDate(start.getUTCDate() - (numDays - 1));
+  start.setUTCHours(0, 0, 0, 0);
+
+  const result = [];
+  for (let i = 0; i < numDays; i++) {
+    const d = new Date(start);
+    d.setUTCDate(d.getUTCDate() + i);
+    const label = d.toISOString().slice(0, 10);
+    result.push({
+      label,
+      value: valueByLabel.get(label) ?? 0,
+    });
+  }
+  return result;
+}
 
 /** @param {string} interval - e.g. "7 days", "1 hour" */
 function intervalToMs(interval) {

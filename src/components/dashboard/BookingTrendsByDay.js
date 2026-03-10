@@ -116,7 +116,7 @@ function BookingTrendsByDayCard({
                 dataKey="percent"
                 fill="var(--orange-500)"
                 radius={[4, 4, 4, 4]}
-                isAnimationActive={false}
+                isAnimationActive={true}
                 barSize={10}
                 zIndex={1}
                 

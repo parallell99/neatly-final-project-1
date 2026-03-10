@@ -83,7 +83,7 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
                     cx="50%"
                     cy="50%"
                     paddingAngle={0}
-                    isAnimationActive={false}
+                    isAnimationActive={true}
                     stroke="transparent"
                   >
                     {chartData.map((entry, index) => (
@@ -120,42 +120,17 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
 export default RoomAvailabilityCard;
 
 const ROOM_AVAILABILITY_SKELETON_IDS = Object.keys(ROOM_AVAILABILITY_UI);
-const ROOM_AVAILABILITY_SKELETON_CHART = ROOM_AVAILABILITY_SKELETON_IDS.map((id) => ({
-  name: ROOM_AVAILABILITY_UI[id].label,
-  value: 1, // ใช้ค่าเท่าๆ กัน แค่ไว้ให้มี slice ครบ
-}));
 
 function RoomAvailabilitySkeleton() {
   return (
     <>
-      {/* Donut skeleton ขนาดเท่า chart จริง */}
       <div
         className="w-[120px] h-[120px] xl:w-[260px] xl:h-[260px] xl:flex-none"
         aria-label="Loading chart"
       >
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={ROOM_AVAILABILITY_SKELETON_CHART}
-              dataKey="value"
-              nameKey="name"
-              innerRadius="65%"
-              outerRadius="100%"
-              cx="50%"
-              cy="50%"
-              paddingAngle={0}
-              isAnimationActive={false}
-              stroke="transparent"
-            >
-              {ROOM_AVAILABILITY_SKELETON_CHART.map((entry) => (
-                <Cell key={entry.name} fill="var(--gray-200)" />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+        
       </div>
 
-      {/* Legend skeleton: โครงเหมือนของจริง แต่ตัวเลขเป็น skeleton */}
       <ul
         className="flex flex-col gap-3 w-[160px] shrink-0 xl:self-end"
         aria-busy="true"

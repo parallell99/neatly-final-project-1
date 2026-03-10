@@ -119,6 +119,26 @@ function WebsiteTrafficCard({
     labelFormatted: formatTrafficLabel(item.label, periodId),
   }));
 
+  // จำกัดจำนวน label บนแกน X ไม่ให้แน่นเกินไป (mobile < desktop)
+  const isClient = typeof window !== "undefined";
+  const MAX_X_TICKS = isClient && window.innerWidth < 768 ? 5 : 8;
+
+  const xTicks = React.useMemo(() => {
+    if (formattedChartData.length <= MAX_X_TICKS) {
+      return formattedChartData.map((d) => d.labelFormatted);
+    }
+    const step = Math.ceil(formattedChartData.length / MAX_X_TICKS);
+    const selected = [];
+    for (let i = 0; i < formattedChartData.length; i += step) {
+      selected.push(formattedChartData[i].labelFormatted);
+    }
+    const lastLabel = formattedChartData[formattedChartData.length - 1].labelFormatted;
+    if (!selected.includes(lastLabel)) {
+      selected.push(lastLabel);
+    }
+    return selected;
+  }, [formattedChartData, MAX_X_TICKS]);
+
   return (
     <article
       className="flex flex-col gap-[24px]"
@@ -214,6 +234,7 @@ function WebsiteTrafficCard({
                 tickLine={false}
                 tick={{ fill: "var(--gray-600)", fontSize: 11 }}
                 tickMargin={8}
+                ticks={xTicks}
               />
               <YAxis
                 axisLine={false}
@@ -228,9 +249,6 @@ function WebsiteTrafficCard({
                 stroke="var(--orange-500)"
                 strokeWidth={2}
                 fill="url(#trafficGradient)"
-                dot={{ stroke: "var(--orange-500)", strokeWidth: 2, r: 3 }}
-                activeDot={{ r: 5 }}
-                isAnimationActive={false}
               />
             </AreaChart>
           </ResponsiveContainer>
