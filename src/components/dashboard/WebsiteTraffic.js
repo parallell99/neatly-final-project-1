@@ -18,6 +18,55 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+function formatTimeLabel(date) {
+  const hours24 = date.getHours();
+  const minutes = date.getMinutes();
+  const period = hours24 >= 12 ? "PM" : "AM";
+  const hours12 = hours24 % 12 || 12;
+  const paddedMinutes = minutes.toString().padStart(2, "0");
+
+  return `${hours12}:${paddedMinutes} ${period}`;
+}
+
+function formatDateLabel(date) {
+  const day = date.getDate();
+  const monthShort = date.toLocaleString("en-US", { month: "short" });
+
+  return `${day} ${monthShort}`;
+}
+
+function formatTrafficLabel(rawLabel, periodId) {
+  if (!rawLabel) return "";
+
+  const label = String(rawLabel);
+  const parsed = new Date(label);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return label;
+  }
+
+  if (periodId === "realtime" || periodId === "yesterday") {
+    return formatTimeLabel(parsed);
+  }
+
+  if (periodId === "last_7_days" || periodId === "last_30_days") {
+    return formatDateLabel(parsed);
+  }
+
+  return label;
+}
+
+/** Mock data for chart-shaped loading skeleton */
+const TRAFFIC_SKELETON_DATA = [
+  { label: "12:00 AM", labelFormatted: "12:00 AM", value: 12 },
+  { label: "4:00 AM", labelFormatted: "4:00 AM", value: 8 },
+  { label: "8:00 AM", labelFormatted: "8:00 AM", value: 24 },
+  { label: "12:00 PM", labelFormatted: "12:00 PM", value: 32 },
+  { label: "4:00 PM", labelFormatted: "4:00 PM", value: 28 },
+  { label: "8:00 PM", labelFormatted: "8:00 PM", value: 18 },
+  { label: "11:59 PM", labelFormatted: "11:59 PM", value: 14 },
+];
+
 /**
  * @param {Object} props
  * @param {string} props.pageId
@@ -26,6 +75,7 @@ import {
  * @param {(value: string) => void} props.onPeriodChange
  * @param {Array<{ label: string, value: number }>} props.data
  * @param {boolean} props.loading
+ * @param {Array<{ id: string, label: string }>} [props.roomOptions] - from room_types (id = "room:{slug}")
  */
 function WebsiteTrafficCard({
   pageId,
@@ -34,6 +84,7 @@ function WebsiteTrafficCard({
   onPeriodChange,
   data,
   loading,
+  roomOptions = [],
 }) {
   const PERIODS = [
     { id: "realtime", label: "Real-time" },
@@ -42,15 +93,31 @@ function WebsiteTrafficCard({
     { id: "last_30_days", label: "Last 30 days" },
   ];
 
-  const PAGE_OPTIONS = [
+  const STATIC_PAGE_OPTIONS_BEFORE_ROOMS = [
     { id: "all", label: "All pages" },
     { id: "homepage", label: "Homepage" },
-    { id: "rooms", label: "Rooms" },
+    { id: "search_rooms", label: "Search rooms" },
     { id: "booking", label: "Booking" },
-    { id: "blog", label: "Blog" },
+    { id: "booking_action", label: "Booking actions" },
+    { id: "room_details", label: "Room details" },
+  ];
+  const STATIC_PAGE_OPTIONS_AFTER_ROOMS = [
+    { id: "login", label: "Login" },
+    { id: "register", label: "Register" },
+    { id: "user_profile", label: "User profile" },
+    { id: "payment_method", label: "Payment method" },
+  ];
+  const PAGE_OPTIONS = [
+    ...STATIC_PAGE_OPTIONS_BEFORE_ROOMS,
+    ...roomOptions,
+    ...STATIC_PAGE_OPTIONS_AFTER_ROOMS,
   ];
 
   const chartData = data ?? [];
+  const formattedChartData = chartData.map((item) => ({
+    ...item,
+    labelFormatted: formatTrafficLabel(item.label, periodId),
+  }));
 
   return (
     <article
@@ -67,7 +134,7 @@ function WebsiteTrafficCard({
 
         <div className="min-w-[140px]">
           <Select value={pageId} onValueChange={onPageChange}>
-            <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900">
+            <SelectTrigger className="w-[136px]! min-w-[136px] h-[40px]! border border-gray-300 rounded-[8px] px-3 **:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900">
               <SelectValue />
             </SelectTrigger>
             <SelectContent position="popper">
@@ -75,7 +142,7 @@ function WebsiteTrafficCard({
                 <SelectItem
                   key={page.id}
                   value={page.id}
-                  className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900"
+                  className="**:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900"
                 >
                   {page.label}
                 </SelectItem>
@@ -105,17 +172,15 @@ function WebsiteTrafficCard({
 
       <div className="w-full min-h-[220px] [&_*[tabindex]:focus]:outline-none">
         {loading ? (
-          <div className="flex items-center justify-center h-[220px] body-2 text-gray-400">
-            Loading traffic data...
-          </div>
+          <WebsiteTrafficChartSkeleton />
         ) : chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-[220px] body-2 text-gray-400">
+          <div className="flex items-center justify-center h-[295px] body-2 text-gray-400">
             No traffic data for selected filters
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={295}>
             <AreaChart
-              data={chartData}
+              data={formattedChartData}
               margin={{ top: 8, right: 8, left: -8, bottom: 8 }}
             >
               <defs>
@@ -144,7 +209,7 @@ function WebsiteTrafficCard({
                 vertical={false}
               />
               <XAxis
-                dataKey="label"
+                dataKey="labelFormatted"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "var(--gray-600)", fontSize: 11 }}
@@ -175,13 +240,16 @@ function WebsiteTrafficCard({
   );
 }
 
+export default WebsiteTrafficCard;
+
 function WebsiteTrafficTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
-  const { label, value } = payload[0].payload;
+  const { label, labelFormatted, value } = payload[0].payload;
+  const displayLabel = labelFormatted || label;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md px-3 py-2">
-      <p className="body-3 text-gray-600">{label}</p>
+      <p className="body-3 text-gray-600">{displayLabel}</p>
       <p className="body-3 text-gray-700">
         Visitors:{" "}
         <span className="font-medium text-gray-900">
@@ -192,5 +260,49 @@ function WebsiteTrafficTooltip({ active, payload }) {
   );
 }
 
-export default WebsiteTrafficCard;
+
+
+function WebsiteTrafficChartSkeleton() {
+  return (
+    <div
+      className="w-full animate-pulse"
+      style={{ height: 295 }}
+      aria-label="Loading website traffic chart"
+    >
+      <ResponsiveContainer width="100%" height={295}>
+        <AreaChart
+          data={TRAFFIC_SKELETON_DATA}
+          margin={{ top: 8, right: 8, left: -8, bottom: 8 }}
+        >
+          <CartesianGrid
+            stroke="var(--gray-200)"
+            horizontal
+            vertical={false}
+          />
+          <XAxis
+            dataKey="labelFormatted"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "var(--gray-400)", fontSize: 11 }}
+            tickMargin={8}
+          />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "var(--gray-400)", fontSize: 11 }}
+            tickMargin={8}
+          />
+          <Area
+            type="monotone"
+            dataKey="value"
+            stroke="var(--gray-300)"
+            strokeWidth={2}
+            fill="var(--gray-100)"
+            isAnimationActive={false}
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 

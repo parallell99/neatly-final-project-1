@@ -19,7 +19,6 @@ function AuthProvider({ children }) {
     if (typeof window === "undefined") return;
 
     const token = localStorage.getItem("token");
-    console.log("Token :",JSON.parse(atob(token.split(".")[1])))
     if (!token) {
       setState((prev) => ({
         ...prev,
@@ -36,7 +35,6 @@ function AuthProvider({ children }) {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log(response)
       setState((prev) => ({
         ...prev,
         user: response.data,
@@ -49,7 +47,8 @@ function AuthProvider({ children }) {
         getUserLoading: false,
         error: error.response?.data?.error ?? error.message,
       }));
-      if (error.response?.status === 401) {
+      const status = error.response?.status;
+      if (status === 401 || status === 403) {
         localStorage.removeItem("token");
       }
     }

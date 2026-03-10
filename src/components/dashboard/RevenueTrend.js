@@ -300,10 +300,10 @@ function RevenueTrendSkeleton() {
       className="w-full min-h-[240px]"
       aria-label="Loading revenue trend chart"
     >
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={295}>
         <AreaChart
           data={REVENUE_SKELETON_DATA}
-          margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
+          margin={{ top: 8, right: 0, left: -1, bottom: 8 }}
         >
           <CartesianGrid
             stroke="var(--gray-200)"
@@ -320,7 +320,7 @@ function RevenueTrendSkeleton() {
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "var(--gray-700)", fontSize: 12 }}
+            tick={{ fill: "var(--gray-700)", fontSize: 12, textAnchor: "start", dx: -45,}}
             tickFormatter={(v) =>
               v >= 1000 ? `${v / 1000},000` : String(v)
             }
