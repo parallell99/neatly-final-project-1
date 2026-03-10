@@ -1,19 +1,18 @@
 import {
   startOfMonth,
+  startOfDay,
   endOfMonth,
   subMonths,
   eachDayOfInterval,
   getDay,
   parseISO,
 } from "date-fns";
-import { getPaidOrdersOverlapping } from "./bookingTrendsRepository";
-
-const TOTAL_ROOMS = 50;
+import { getPaidOrdersOverlapping, getTotalRooms } from "./bookingTrendsRepository";
 
 function getDateRangeForPeriod(period) {
   const now = new Date();
   if (period === "month") {
-    return { from: startOfMonth(now), to: endOfMonth(now) };
+    return { from: startOfMonth(now), to: startOfDay(now) };
   }
   if (period === "last_month") {
     const last = subMonths(now, 1);
@@ -43,7 +42,12 @@ export async function getBookingTrends(period) {
   const fromStr = from.toISOString().split("T")[0];
   const toStr = to.toISOString().split("T")[0];
 
-  const orders = await getPaidOrdersOverlapping(fromStr, toStr);
+  const [orders, totalRoomsRaw] = await Promise.all([
+    getPaidOrdersOverlapping(fromStr, toStr),
+    getTotalRooms(),
+  ]);
+
+  const TOTAL_ROOMS = totalRoomsRaw > 0 ? totalRoomsRaw : 1;
 
   const allDays = eachDayOfInterval({ start: from, end: to });
   const dailyCount = new Map();
@@ -81,17 +85,24 @@ export async function getBookingTrends(period) {
     dowAccumulator[dow].count += 1;
   }
 
-  const byDayOfWeek = dowAccumulator.map((acc, dow) => ({
-    dayOfWeek: dow,
-    avgOccupancyPercent:
-      acc.count > 0 ? Math.round(acc.totalPercent / acc.count) : 0,
-    sampleCount: acc.count,
-  }));
+  const byDayOfWeek = dowAccumulator.map((acc, dow) => {
+    const avgPercent = acc.count > 0 ? acc.totalPercent / acc.count : 0;
+    const avgRooms =
+      acc.count > 0 ? (avgPercent / 100) * TOTAL_ROOMS : 0;
+
+    return {
+      dayOfWeek: dow,
+      avgOccupancyPercent: Math.round(avgPercent),
+      sampleCount: acc.count,
+      avgOccupiedRooms: Math.round(avgRooms),
+    };
+  });
 
   return {
     period,
     from: fromStr,
     to: toStr,
+    totalRooms: TOTAL_ROOMS,
     byDayOfWeek,
   };
 }

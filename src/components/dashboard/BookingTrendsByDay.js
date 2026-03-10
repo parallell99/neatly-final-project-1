@@ -22,7 +22,7 @@ const BOOKING_TRENDS_PERIODS = [
  * @param {Object} props
  * @param {string} props.periodId
  * @param {(value: string) => void} props.onPeriodChange
- * @param {Array<{ day: string, percent: number, sampleCount?: number }>} props.data
+ * @param {Array<{ day: string, percent: number, sampleCount?: number, rooms?: number, totalRooms?: number }>} props.data
  * @param {boolean} props.loading
  * @param {boolean} props.useLive
  * @param {() => void} props.onToggleLive
@@ -191,7 +191,7 @@ function BookingTrendsByDaySkeleton() {
 function BookingTrendsTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
 
-  const { day, percent, sampleCount } = payload[0].payload;
+  const { day, percent, sampleCount, rooms, totalRooms } = payload[0].payload;
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md px-3 py-2 flex flex-col gap-1">
@@ -199,6 +199,14 @@ function BookingTrendsTooltip({ active, payload }) {
       <span className="body-2 text-gray-600">
         Avg occupancy: <span className="font-medium text-gray-900">{percent}%</span>
       </span>
+      {typeof rooms === "number" && typeof totalRooms === "number" && totalRooms > 0 && (
+        <span className="body-2 text-gray-600">
+          Rooms:{" "}
+          <span className="font-medium text-gray-900">
+            {rooms} / {totalRooms}
+          </span>
+        </span>
+      )}
       <span className="caption text-gray-400">
         Based on {sampleCount} {sampleCount === 1 ? "occurrence" : "occurrences"}
       </span>
