@@ -388,7 +388,7 @@ function RevenueTrendCard({
                 stroke="var(--orange-500)"
                 strokeWidth={2}
                 fill="url(#revenueGradient)"
-                isAnimationActive={false}
+                isAnimationActive={true}
               />
             </AreaChart>
           </ResponsiveContainer>
