@@ -53,10 +53,10 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
         </h5>
 
         <Select value={periodId} onValueChange={onPeriodChange}>
-          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900" aria-label="Select period">
+          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300" aria-label="Select period">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
-          <SelectContent position="popper">
+          <SelectContent position="popper" >
             {ROOM_AVAILABILITY_PERIODS.map((periods) => (
               <SelectItem key={periods.id} value={periods.id} className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900">
                 {periods.label}
@@ -172,7 +172,8 @@ function RoomAvailabilitySkeleton() {
               <span className="body-2 text-gray-700">
                 {item.label}:{" "}
                 <span className="font-medium">
-                  <Skeleton className="h-4 w-24 inline-block align-middle" />
+                  <Skeleton className="h-4 w-4 inline-block align-middle" />
+                  {" "}Rooms
                 </span>
               </span>
             </li>

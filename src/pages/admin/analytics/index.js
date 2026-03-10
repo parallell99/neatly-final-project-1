@@ -196,22 +196,20 @@ async function fetchBookingTrendsLive(period) {
 }
 
 // ── Revenue Trend mock ─────────────────────────────────────────
-function getGranularity(dateFrom, dateTo) {
-    const days = differenceInDays(dateTo, dateFrom);;
-    if (days <= 14) return "day";
-    if (days <= 31) return "week";
-    return "month";
+function getGranularity() {
+    // mock ให้เหมือน backend: ส่งรายวันเสมอ
+    return "day";
 }
 
 function fetchRevenueTrend(dateFrom, dateTo, mode = "booking_date") {
     return new Promise((resolve) => {
         setTimeout(() => {
             if (!dateFrom || !dateTo) {
-                resolve({ data: [], granularity: "month" });
+                resolve({ data: [], granularity: "day" });
                 return;
             }
 
-            const granularity = getGranularity(dateFrom, dateTo);
+            const granularity = getGranularity();
 
             // เลือก field ตาม mode
             const dateField = mode === "stay_date" ? "check_in_date" : "created_at";
@@ -234,17 +232,7 @@ function fetchRevenueTrend(dateFrom, dateTo, mode = "booking_date") {
                 const d = new Date(o[dateField]);
                 let key;
 
-                if (granularity === "day") {
-                    key = format(d, "yyyy-MM-dd");
-                } else if (granularity === "week") {
-                    // จัด key เป็นวันจันทร์ต้นสัปดาห์ (ไว้ใช้ group เท่านั้น)
-                    const day = d.getDay();
-                    const monday = new Date(d);
-                    monday.setDate(d.getDate() - ((day + 6) % 7));
-                    key = format(monday, "yyyy-MM-dd");
-                } else {
-                    key = format(d, "yyyy-MM-01");
-                }
+                key = format(d, "yyyy-MM-dd");
 
                 const prev = groupMap.get(key);
                 const total = (prev?.total ?? 0) + Number(o.total_price);
@@ -255,21 +243,13 @@ function fetchRevenueTrend(dateFrom, dateTo, mode = "booking_date") {
             });
 
             // แปลง map → array เรียงตาม date
-            const data = Array.from(groupMap.entries())
+                const data = Array.from(groupMap.entries())
                 .sort(([a], [b]) => a.localeCompare(b))
                 .map(([key, bucket]) => {
                     let labelDate;
 
-                    if (granularity === "day") {
-                        // ใช้วันที่เดียวกับ key
-                        labelDate = new Date(key);
-                    } else if (granularity === "week") {
-                        // แสดงเป็นวันสุดท้ายที่มีออเดอร์ในสัปดาห์นั้น
-                        labelDate = bucket.maxDate;
-                    } else {
-                        // month: ใช้วันแรกของเดือน
-                        labelDate = new Date(key);
-                    }
+                    // ใช้วันที่เดียวกับ key (รายวัน)
+                    labelDate = new Date(key);
 
                     return {
                         label: format(labelDate, "yyyy-MM-dd"),
@@ -288,8 +268,31 @@ function transformRevenueTrend(apiResponse) {
             label: item.label,
             revenue: item.revenue,
         })),
-        granularity: apiResponse?.granularity ?? "month",
+        // backend ส่งรายวันเสมอ ตอนนี้ granularity จะเป็น "day"
+        granularity: apiResponse?.granularity ?? "day",
     };
+}
+
+async function fetchRevenueTrendLive(dateFrom, dateTo, mode = "booking_date") {
+    if (!dateFrom || !dateTo) {
+        return { data: [], granularity: "day" };
+    }
+
+    const token =
+        typeof window !== "undefined"
+            ? window.localStorage.getItem("token")
+            : null;
+
+    const res = await axios.get("/api/admin/analytics/revenue-trend", {
+        params: {
+            from: format(dateFrom, "yyyy-MM-dd"),
+            to: format(dateTo, "yyyy-MM-dd"),
+            mode,
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    return res.data;
 }
 
 // ── Occupancy & Guest mock ─────────────────────────────────────
@@ -465,6 +468,15 @@ function fetchOccupancyGuest(dateFrom, dateTo, viewBy = "overall") {
 function AnalyticDashboard() {
     const today = new Date();
     const currentYear = today.getFullYear();
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        document.documentElement.classList.add("allow-x-scroll");
+        document.body.classList.add("allow-x-scroll");
+        return () => {
+            document.documentElement.classList.remove("allow-x-scroll");
+            document.body.classList.remove("allow-x-scroll");
+        };
+    }, []);
     // ── Room Availability mock , transform -------------------------------------------------------
     const [roomPeriod, setRoomPeriod] = useState("month");
     const [roomData, setRoomData] = useState([]);
@@ -474,7 +486,7 @@ function AnalyticDashboard() {
     const [bookingData, setBookingData] = useState([]);
     const [bookingLoading, setBookingLoading] = useState(true);
     const [bookingUseLive, setBookingUseLive] = useState(false);
-    // ── Revenue Trend (date range, mock API) --------------------------------------------------------
+    // ── Revenue Trend (date range, mock + live API) --------------------------------------------------------
     const [revenueDateFrom, setRevenueDateFrom] = useState(
         () => new Date(currentYear, 0, 1)
     );
@@ -483,6 +495,7 @@ function AnalyticDashboard() {
     const [revenueGranularity, setRevenueGranularity] = useState("month");
     const [revenueData, setRevenueData] = useState([]);
     const [revenueLoading, setRevenueLoading] = useState(true);
+    const [revenueUseLive, setRevenueUseLive] = useState(false);
     // ── Occupancy & Guest ---------------------------------------------------------------------------
     const [occFrom, setOccFrom] = useState(() => new Date(2022, 0, 1));
     const [occTo, setOccTo] = useState(() => new Date(2022, 5, 28));
@@ -542,15 +555,34 @@ function AnalyticDashboard() {
     }, [bookingPeriod, bookingUseLive]);
 
     useEffect(() => {
-        setRevenueLoading(true);
-        fetchRevenueTrend(revenueDateFrom, revenueDateTo, revenueMode)
-            .then((res) => {
-                const { data, granularity } = transformRevenueTrend(res);
+        let cancelled = false;
+
+        async function loadRevenueTrend() {
+            try {
+                setRevenueLoading(true);
+
+                const res = revenueUseLive
+                    ? await fetchRevenueTrendLive(revenueDateFrom, revenueDateTo, revenueMode)
+                    : await fetchRevenueTrend(revenueDateFrom, revenueDateTo, revenueMode);
+
+                if (cancelled || !res) return;
+                const { data } = transformRevenueTrend(res);
                 setRevenueData(data);
-                setRevenueGranularity(granularity);
-            })
-            .finally(() => setRevenueLoading(false));
-    }, [revenueDateFrom, revenueDateTo, revenueMode]);
+            } catch {
+                if (cancelled) return;
+                setRevenueData([]);
+            } finally {
+                if (cancelled) return;
+                setRevenueLoading(false);
+            }
+        }
+
+        loadRevenueTrend();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [revenueDateFrom, revenueDateTo, revenueMode, revenueUseLive]);
 
     useEffect(() => {
         setOccLoading(true);
@@ -671,7 +703,10 @@ function AnalyticDashboard() {
                             onModeChange={setRevenueMode}
                             data={revenueData}
                             granularity={revenueGranularity}
+                            onGranularityChange={setRevenueGranularity}
                             loading={revenueLoading}
+                            useLive={revenueUseLive}
+                            onToggleLive={() => setRevenueUseLive((prev) => !prev)}
                         />
                     </section>
 
