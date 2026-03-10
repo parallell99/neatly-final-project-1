@@ -65,10 +65,13 @@ function Calendar({
           defaultClassNames.dropdowns
         ),
         dropdown_root: cn(
-          "relative has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md",
+          "relative border border-input shadow-xs rounded-md focus-within:outline-none focus-within:ring-0 [&_select]:focus:outline-none [&_select]:focus:ring-0 [&_select]:focus:border-input",
           defaultClassNames.dropdown_root
         ),
-        dropdown: cn("absolute bg-popover inset-0 opacity-0", defaultClassNames.dropdown),
+        dropdown: cn(
+          "absolute bg-popover inset-0 opacity-0 focus:outline-none focus:ring-0",
+          defaultClassNames.dropdown
+        ),
         caption_label: cn("select-none font-medium", captionLayout === "label"
           ? "text-sm"
           : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5", defaultClassNames.caption_label),

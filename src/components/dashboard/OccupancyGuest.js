@@ -24,11 +24,11 @@ import {
 import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
 import { Calendar } from "@/components/ui/booking/calendar";
 import {
-  Select as UiSelect,
-  SelectContent as UiSelectContent,
-  SelectItem as UiSelectItem,
-  SelectTrigger as UiSelectTrigger,
-  SelectValue as UiSelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import Button from "@/components/ui/buttons/buttons";
 import Cash from "@/assets/icons/cash.svg"
@@ -227,19 +227,19 @@ function OccupancyGuestCard({
           {/* View by */}
           <div className="flex flex-col gap-1 w-[144px]">
             <label className="body-2 text-gray-600">View by</label>
-            <UiSelect value={viewBy} onValueChange={onViewByChange}>
-              <UiSelectTrigger className="w-full min-h-[40px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900">
-                <UiSelectValue />
-              </UiSelectTrigger>
-              <UiSelectContent position="popper">
-                <UiSelectItem value="overall" className="body-2">
+            <Select value={viewBy} onValueChange={onViewByChange}>
+              <SelectTrigger className="w-full min-h-[40px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value="overall" className="body-2">
                   Overall
-                </UiSelectItem>
-                <UiSelectItem value="room_types" className="body-2">
+                </SelectItem>
+                <SelectItem value="room_types" className="body-2">
                   Room types
-                </UiSelectItem>
-              </UiSelectContent>
-            </UiSelect>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </header>

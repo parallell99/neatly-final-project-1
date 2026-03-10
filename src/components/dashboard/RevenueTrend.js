@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import {
   Select,
@@ -38,20 +38,27 @@ import Button from "@/components/ui/buttons/buttons";
  * @param {(mode: string) => void} props.onModeChange
  * @param {Array<{ label: string, revenue: number }>} props.data
  * @param {boolean} props.loading
- * @param {"day" | "week" | "month"} props.granularity
+ * @param {"day" | "month"} props.granularity
+ * @param {(g: "day" | "month") => void} props.onGranularityChange
+ * @param {boolean} props.useLive
+ * @param {() => void} props.onToggleLive
  */
 
 function formatChartLabel(isoDate, granularity) {
   const date = new Date(isoDate);
-  if (granularity === "day") return format(date, "d MMM ");      // "4 Mar"
-  if (granularity === "week") return format(date, "d MMM");      // "3 Mar"
-  if (granularity === "month") return format(date, "MMM");        // "Mar"
+  if (granularity === "day") return format(date, "d MMM ");
+  if (granularity === "month") return format(date, "MMM Y");
   return isoDate;
 }
 
 const REVENUE_MODES = [
   { id: "booking_date", label: "Booking Date" },
   { id: "stay_date", label: "Stay Date" },
+];
+
+const GRANULARITY_OPTIONS = [
+  { id: "day", label: "Day" },
+  { id: "month", label: "Month" },
 ];
 
 function RevenueTrendCard({
@@ -63,12 +70,87 @@ function RevenueTrendCard({
   onModeChange,
   data,
   loading,
-  granularity = "month",
+  granularity = "day",
+  onGranularityChange,
+  useLive,
+  onToggleLive,
 }) {
-  const formattedData = data.map((item) => ({
-    ...item,
-    label: formatChartLabel(item.label, granularity),
-  }));
+  // จำกัดจำนวน label บนแกน X ไม่ให้แน่นเกินไป (mobile < desktop)
+  const isClient = typeof window !== "undefined";
+  const MAX_X_TICKS = isClient && window.innerWidth < 768 ? 5 : 8;
+
+  // ถ้าช่วงไม่เกิน 30 วันหรืออยู่ภายในเดือนเดียวกัน → แสดงรายวันเสมอ
+  const effectiveGranularity = React.useMemo(() => {
+    if (!dateFrom || !dateTo) return granularity;
+    const days = differenceInDays(dateTo, dateFrom);
+    const sameMonth = format(dateFrom, "yyyy-MM") === format(dateTo, "yyyy-MM");
+    if (days <= 30 || sameMonth) return "day";
+    return granularity;
+  }, [dateFrom, dateTo, granularity]);
+
+  const formattedData = React.useMemo(() => {
+    if (effectiveGranularity === "day") {
+      return data.map((item) => {
+        const baseDate = new Date(item.label);
+        const rangeText = format(baseDate, "d MMM yyyy");
+        return {
+          ...item,
+          label: formatChartLabel(item.label, "day"),
+          rangeText,
+        };
+      });
+    }
+    // month: รวมรายวันเป็นรายเดือน แล้ว clamp ช่วงใน tooltip
+    const monthMap = new Map();
+    for (const item of data) {
+      const d = new Date(item.label);
+      const key = format(startOfMonth(d), "yyyy-MM-dd");
+      const prev = monthMap.get(key);
+      monthMap.set(key, (prev ?? 0) + (item.revenue ?? 0));
+    }
+    const months = [];
+    if (dateFrom && dateTo) {
+      let cursor = startOfMonth(dateFrom);
+      const endMonth = addMonths(startOfMonth(dateTo), 1);
+      while (cursor < endMonth) {
+        const key = format(cursor, "yyyy-MM-dd");
+        const revenue = monthMap.get(key) ?? 0;
+        let rangeStart = cursor;
+        let rangeEnd = endOfMonth(cursor);
+        if (dateFrom && rangeStart < dateFrom) rangeStart = dateFrom;
+        if (dateTo && rangeEnd > dateTo) rangeEnd = dateTo;
+        const rangeText = `${format(rangeStart, "d MMM yyyy")} - ${format(rangeEnd, "d MMM yyyy")}`;
+        months.push({
+          label: key,
+          revenue,
+          displayLabel: formatChartLabel(key, "month"),
+          rangeText,
+        });
+        cursor = addMonths(cursor, 1);
+      }
+    }
+    return months;
+  }, [data, effectiveGranularity, dateFrom, dateTo]);
+
+  const chartData = effectiveGranularity === "month"
+    ? formattedData.map((d) => ({ ...d, label: d.displayLabel }))
+    : formattedData;
+
+  const xTicks = React.useMemo(() => {
+    if (chartData.length <= MAX_X_TICKS) {
+      return chartData.map((d) => d.label);
+    }
+    const step = Math.ceil(chartData.length / MAX_X_TICKS);
+    const selected = [];
+    for (let i = 0; i < chartData.length; i += step) {
+      selected.push(chartData[i].label);
+    }
+    const lastLabel = chartData[chartData.length - 1].label;
+    if (!selected.includes(lastLabel)) {
+      selected.push(lastLabel);
+    }
+    return selected;
+  }, [chartData]);
 
   const handleExport = () => {
     const range = dateFrom && dateTo
@@ -77,7 +159,7 @@ function RevenueTrendCard({
     const modeLabel = mode === "stay_date" ? "Stay Date" : "Booking Date";
     const csv =
       `Period (${granularity} by ${modeLabel}),Revenue (THB)\n` +
-      formattedData.map((d) => `${d.label},${d.revenue}`).join("\n");
+      chartData.map((d) => `${d.label},${d.revenue}`).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -95,14 +177,28 @@ function RevenueTrendCard({
       aria-labelledby="revenue-trend-title"
     >
       <header className="flex flex-row items-center justify-between pb-[16px]">
-        <h2
-          id="revenue-trend-title"
-          className="headline-5 text-gray-600"
-        >
-          Revenue Trend
-        </h2>
+        <div className="flex items-center gap-[8px]">
+          <h2
+            id="revenue-trend-title"
+            className="headline-5 text-gray-600"
+          >
+            Revenue Trend
+          </h2>
+          {typeof useLive === "boolean" && typeof onToggleLive === "function" && (
+            <button
+              type="button"
+              onClick={onToggleLive}
+              className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors ${
+                useLive
+                  ? "bg-green-50 border-green-400 text-green-700"
+                  : "bg-gray-100 border-gray-300 text-gray-500"
+              }`}
+            >
+              {useLive ? "● Live DB" : "○ Mock"}
+            </button>
+          )}
+        </div>
         <Button buttonStyle="primary" onClick={handleExport} buttonText={"Export"} type="submit" className="w-[115px] h-[40px] lg:w-[167px]" />
-
       </header>
 
       
@@ -187,11 +283,11 @@ function RevenueTrendCard({
             </Popover>
           </div>
 
-          {/*view by */}
+          {/* View by: Booking Date / Stay Date */}
           <div className="flex flex-col gap-1 w-[144px]">
             <label className="body-2 text-gray-600">View by</label>
             <Select value={mode} onValueChange={onModeChange}>
-              <SelectTrigger className="w-full !h-[40px]  border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900">
+              <SelectTrigger className="w-full !h-[40px]  border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper" >
@@ -204,22 +300,40 @@ function RevenueTrendCard({
             </Select>
           </div>
 
+          {/* Granularity: Day / Month */}
+          <div className="flex flex-col gap-1 w-[144px]">
+            <label className="body-2 text-gray-600">Granularity</label>
+            <Select
+              value={granularity}
+              onValueChange={(v) => typeof onGranularityChange === "function" && onGranularityChange(v)}
+            >
+              <SelectTrigger className="w-full !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {GRANULARITY_OPTIONS.map((o) => (
+                  <SelectItem key={o.id} value={o.id} className="[&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900">
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
         </div>
 
-
-      
 
       <div className="w-full min-h-[240px] [&_*[tabindex]:focus]:outline-none">
         {loading ? (
           <RevenueTrendSkeleton />
-        ) : formattedData.length === 0 ? (
+        ) : chartData.length === 0 ? (
           <div className="flex items-center justify-center h-[240px] body-2 text-gray-400">
             No data for selected range
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={295}>
             <AreaChart
-              data={formattedData}
+              data={chartData}
               margin={{ top: 8, right: 0, left: -1, bottom: 8 }}
             >
               <defs>
@@ -253,6 +367,7 @@ function RevenueTrendCard({
                 tickLine={false}
                 tick={{ fill: "var(--gray-700)", fontSize: 12 }}
                 tickMargin={8}
+                ticks={xTicks}
               />
               <YAxis
                 axisLine={false}
@@ -342,10 +457,11 @@ function RevenueTrendSkeleton() {
 
 function RevenueTrendTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
-  const { label, revenue } = payload[0].payload;
+  const { label, revenue, rangeText } = payload[0].payload;
+  const header = rangeText || label;
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md px-3 py-2">
-      <span className="body-2 font-medium text-gray-700">{label}</span>
+      <span className="body-2 font-medium text-gray-700">{header}</span>
       <p className="body-2 text-gray-600">
         Revenue:{" "}
         <span className="font-medium text-gray-900">

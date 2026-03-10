@@ -60,7 +60,7 @@ function BookingTrendsByDayCard({
         </div>
         {/*period selection */}
         <Select value={periodId} onValueChange={onPeriodChange}>
-          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900" aria-label="Select period">
+          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300" aria-label="Select period">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent position="popper">

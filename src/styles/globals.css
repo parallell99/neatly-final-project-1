@@ -68,7 +68,6 @@
   --input: var(--gray-300);
   --border: var(--gray-300);
   --radius: 0.5rem;
-  
 
   /* Status colors */
   --status-blue-bg: #e3f2fd;
@@ -94,10 +93,10 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.52 0.20 29);
+  --destructive: oklch(0.52 0.2 29);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.67 0.20 41);
+  --ring: oklch(0.67 0.2 41);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -231,9 +230,15 @@
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
+}
+
+/* ปิด scroll แนวนอนทุกหน้ายกเว้นหน้าที่เพิ่ม class allow-x-scroll ให้ html/body (เช่น analytics) */
+html:not(.allow-x-scroll),
+body:not(.allow-x-scroll) {
   overflow-x: hidden;
 }
 
@@ -274,7 +279,6 @@ html, body {
   font-weight: 500;
   line-height: 1.25;
 }
-
 
 .headline-4 {
   font-family: var(--font-sans);
@@ -600,8 +604,16 @@ body {
 }
 
 @keyframes chatbot-typing {
-  0%, 60%, 100% { opacity: 0.35; transform: scale(0.9); }
-  30% { opacity: 1; transform: scale(1); }
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .chatbot-typing-dot {
@@ -622,4 +634,3 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
-
