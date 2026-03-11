@@ -24,36 +24,29 @@ async function buildQABlock() {
   return qaCache
 }
 
-/** Query ห้องว่างตามวันที่ */
-async function queryAvailableRooms(checkIn, checkOut) {
-  const result = await connectionPool.query(
-    `
-    SELECT
-      rp.id,
-      rp.title,
-      rp.description,
-      rp.price_per_night,
-      rp.image_main,
-      rt.name AS room_type_name
-    FROM room_properties rp
-    LEFT JOIN room_types rt ON rp.room_type_id = rt.id
-    WHERE rp.id NOT IN (
-      SELECT room_id FROM orders
-      WHERE NOT (check_out_date <= $1 OR check_in_date >= $2)
-        AND status NOT IN ('cancelled', 'refunded')
-    )
-    ORDER BY rp.price_per_night ASC
-    `,
-    [checkIn, checkOut]
-  )
-  return result.rows.map((r) => ({
-    id: r.id,
-    title: r.title,
-    description: r.description,
-    price_per_night: r.price_per_night,
-    image_main: r.image_main,
-    room_type: { name: r.room_type_name },
-  }))
+/** Query ห้องว่างตามวันที่ โดยเรียกผ่าน API /api/rooms/availablerooms */
+async function queryAvailableRooms(checkIn, checkOut, req) {
+  const protocol = req.headers["x-forwarded-proto"] ?? "http"
+  const host = req.headers.host
+  const url = `${protocol}://${host}/api/rooms/availablerooms?checkIn=${checkIn}&checkOut=${checkOut}`
+
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`availablerooms API error: ${response.status}`)
+  }
+  const json = await response.json()
+  const rows = json.data ?? []
+
+  return rows
+    .filter((r) => Number(r.available_rooms) > 0)
+    .map((r) => ({
+      id: r.room_type_id,
+      title: r.room_type_name,
+      description: r.description,
+      price_per_night: r.price_per_night,
+      image_main: r.image_main,
+      room_type: { name: r.room_type_name },
+    }))
 }
 
 /** Build system prompt รวม role + schema + Q&A */
@@ -80,8 +73,8 @@ function buildSystemPrompt(qaBlock) {
 4. ขอข้อมูลเพิ่มเติม (เมื่อลูกค้าถามห้องว่างแต่ไม่บอกวันที่ครบ เช่น ไม่มีปี หรือไม่มีวันเช็คเอาท์):
 {"type":"need_info","text":"...","missing":["check_in","check_out"]}
 
-5. ไม่มีข้อมูล (เมื่อคำถามนอกขอบเขต):
-{"type":"not_found","text":"ขออภัย ไม่มีข้อมูลในส่วนนี้ กรุณาติดต่อเจ้าหน้าที่โดยตรงค่ะ"}
+5. ไม่มีข้อมูล (เมื่อคำถามนอกขอบเขต) หรือ ไม่เข้าใจคำถาม:
+{"type":"not_found","text":"ขออภัย ไม่มีข้อมูลในส่วนนี้ กรุณาติดต่อเจ้าหน้าที่โดยตรงค่ะ / We apologize, but this information is currently unavailable. Please contact our staff directly for further assistance."}
 
 --- ข้อมูลโรงแรม ---
 ${qaBlock || "ไม่มีข้อมูล Q&A ในระบบ"}
@@ -257,16 +250,20 @@ export default async function handler(req, res) {
         })
       }
 
-      const rooms = await queryAvailableRooms(parsed.check_in, parsed.check_out)
+      const rooms = await queryAvailableRooms(parsed.check_in, parsed.check_out, req)
       if (rooms.length === 0) {
         return res.status(200).json({
           type: "message",
           text: `ขออภัยค่ะ ไม่มีห้องว่างในช่วงวันที่ ${parsed.check_in} ถึง ${parsed.check_out} กรุณาเลือกวันอื่นหรือติดต่อเจ้าหน้าที่ค่ะ`,
         })
       }
+      const formatDate = (dateStr) => {
+        const d = new Date(dateStr)
+        return d.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })
+      }
       return res.status(200).json({
         type: "room_type",
-        reply_title: parsed.reply_title ?? "ห้องที่ว่างในช่วงเวลานั้น",
+        reply_title: `ห้องพักระหว่างวันที่ ${formatDate(parsed.check_in)} - ${formatDate(parsed.check_out)} มีดังนี้`,
         button_name: "View Details",
         rooms,
       })
