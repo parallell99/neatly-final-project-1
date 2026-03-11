@@ -128,7 +128,12 @@ export default function PaymentMethodForm({
     const pct =
       p.discount_percentage != null ? Number(p.discount_percentage) : val;
     if (!Number.isFinite(pct) || pct <= 0) return sum;
-    return sum + (subtotal * pct) / 100;
+    const raw = (subtotal * pct) / 100;
+    const maxCapRaw = p.max_discount != null ? Number(p.max_discount) : null;
+    const maxCap =
+      maxCapRaw != null && Number.isFinite(maxCapRaw) && maxCapRaw > 0 ? maxCapRaw : null;
+    const capped = maxCap != null ? Math.min(raw, maxCap) : raw;
+    return sum + capped;
   }, 0);
 
   const subtotalAfterPercent = Math.max(0, subtotal - percentDiscount);
@@ -257,6 +262,7 @@ export default function PaymentMethodForm({
         discount_type: promo.discount_type || "percent",
         discount_value: Number(promo.discount_value) || 0,
         discount_percentage: promo.discount_percentage != null ? Number(promo.discount_percentage) : null,
+        max_discount: promo.max_discount != null ? Number(promo.max_discount) : null,
         is_stackable: promo.is_stackable === true,
       };
 

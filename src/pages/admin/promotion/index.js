@@ -37,6 +37,7 @@ export default function PromotionPage() {
     description: "",
     discount_type: "percent",
     discount_value: "",
+    max_discount: "",
     min_spend: "",
     start_date: "",
     end_date: "",
@@ -109,6 +110,7 @@ export default function PromotionPage() {
       description: "",
       discount_type: "percent",
       discount_value: "",
+      max_discount: "",
       min_spend: "",
       start_date: "",
       end_date: "",
@@ -127,6 +129,7 @@ export default function PromotionPage() {
       description: p.description ?? "",
       discount_type: (p.discount_type || "percent").toLowerCase() === "fixed" ? "fixed" : "percent",
       discount_value: p.discount_value != null ? String(p.discount_value) : "",
+      max_discount: p.max_discount != null ? String(p.max_discount) : "",
       min_spend: p.min_spend != null ? String(p.min_spend) : "",
       start_date: p.start_date ? String(p.start_date).slice(0, 10) : "",
       end_date: p.end_date ? String(p.end_date).slice(0, 10) : "",
@@ -156,6 +159,7 @@ export default function PromotionPage() {
         description: form.description.trim() || null,
         discount_type: form.discount_type,
         discount_value: Number(form.discount_value) || 0,
+        max_discount: form.max_discount ? Number(form.max_discount) : null,
         min_spend: form.min_spend ? Number(form.min_spend) : 0,
         start_date: form.start_date || null,
         end_date: form.end_date || null,
@@ -315,6 +319,7 @@ export default function PromotionPage() {
                         <th className="px-4 py-3 border-b border-gray-200">Code</th>
                         <th className="px-4 py-3 border-b border-gray-200">Name</th>
                         <th className="px-4 py-3 border-b border-gray-200">Discount</th>
+                        <th className="px-4 py-3 border-b border-gray-200">Max Discount</th>
                         <th className="px-4 py-3 border-b border-gray-200">Min Spend</th>
                         <th className="px-4 py-3 border-b border-gray-200">Start</th>
                         <th className="px-4 py-3 border-b border-gray-200">End</th>
@@ -328,69 +333,76 @@ export default function PromotionPage() {
                     <tbody>
                       {rows.length === 0 ? (
                         <tr>
-                          <td colSpan={11} className="p-8 text-center text-gray-500">
+                          <td colSpan={12} className="p-8 text-center text-gray-500">
                             No promotions found.
                           </td>
                         </tr>
                       ) : (
                         rows.map((p) => {
-                          const expired = isUnusable(p);
+                          const expired = isExpired(p);
+                          const unusable = isUnusable(p);
+                          const displayDisabled = p.is_active === false || expired;
                           return (
                           <tr
                             key={p.id}
-                            className={`border-b border-gray-100 ${expired ? "bg-gray-100" : "hover:bg-gray-50"}`}
+                            className={`border-b border-gray-100 ${unusable ? "bg-gray-100" : "hover:bg-gray-50"}`}
                           >
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : ""}`}>
-                              <span className={`font-mono font-medium ${expired ? "text-gray-400" : "text-gray-900"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : ""}`}>
+                              <span className={`font-mono font-medium ${unusable ? "text-gray-400" : "text-gray-900"}`}>
                                 {p.code ?? "—"}
                               </span>
-                              {expired && (
+                              {unusable && (
                                 <span className="ml-2 text-xs text-gray-500 font-medium">
-                                  {p.is_active === false ? "Disabled" : "Expired"}
+                                  Disabled
                                 </span>
                               )}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.name ?? "—"}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDiscount(p)}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                              {p.max_discount != null && Number(p.max_discount) > 0
+                                ? `${Number(p.max_discount).toLocaleString()} THB`
+                                : "0"}
+                            </td>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.min_spend ? `${Number(p.min_spend).toLocaleString()} THB` : "0"}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDate(p.start_date)}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDate(p.end_date)}
                             </td>
-                            <td className={`px-4 py-3 font-medium ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 font-medium ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {usageStats[p.id] ?? 0}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.usage_limit_per_user != null ? String(p.usage_limit_per_user) : "—"}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.global_usage_limit != null ? String(p.global_usage_limit) : "—"}
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : "text-gray-700"}`}>
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-sm font-medium ${p.is_active === false ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
-                                {p.is_active !== false ? "Enabled" : "Disabled"}
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                              <span className={`inline-block px-2.5 py-1 rounded-full text-sm font-medium ${displayDisabled ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
+                                {displayDisabled ? "Disabled" : "Enabled"}
                               </span>
                             </td>
-                            <td className={`px-4 py-3 ${expired ? "text-gray-400" : ""}`}>
+                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : ""}`}>
                               <div className="flex gap-2">
                                 <button
                                   type="button"
                                   onClick={() => openEdit(p)}
-                                  className={`p-2 rounded ${expired ? "text-gray-400 hover:text-gray-500 hover:bg-gray-200" : "text-orange-600 hover:text-orange-700 hover:bg-orange-50"}`}
+                                  className={`p-2 rounded ${unusable ? "text-gray-400 hover:text-gray-500 hover:bg-gray-200" : "text-orange-600 hover:text-orange-700 hover:bg-orange-50"}`}
                                   title="Edit"
                                   aria-label="Edit promotion"
                                 >
                                   <Pencil className="w-4 h-4" aria-hidden />
                                 </button>
-                                {p.is_active !== false ? (
+                                {!displayDisabled ? (
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -403,7 +415,7 @@ export default function PromotionPage() {
                                   >
                                     <XCircle className="w-4 h-4" aria-hidden />
                                   </button>
-                                ) : (
+                                ) : !expired && p.is_active === false ? (
                                   <button
                                     type="button"
                                     onClick={() => {
@@ -416,7 +428,7 @@ export default function PromotionPage() {
                                   >
                                     <CheckCircle className="w-4 h-4" aria-hidden />
                                   </button>
-                                )}
+                                ) : null}
                               </div>
                             </td>
                           </tr>

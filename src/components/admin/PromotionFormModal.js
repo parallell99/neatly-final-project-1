@@ -112,6 +112,20 @@ export default function PromotionFormModal({
             </div>
           </div>
           <div>
+            <label htmlFor="promo-max-discount" className="block text-sm font-medium text-gray-700 mb-1">Max Discount (THB)</label>
+            <input
+              id="promo-max-discount"
+              type="number"
+              min={0}
+              step={0.01}
+              value={form.max_discount ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, max_discount: e.target.value }))}
+              className="w-full h-10 px-3 py-2 border border-gray-300 rounded bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+              placeholder="—"
+            />
+            <p className="text-xs text-gray-500 mt-0.5">Optional. Leave blank for no cap.</p>
+          </div>
+          <div>
             <label htmlFor="promo-min-spend" className="block text-sm font-medium text-gray-700 mb-1">Min Spend (THB)</label>
             <input
               id="promo-min-spend"

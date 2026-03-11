@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
       const { data, error } = await supabaseAdmin
         .from("promotions")
-        .select("id, name, code, description, discount_type, discount_value, min_spend, start_date, end_date, is_stackable, global_usage_limit, usage_limit_per_user, is_active, created_at")
+        .select("id, name, code, description, discount_type, discount_value, max_discount, min_spend, start_date, end_date, is_stackable, global_usage_limit, usage_limit_per_user, is_active, created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -26,6 +26,7 @@ export default async function handler(req, res) {
         description,
         discount_type,
         discount_value,
+        max_discount,
         min_spend,
         start_date,
         end_date,
@@ -56,6 +57,7 @@ export default async function handler(req, res) {
         description: description?.trim() || null,
         discount_type: (discount_type || "percent").toLowerCase() === "fixed" ? "fixed" : "percent",
         discount_value: Number(discount_value) ?? 0,
+        max_discount: max_discount != null && max_discount !== "" ? Number(max_discount) : null,
         min_spend: min_spend != null ? Number(min_spend) : 0,
         start_date: start_date || null,
         end_date: end_date || null,
@@ -91,6 +93,7 @@ export default async function handler(req, res) {
       if (fields.description !== undefined) update.description = fields.description?.trim() || null;
       if (fields.discount_type !== undefined) update.discount_type = (fields.discount_type || "percent").toLowerCase() === "fixed" ? "fixed" : "percent";
       if (fields.discount_value !== undefined) update.discount_value = Number(fields.discount_value) ?? 0;
+      if (fields.max_discount !== undefined) update.max_discount = fields.max_discount != null && fields.max_discount !== "" ? Number(fields.max_discount) : null;
       if (fields.min_spend !== undefined) update.min_spend = Number(fields.min_spend) ?? 0;
       if (fields.start_date !== undefined) update.start_date = fields.start_date || null;
       if (fields.end_date !== undefined) update.end_date = fields.end_date || null;

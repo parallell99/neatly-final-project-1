@@ -155,6 +155,11 @@ export default async function handler(req, res) {
     const discountType = (promotion.discount_type || "percent").toLowerCase();
     const discountValue = Number(promotion.discount_value) || 0;
     const discountPct = promotion.discount_percentage != null ? Number(promotion.discount_percentage) : null;
+    const maxDiscountRaw = promotion.max_discount != null ? Number(promotion.max_discount) : null;
+    const maxDiscount =
+      maxDiscountRaw != null && Number.isFinite(maxDiscountRaw) && maxDiscountRaw > 0
+        ? maxDiscountRaw
+        : null;
 
     let discountAmount = 0;
     if (discountType === "fixed") {
@@ -163,6 +168,10 @@ export default async function handler(req, res) {
       const pct = discountPct != null ? discountPct : discountValue;
       discountAmount = (subtotalNum * pct) / 100;
     }
+    if (maxDiscount != null) {
+      discountAmount = Math.min(discountAmount, maxDiscount);
+    }
+    discountAmount = Math.min(discountAmount, Math.max(0, subtotalNum));
     discountAmount = Math.round(discountAmount * 100) / 100;
 
     return res.status(200).json({
