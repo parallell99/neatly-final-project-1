@@ -1,5 +1,7 @@
 "use client";
 
+import Button from "../ui/buttons/buttons";
+
 export default function PromotionEnableDisableModal({
   open,
   promotion,
@@ -33,22 +35,22 @@ export default function PromotionEnableDisableModal({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 disabled:opacity-50 hover:cursor-pointer"
           >
             Cancel
           </button>
-          <button
+          <Button
             type="button"
             onClick={onConfirm}
             disabled={loading}
+            buttonStyle="primary"
+            buttonText={loading ? (isDisable ? "Disabling..." : "Enabling...") : isDisable ? "Disable" : "Enable"}
             className={`px-4 py-2 rounded font-medium disabled:opacity-50 ${
               isDisable
-                ? "bg-orange-600 text-white hover:bg-orange-700"
-                : "bg-green-600 text-white hover:bg-green-700"
+                ? "text-white hover:bg-orange-700"
+                : "text-white hover:bg-green-700"
             }`}
-          >
-            {loading ? (isDisable ? "Disabling..." : "Enabling...") : isDisable ? "Disable" : "Enable"}
-          </button>
+          />
         </div>
       </div>
     </div>

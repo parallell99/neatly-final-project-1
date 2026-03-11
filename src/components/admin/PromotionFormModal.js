@@ -9,6 +9,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Button from "../ui/buttons/buttons";
 
 function parseDateStr(str) {
   if (!str) return undefined;
@@ -121,7 +122,7 @@ export default function PromotionFormModal({
               value={form.max_discount ?? ""}
               onChange={(e) => setForm((f) => ({ ...f, max_discount: e.target.value }))}
               className="w-full h-10 px-3 py-2 border border-gray-300 rounded bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="—"
+              placeholder="0"
             />
             <p className="text-xs text-gray-500 mt-0.5">Optional. Leave blank for no cap.</p>
           </div>
@@ -236,7 +237,7 @@ export default function PromotionFormModal({
               type="checkbox"
               checked={form.is_stackable}
               onChange={(e) => setForm((f) => ({ ...f, is_stackable: e.target.checked }))}
-              className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+              className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500 hover:cursor-pointer"
             />
             <label htmlFor="promo-stackable" className="text-sm text-gray-700">Stackable with other promotions</label>
           </div>
@@ -244,17 +245,17 @@ export default function PromotionFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100"
+              className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 hover:cursor-pointer"
             >
               Cancel
             </button>
-            <button
+            <Button
               type="submit"
+              buttonStyle="primary"
               disabled={saving}
-              className="px-4 py-2 rounded bg-orange-600 text-white font-medium hover:bg-orange-700 disabled:opacity-50"
-            >
-              {saving ? "Saving..." : (editing ? "Update" : "Create")}
-            </button>
+              buttonText={saving ? "Saving..." : (editing ? "Update" : "Create")}
+              className="px-4 py-2 rounded text-white font-medium disabled:opacity-50 hover:cursor-pointer"
+            />
           </div>
         </form>
       </div>

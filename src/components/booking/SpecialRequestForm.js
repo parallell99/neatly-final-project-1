@@ -7,7 +7,7 @@ import BookingDetailCard from "@/components/booking/BookingDetailCard";
 const inputBase =
   "w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white";
 const checkboxClass =
-  "size-5 rounded border-[#D6D9E4] text-[#E76B39] focus:ring-[#E76B39]";
+  "size-5 rounded border-[#D6D9E4] text-[#E76B39] focus:ring-[#E76B39] hover:cursor-pointer";
 
 export default function SpecialRequestForm({
   orderId,
@@ -143,7 +143,7 @@ export default function SpecialRequestForm({
           {standardOptions.map((opt) => (
             <label
               key={opt.id}
-              className="flex items-center gap-3 cursor-pointer font-sans text-base text-[#2A2E3F]"
+              className="flex items-center gap-3 cursor-pointer font-sans text-base text-gray-700"
             >
               <input
                 type="checkbox"
@@ -168,7 +168,7 @@ export default function SpecialRequestForm({
           {specialOptions.map((opt) => (
             <label
               key={opt.id}
-              className="flex items-center gap-3 cursor-pointer font-sans text-base text-[#2A2E3F]"
+              className="flex items-center gap-3 cursor-pointer font-sans text-base text-gray-700"
             >
               <input
                 type="checkbox"

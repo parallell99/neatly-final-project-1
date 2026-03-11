@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { Copy, Check } from "lucide-react";
+import Button from "@/components/ui/buttons/buttons";
 
 const COPIED_DURATION_MS = 2000;
 
@@ -91,15 +92,15 @@ export default function PromotionCard({ promotion }) {
       )}
 
       {/* Copy Code button */}
-      <button
+      <Button
         type="button"
         onClick={handleCopy}
         className="mt-auto flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg font-medium text-sm transition-colors bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
         aria-label={copied ? "Code copied" : "Copy promotion code"}
-      >
-        <Copy className="w-4 h-4 shrink-0" aria-hidden />
-        <span>Copy Code</span>
-      </button>
+        icon={Copy}
+        buttonText="Copy Code"
+        buttonStyle="primary"
+      />
     </article>
   );
 }
