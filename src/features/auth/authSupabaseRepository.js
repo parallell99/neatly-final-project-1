@@ -1,13 +1,10 @@
 // providers/authProvider.js
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-/**
- * Auth Provider
- * จัดการการเชื่อมต่อกับ Supabase Auth โดยตรง
- */
+
 
 async function signUp(email, password, metadata = {}) {
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await supabaseAdmin.auth.signUp({
     email,
     password,
     options: { data: metadata },
@@ -22,7 +19,7 @@ async function signUp(email, password, metadata = {}) {
 
 async function signIn(email, password) {
   const { data, error } =
-    await supabase.auth.signInWithPassword({
+    await supabaseAdmin.auth.signInWithPassword({
       email,
       password,
     });
@@ -35,7 +32,7 @@ async function signIn(email, password) {
 }
 
 async function signOut() {
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabaseAdmin.auth.signOut();
 
   if (error) {
     const err = new Error(error.message);
@@ -45,7 +42,7 @@ async function signOut() {
 }
 
 async function getUserFromSupabase(token) {
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
   if (error) throw error;
   return user;
 
