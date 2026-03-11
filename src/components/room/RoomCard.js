@@ -253,6 +253,10 @@ export default function RoomCard({ room, searchParams, onClick }) {
                 router.push("/login");
                 return;
             }
+            console.log("room.room_type_id 1",room.room_type_id);
+            console.log("searchParams.checkIn 1",searchParams.checkIn);
+            console.log("searchParams.checkOut 1",searchParams.checkOut);
+            console.log("bookingQuantity 1",bookingQuantity);
 
             await axios.post(
                 "/api/rooms/order",
@@ -266,6 +270,10 @@ export default function RoomCard({ room, searchParams, onClick }) {
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
+            console.log("room.room_type_id 2",room.room_type_id);
+            console.log("searchParams.checkIn 2",searchParams.checkIn);
+            console.log("searchParams.checkOut 2",searchParams.checkOut);
+            console.log("bookingQuantity 2",bookingQuantity);
 
             // สำเร็จ → ไปหน้า bookingไปหน้าคุณโม
             router.push(`/booking`);
