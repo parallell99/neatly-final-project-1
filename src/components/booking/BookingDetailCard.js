@@ -144,12 +144,14 @@ export default function BookingDetailCard({
   );
 
   // ส่วนลดเป็นเปอร์เซ็นต์จาก promotion (discount_percentage)
-  const promoPercent = Number(promotionDiscount || 0) || 0;
+  const promoPercentRaw = Number(promotionDiscount || 0) || 0;
+  const promoPercent = Math.min(100, Math.max(0, promoPercentRaw));
   const subtotal = baseRoomPrice + extrasTotal;
-  const discountAmount =
-    promoPercent > 0 ? (subtotal * promoPercent) / 100 : 0;
+  const discountAmountRaw =
+    promoPercent > 0 && subtotal > 0 ? (subtotal * promoPercent) / 100 : 0; //กันราคาติดลบ
+  const discountAmount = Math.min(subtotal, Math.max(0, discountAmountRaw)); //ต่อให้ส่วนลดลดมากกว่าราคารวม ส่วนลดก็จะลดได้มาสุดเท่าราคารวม แต่เนื่องจากมี field max_discount แล้ว เพื่อกันไม่ให้ลดมากเกินไป
 
-  const totalNumber = Math.max(0, subtotal - discountAmount);
+  const totalNumber = subtotal - discountAmount; //ดังนั้นราคารวมไม่มีวันติดลบ
 
   const total =
     totalNumber > 0
