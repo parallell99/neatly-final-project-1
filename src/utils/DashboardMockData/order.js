@@ -1,5 +1,16 @@
-// Mock order generator for analytics dashboard revenue trend.
-// Generates deterministic-looking seasonal revenue data between 2025 and today.
+// Mock order generator for analytics dashboard (Revenue Trend, Occupancy & Guest).
+// Room types ตรงกับ DB จริง (room_types table).
+export const ROOM_TYPES = [
+  { id: "b2000001-0000-0000-0000-000000000001", name: "Superior Garden View", total_rooms: 3 },
+  { id: "b2000001-0000-0000-0000-000000000002", name: "Deluxe", total_rooms: 3 },
+  { id: "b2000001-0000-0000-0000-000000000003", name: "Superior", total_rooms: 4 },
+  { id: "b2000001-0000-0000-0000-000000000004", name: "Supreme", total_rooms: 2 },
+  { id: "b2000001-0000-0000-0000-000000000005", name: "Premium Sea View", total_rooms: 3 },
+  { id: "b2000001-0000-0000-0000-000000000006", name: "Suite", total_rooms: 2 },
+];
+
+/** @deprecated Use ROOM_TYPES. Kept for backward compatibility. */
+export const ROOM_TYPE_IDS = ROOM_TYPES.map((rt) => rt.id);
 
 // ── Seasonal config ────────────────────────────────────────────
 // multiplier บอกว่าช่วงนี้ busy แค่ไหน เทียบกับ baseline
@@ -24,6 +35,10 @@ const WEEKEND_PRICE_BOOST = 1.15;
 const BASE_ROOMS_PER_DAY = 10;
 const BASE_PRICE_MIN = 2000;
 const BASE_PRICE_MAX = 4500;
+const MIN_STAY_NIGHTS = 1;
+const MAX_STAY_NIGHTS = 5;
+const CARD_PROBABILITY = 0.7;
+const RETURNING_GUEST_PROBABILITY = 0.12;
 
 export function generateMockOrders(year) {
   const orders = [];
@@ -31,6 +46,7 @@ export function generateMockOrders(year) {
   const today = new Date();
   const isCurrentYear = year === today.getFullYear();
   const endDate = isCurrentYear ? today : new Date(`${year}-12-31`);
+  const yearEnd = new Date(`${year}-12-31`);
 
   for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
     const month = date.getMonth() + 1;
@@ -49,13 +65,22 @@ export function generateMockOrders(year) {
       const checkInOffset = Math.floor(Math.random() * 30);
       const checkInDate = new Date(date);
       checkInDate.setDate(checkInDate.getDate() + checkInOffset);
+      if (checkInDate > yearEnd) continue;
+
+      const stayNights = MIN_STAY_NIGHTS + Math.floor(Math.random() * (MAX_STAY_NIGHTS - MIN_STAY_NIGHTS + 1));
+      const checkOutDate = new Date(checkInDate);
+      checkOutDate.setDate(checkOutDate.getDate() + stayNights);
 
       const basePrice = BASE_PRICE_MIN + Math.random() * (BASE_PRICE_MAX - BASE_PRICE_MIN);
 
       orders.push({
-        created_at:    date.toISOString().split("T")[0],
+        created_at: date.toISOString().split("T")[0],
         check_in_date: checkInDate.toISOString().split("T")[0],
-        total_price:   Number((basePrice * priceMult).toFixed(2)),
+        check_out_date: checkOutDate.toISOString().split("T")[0],
+        total_price: Number((basePrice * priceMult).toFixed(2)),
+        room_type_id: ROOM_TYPES[Math.floor(Math.random() * ROOM_TYPES.length)].id,
+        payment_method: Math.random() < CARD_PROBABILITY ? "card" : "cash",
+        is_returning_guest: Math.random() < RETURNING_GUEST_PROBABILITY,
       });
     }
   }
