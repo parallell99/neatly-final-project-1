@@ -26,6 +26,12 @@ function formatPriceInput(value) {
   return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function parsePriceString(str) {
+  if (str == null || String(str).trim() === "") return null;
+  const n = parseFloat(String(str).replace(/,/g, "").trim());
+  return Number.isNaN(n) ? null : n;
+}
+
 export default function EditRoom() {
   const router = useRouter();
   const { id } = router.query;
@@ -263,6 +269,22 @@ export default function EditRoom() {
     if (!form.pricePerNight.trim()) {
       alert("Please fill in Price per Night.");
       return;
+    }
+    const priceNum = parsePriceString(form.pricePerNight);
+    if (priceNum !== null && priceNum < 0) {
+      alert("Price per Night cannot be negative.");
+      return;
+    }
+    if (form.promotionChecked && form.promotionPrice.trim()) {
+      const promoNum = parsePriceString(form.promotionPrice);
+      if (promoNum !== null && promoNum < 0) {
+        alert("Promotion price cannot be negative.");
+        return;
+      }
+      if (promoNum !== null && priceNum !== null && promoNum > priceNum) {
+        alert("Promotion price must not be higher than Price per Night.");
+        return;
+      }
     }
     setSaving(true);
     setSaveError(null);
@@ -507,7 +529,12 @@ export default function EditRoom() {
                         type="text"
                         inputMode="numeric"
                         value={form.pricePerNight}
-                        onChange={(e) => setForm((f) => ({ ...f, pricePerNight: e.target.value }))}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const num = parsePriceString(raw);
+                          if (num !== null && num < 0) return;
+                          setForm((f) => ({ ...f, pricePerNight: raw }));
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         placeholder="e.g. 3,000.00"
                       />
@@ -529,11 +556,32 @@ export default function EditRoom() {
                         type="text"
                         inputMode="numeric"
                         value={form.promotionPrice}
-                        onChange={(e) => setForm((f) => ({ ...f, promotionPrice: e.target.value }))}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          const num = parsePriceString(raw);
+                          if (num !== null && num < 0) return;
+                          setForm((f) => {
+                            const priceNum = parsePriceString(f.pricePerNight);
+                            if (num !== null && priceNum !== null && num > priceNum) return f;
+                            return { ...f, promotionPrice: raw };
+                          });
+                        }}
                         disabled={!form.promotionChecked}
                         className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:text-gray-500"
                         placeholder="e.g. 2,500.00"
                       />
+                      {form.promotionChecked && form.promotionPrice && (() => {
+                        const promoNum = parsePriceString(form.promotionPrice);
+                        const priceNum = parsePriceString(form.pricePerNight);
+                        if (promoNum != null && priceNum != null && promoNum > priceNum) {
+                          return (
+                            <p className="mt-1 text-sm text-red-600">
+                              Promotion price must not be higher than Price per Night.
+                            </p>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                   <div>
