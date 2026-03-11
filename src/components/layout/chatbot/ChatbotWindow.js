@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/router"
 import axios from "axios"
 import ChatbotLogo from "@/assets/icons/chatbot_inside_logo.svg"
 import CirLogo from "@/assets/icons/circlelogo-chatbot.svg?url"
@@ -6,7 +7,13 @@ import StarLogo from "@/assets/icons/starlogo-chatbot.svg?url"
 import SendLogo from "@/assets/icons/send.svg"
 import { ChatbotResponse } from "@/components/layout/chatbot/ChatbotResponse.js"
 
+function createSlug(title) {
+  if (!title || typeof title !== "string") return ""
+  return title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")
+}
+
 export default function ChatbotWindow({ onClose }) {
+  const router = useRouter()
   const [messages, setMessages] = useState([])
   const [inputValue, setInputValue] = useState("")
   const [topics, setTopics] = useState([])
@@ -86,14 +93,22 @@ export default function ChatbotWindow({ onClose }) {
     }
     if (item.reply_format === "Room type" && item.reply_title) {
       setIsTyping(true)
-      axios.get("/api/chatbot/all-room")
+      axios.get("/api/rooms/availablerooms")
         .then((res) => {
-          const allRooms = res.data?.data ?? []
+          const allRoomTypes = res.data?.data ?? []
           const roomTypeNames = Array.isArray(item.roomTypes) ? item.roomTypes.map((n) => String(n).trim().toLowerCase()) : []
-          const rooms =
+          const filtered =
             roomTypeNames.length > 0
-              ? allRooms.filter((r) => r?.room_type?.name && roomTypeNames.includes(String(r.room_type.name).trim().toLowerCase()))
-              : allRooms
+              ? allRoomTypes.filter((r) => r?.room_type_name && roomTypeNames.includes(String(r.room_type_name).trim().toLowerCase()))
+              : allRoomTypes
+          const rooms = filtered.map((r) => ({
+            id: r.room_type_id,
+            title: r.room_type_name,
+            description: r.description,
+            price_per_night: r.price_per_night,
+            image_main: r.image_main,
+            room_type: { name: r.room_type_name },
+          }))
           setMessages((prev) => [
             ...prev,
             {
@@ -149,7 +164,10 @@ export default function ChatbotWindow({ onClose }) {
           <img src={StarLogo} className="absolute left-0 lg:hidden w-auto h-auto" alt="" aria-hidden />
           <img src={StarLogo} className="absolute right-5 bottom-[15%] lg:hidden w-auto h-auto" alt="" aria-hidden />
           <img src={StarLogo} className="absolute left-4 bottom-[15%] scale-200 w-auto h-auto" alt="" aria-hidden />
-          <ChatbotResponse messages={messages} isTyping={isTyping} onOptionSelect={handleOptionSelect} onRoomViewDetails={(room) => { /* optional: navigate to room detail */ }} />
+          <ChatbotResponse messages={messages} isTyping={isTyping} onOptionSelect={handleOptionSelect} onRoomViewDetails={(room) => {
+              const slug = createSlug(room.title ?? room.room_type?.name ?? "")
+              if (slug) router.push(`/rooms/${slug}`)
+            }} />
         </section>
         {/* menu suggestions bar */}
         <section className="flex gap-2 px-4 py-2 overflow-x-auto">

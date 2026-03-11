@@ -52,6 +52,7 @@ export default function ChatbotAdmin() {
   const [savedAutoReply, setSavedAutoReply] = useState("")
 
   const [cards, setCards] = useState([])
+  const [searchQuery, setSearchQuery] = useState("")
   const [editingCount, setEditingCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -210,6 +211,10 @@ export default function ChatbotAdmin() {
     }
   }
 
+  const filteredCards = searchQuery.trim()
+    ? cards.filter((c) => c.data?.topic?.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    : cards
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
   const [activeId, setActiveId] = useState(null)
   const activeCard = cards.find((c) => c.id === activeId)
@@ -319,11 +324,35 @@ export default function ChatbotAdmin() {
                 )}
               </div>
               {/* section Suggestion menu & Response */}
-              <span className="h-[54px] headline-5 text-gray-600 flex items-end border-t border-gray-300">Suggestion menu & Response</span>
+              <div className="flex items-end justify-between border-t border-gray-300">
+                <span className="h-[54px] headline-5 text-gray-600 flex items-end">Suggestion menu & Response</span>
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Search topic..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 pr-4 py-2 text-[14px] border border-gray-300 rounded-[4px] outline-none focus:border-orange-400 w-[220px] bg-white"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="flex flex-col gap-5">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                  <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                    {cards.map((card) => (
+                  <SortableContext items={filteredCards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+                    {filteredCards.length === 0 && searchQuery.trim() ? (
+                      <p className="text-center text-gray-400 py-6">No suggestion menu found for &quot;{searchQuery}&quot;</p>
+                    ) : filteredCards.map((card) => (
                       <CardResponseMenu
                         key={card.id}
                         id={card.id}
@@ -335,7 +364,8 @@ export default function ChatbotAdmin() {
                         }}
                         isSaving={savingCardId === card.id}
                       />
-                    ))}
+                    ))
+                    }
                   </SortableContext>
                   <DragOverlay>
                     {activeCard ? (
