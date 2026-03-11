@@ -124,7 +124,7 @@ export default function Register() {
         const file = data.profilePicture;
 
         const fileExt = file.name.split(".").pop();
-        const filePath = `users/${userId}/avatar.${fileExt}`;
+        const filePath = `users/${userId}/avatar.${fileExt}?v=${Date.now()}`;
 
         const { error: uploadError } = await supabase.storage
           .from("nealty-profile-image")
