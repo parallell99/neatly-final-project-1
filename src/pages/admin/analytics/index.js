@@ -17,8 +17,19 @@ import Booking from "@/assets/icons/booking.svg";
 import Site from "@/assets/icons/site.svg";
 import Wallet from "@/assets/icons/wallet.svg";
 
-import { format, startOfDay, addDays, differenceInDays } from "date-fns";
-import { MOCK_ORDERS } from "@/utils/DashboardMockData/order";
+import {
+  format,
+  parseISO,
+  startOfDay,
+  addDays,
+  differenceInDays,
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+  eachDayOfInterval,
+  eachMonthOfInterval,
+} from "date-fns";
+import { MOCK_ORDERS, ROOM_TYPES } from "@/utils/DashboardMockData/order";
 import { useTrafficRealtime } from "@/hooks/useTrafficRealtime";
 
 function createSlug(title) {
@@ -303,96 +314,116 @@ async function fetchRevenueTrendLive(dateFrom, dateTo, mode = "booking_date") {
     return res.data;
 }
 
-// ── Occupancy & Guest mock ─────────────────────────────────────
-const OCCUPANCY_GUEST_MOCK = {
-    // รวมทุกประเภทห้อง
-    occupancy: {
-        points: [
-            { date: "2022-01-01", occupancyPercent: 32 },
-            { date: "2022-02-01", occupancyPercent: 45 },
-            { date: "2022-03-01", occupancyPercent: 68 },
-            { date: "2022-04-01", occupancyPercent: 78 },
-            { date: "2022-05-01", occupancyPercent: 54 },
-            { date: "2022-06-01", occupancyPercent: 82 },
-        ],
-    },
-    // แยกตามประเภทห้อง
-    occupancyByRoomType: {
-        roomTypes: [
-            { id: "superior_garden_view", label: "Superior Garden View" },
-            { id: "deluxe", label: "Deluxe" },
-            { id: "superior", label: "Superior" },
-            { id: "supreme", label: "Supreme" },
-        ],
-        monthly: [
-            {
-                month: "2022-01-01",
-                occupancyPercentByRoomType: {
-                    superior_garden_view: 40,
-                    deluxe: 55,
-                    superior: 30,
-                    supreme: 25,
-                },
-            },
-            {
-                month: "2022-02-01",
-                occupancyPercentByRoomType: {
-                    superior_garden_view: 35,
-                    deluxe: 48,
-                    superior: 28,
-                    supreme: 22,
-                },
-            },
-            {
-                month: "2022-03-01",
-                occupancyPercentByRoomType: {
-                    superior_garden_view: 60,
-                    deluxe: 72,
-                    superior: 50,
-                    supreme: 45,
-                },
-            },
-            {
-                month: "2022-04-01",
-                occupancyPercentByRoomType: {
-                    superior_garden_view: 84,
-                    deluxe: 78,
-                    superior: 62,
-                    supreme: 58,
-                },
-            },
-            {
-                month: "2022-05-01",
-                occupancyPercentByRoomType: {
-                    superior_garden_view: 52,
-                    deluxe: 60,
-                    superior: 46,
-                    supreme: 40,
-                },
-            },
-            {
-                month: "2022-06-01",
-                occupancyPercentByRoomType: {
-                    superior_garden_view: 80,
-                    deluxe: 70,
-                    superior: 65,
-                    supreme: 60,
-                },
-            },
-        ],
-    },
-    guestVisit: {
-        totalGuests: 985,
+// ── Occupancy & Guest (computed from MOCK_ORDERS) ────────────────
+// จำนวนห้องรวมจาก DB จริง (room_types.total_rooms)
+const TOTAL_ROOMS = ROOM_TYPES.reduce((sum, rt) => sum + (rt.total_rooms ?? 0), 0);
+
+function isOrderActiveOnDay(order, day) {
+    const ci = parseISO(order.check_in_date);
+    const co = parseISO(order.check_out_date);
+    return day >= ci && day < co;
+}
+
+function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
+    const fromStr = format(dateFrom, "yyyy-MM-dd");
+    const toStr = format(dateTo, "yyyy-MM-dd");
+
+    const ordersList = MOCK_ORDERS.filter((o) => {
+        if (!o.check_in_date || !o.check_out_date) return false;
+        return o.check_in_date < toStr && o.check_out_date > fromStr;
+    });
+
+    const roomTypesMeta = ROOM_TYPES.map((rt) => ({
+        id: rt.id,
+        label: rt.name ?? rt.id,
+        totalRooms: rt.total_rooms ?? 0,
+    }));
+
+    const months = eachMonthOfInterval({ start: dateFrom, end: dateTo });
+
+    const occupancyPoints =
+        granularity === "day"
+            ? (() => {
+                  const allDays = eachDayOfInterval({ start: dateFrom, end: dateTo });
+                  return allDays.map((day) => {
+                      const raw = ordersList.filter((o) => isOrderActiveOnDay(o, day)).length;
+                      const occupied = Math.min(raw, TOTAL_ROOMS);
+                      return {
+                          date: format(day, "yyyy-MM-dd"),
+                          occupancyPercent:
+                              TOTAL_ROOMS > 0 ? Math.min(100, Math.round((occupied / TOTAL_ROOMS) * 100)) : 0,
+                      };
+                  });
+              })()
+            : months.map((monthStart) => {
+                  const monthEnd = endOfMonth(monthStart);
+                  const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+                  let totalPercent = 0;
+                  for (const day of allDays) {
+                      const raw = ordersList.filter((o) => isOrderActiveOnDay(o, day)).length;
+                      const occupied = Math.min(raw, TOTAL_ROOMS);
+                      totalPercent += TOTAL_ROOMS > 0 ? (occupied / TOTAL_ROOMS) * 100 : 0;
+                  }
+                  return {
+                      date: format(monthStart, "yyyy-MM-01"),
+                      occupancyPercent: allDays.length > 0 ? Math.min(100, Math.round(totalPercent / allDays.length)) : 0,
+                  };
+              });
+
+    const occupancyByRoomTypeMonthly = months.map((monthStart) => {
+        const monthEnd = endOfMonth(monthStart);
+        const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+        const occupancyPercentByRoomType = {};
+        for (const rt of roomTypesMeta) {
+            const rtOrders = ordersList.filter((o) => o.room_type_id === rt.id);
+            let totalPercent = 0;
+            for (const day of allDays) {
+                const raw = rtOrders.filter((o) => isOrderActiveOnDay(o, day)).length;
+                const occupied = Math.min(raw, rt.totalRooms);
+                totalPercent += rt.totalRooms > 0 ? (occupied / rt.totalRooms) * 100 : 0;
+            }
+            occupancyPercentByRoomType[rt.id] =
+                allDays.length > 0 ? Math.min(100, Math.round(totalPercent / allDays.length)) : 0;
+        }
+        return { month: format(monthStart, "yyyy-MM-01"), occupancyPercentByRoomType };
+    });
+
+    const ordersInRange = ordersList.filter((o) => {
+        const ci = parseISO(o.check_in_date);
+        return ci >= dateFrom && ci <= dateTo;
+    });
+
+    const returningCount = ordersInRange.filter((o) => o.is_returning_guest === true).length;
+    const newCount = ordersInRange.length - returningCount;
+    const totalGuests = ordersInRange.length;
+    const guestVisit = {
+        totalGuests,
         segments: [
-            { id: "new", label: "New guests", count: 867, percent: 88 },
-            { id: "returning", label: "Returning guests", count: 118, percent: 12 },
+            { id: "new", label: "New guests", count: newCount, percent: totalGuests > 0 ? Math.round((newCount / totalGuests) * 100) : 0 },
+            { id: "returning", label: "Returning guests", count: returningCount, percent: totalGuests > 0 ? Math.round((returningCount / totalGuests) * 100) : 0 },
         ],
-    },
-    paymentMethods: [
-        { id: "credit_card", label: "Credit card", count: 699, percent: 71 },
-        { id: "cash", label: "Cash", count: 286, percent: 29 },
-    ],
-};
+    };
+
+    const cardCount = ordersInRange.filter((o) => o.payment_method === "card").length;
+    const cashCount = ordersInRange.filter((o) => o.payment_method === "cash").length;
+    const paidTotal = cardCount + cashCount;
+    const paymentMethods = [
+        { id: "credit_card", label: "Credit card", count: cardCount, percent: paidTotal > 0 ? Math.round((cardCount / paidTotal) * 100) : 0 },
+        { id: "cash", label: "Cash", count: cashCount, percent: paidTotal > 0 ? Math.round((cashCount / paidTotal) * 100) : 0 },
+    ];
+
+    return {
+        from: fromStr,
+        to: toStr,
+        occupancy: { points: occupancyPoints, totalRooms: TOTAL_ROOMS },
+        occupancyByRoomType: {
+            roomTypes: roomTypesMeta.map(({ id, label }) => ({ id, label })),
+            monthly: occupancyByRoomTypeMonthly,
+        },
+        guestVisit,
+        paymentMethods,
+    };
+}
 
 // ── Check-in / Check-out averages mock ─────────────────────────
 const CHECKIN_CHECKOUT_MOCK = {
@@ -426,18 +457,19 @@ function fetchCheckInCheckOutAverages() {
 // ── Website traffic (live via Supabase + API route) ─────────────
 
 function transformOccupancyGuest(apiResponse) {
-    // overall line
-    const occupancySeries = (apiResponse?.occupancy?.points ?? []).map((p) => ({
-        label: format(new Date(p.date), "MMM"),
-        percent: p.occupancyPercent,
-    }));
+    const totalRooms = apiResponse?.occupancy?.totalRooms ?? 0;
+    const occupancySeries = (apiResponse?.occupancy?.points ?? []).map((p) => {
+        const percent = p.occupancyPercent;
+        const rooms = totalRooms > 0 ? Math.round((percent / 100) * totalRooms) : 0;
+        return { date: p.date, percent, rooms, totalRooms };
+    });
 
     // room type bar (หนึ่ง record ต่อเดือน, key = roomType.id)
     const roomTypes = apiResponse?.occupancyByRoomType?.roomTypes ?? [];
     const monthly = apiResponse?.occupancyByRoomType?.monthly ?? [];
 
     const occupancyByRoomTypeSeries = monthly.map((m) => {
-        const base = { monthLabel: format(new Date(m.month), "MMMM") };
+        const base = { month: m.month, monthLabel: format(new Date(m.month), "MMM yyyy") };
         const values = m.occupancyPercentByRoomType ?? {};
 
         roomTypes.forEach((rt) => {
@@ -456,21 +488,67 @@ function transformOccupancyGuest(apiResponse) {
     };
 }
 
-function fetchOccupancyGuest(dateFrom, dateTo, viewBy = "overall") {
-    // ในโปรดักชัน ตรงนี้จะเป็นการเรียก API จริง เช่น:
-    // return axios.get("/api/admin/analytics/occupancy-guest", { params: { from, to, viewBy }});
+function fetchOccupancyGuest(dateFrom, dateTo, viewBy, granularity = "month") {
     return new Promise((resolve) => {
         setTimeout(() => {
+            if (!dateFrom || !dateTo) {
+                resolve({
+                    data: computeOccupancyFromMockOrders(
+                        new Date(2025, 0, 1),
+                        new Date(),
+                        granularity
+                    ),
+                    meta: { from: null, to: null, viewBy, granularity },
+                });
+                return;
+            }
+            const days = differenceInDays(dateTo, dateFrom);
+            const sameMonth = format(dateFrom, "yyyy-MM") === format(dateTo, "yyyy-MM");
+            const effectiveGranularity =
+                granularity === "day" || days <= 30 || sameMonth ? "day" : granularity;
+            const data = computeOccupancyFromMockOrders(
+                dateFrom,
+                dateTo,
+                effectiveGranularity
+            );
             resolve({
-                data: OCCUPANCY_GUEST_MOCK,
+                data,
                 meta: {
-                    from: dateFrom?.toISOString().split("T")[0] ?? null,
-                    to: dateTo?.toISOString().split("T")[0] ?? null,
+                    from: format(dateFrom, "yyyy-MM-dd"),
+                    to: format(dateTo, "yyyy-MM-dd"),
                     viewBy,
+                    granularity: effectiveGranularity,
                 },
             });
         }, 500);
     });
+}
+
+async function fetchOccupancyGuestLive(dateFrom, dateTo, granularity = "month") {
+    if (!dateFrom || !dateTo) {
+        const fallback = computeOccupancyFromMockOrders(
+            new Date(2025, 0, 1),
+            new Date(),
+            "month"
+        );
+        return { data: fallback };
+    }
+
+    const token =
+        typeof window !== "undefined"
+            ? window.localStorage.getItem("token")
+            : null;
+
+    const res = await axios.get("/api/admin/analytics/occupancy-guest", {
+        params: {
+            from: format(dateFrom, "yyyy-MM-dd"),
+            to: format(dateTo, "yyyy-MM-dd"),
+            granularity,
+        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    return { data: res.data };
 }
 
 function AnalyticDashboard() {
@@ -505,9 +583,11 @@ function AnalyticDashboard() {
     const [revenueLoading, setRevenueLoading] = useState(true);
     const [revenueUseLive, setRevenueUseLive] = useState(false);
     // ── Occupancy & Guest ---------------------------------------------------------------------------
-    const [occFrom, setOccFrom] = useState(() => new Date(2022, 0, 1));
-    const [occTo, setOccTo] = useState(() => new Date(2022, 5, 28));
+    const [occFrom, setOccFrom] = useState(() => new Date(2025, 0, 1));
+    const [occTo, setOccTo] = useState(() => new Date());
     const [occViewBy, setOccViewBy] = useState("overall");
+    const [occGranularity, setOccGranularity] = useState("month");
+    const [occUseLive, setOccUseLive] = useState(false);
     const [occData, setOccData] = useState({
         occupancySeries: [],
         occupancyByRoomTypeSeries: [],
@@ -593,11 +673,55 @@ function AnalyticDashboard() {
     }, [revenueDateFrom, revenueDateTo, revenueMode, revenueUseLive]);
 
     useEffect(() => {
-        setOccLoading(true);
-        fetchOccupancyGuest(occFrom, occTo, occViewBy)
-            .then((res) => setOccData(transformOccupancyGuest(res.data)))
-            .finally(() => setOccLoading(false));
-    }, [occFrom, occTo, occViewBy]);
+        let cancelled = false;
+
+        async function loadOccupancyGuest() {
+            try {
+                setOccLoading(true);
+
+                const days = occFrom && occTo ? differenceInDays(occTo, occFrom) : 0;
+                const sameMonth =
+                    occFrom &&
+                    occTo &&
+                    format(occFrom, "yyyy-MM") === format(occTo, "yyyy-MM");
+                const effectiveGranularity =
+                    days <= 30 || sameMonth ? "day" : occGranularity;
+
+                const res = occUseLive
+                    ? await fetchOccupancyGuestLive(
+                          occFrom,
+                          occTo,
+                          effectiveGranularity
+                      )
+                    : await fetchOccupancyGuest(
+                          occFrom,
+                          occTo,
+                          occViewBy,
+                          effectiveGranularity
+                      );
+
+                if (cancelled || !res) return;
+                setOccData(transformOccupancyGuest(res.data));
+            } catch {
+                if (cancelled) return;
+                setOccData({
+                    occupancySeries: [],
+                    occupancyByRoomTypeSeries: [],
+                    roomTypes: [],
+                    guestVisit: { totalGuests: 0, segments: [] },
+                    paymentMethods: [],
+                });
+            } finally {
+                if (cancelled) return;
+                setOccLoading(false);
+            }
+        }
+
+        loadOccupancyGuest();
+        return () => {
+            cancelled = true;
+        };
+    }, [occFrom, occTo, occViewBy, occGranularity, occUseLive]);
 
     useEffect(() => {
         setCheckTimeLoading(true);
@@ -722,12 +846,24 @@ function AnalyticDashboard() {
                         <OccupancyGuestCard
                             dateFrom={occFrom}
                             dateTo={occTo}
-                            onDateFromChange={setOccFrom}
-                            onDateToChange={setOccTo}
+                            onDateFromChange={(date) => {
+                                if (!date) { setOccFrom(date); return; }
+                                const maxFrom = occTo ? addMonths(occTo, -6) : null;
+                                setOccFrom(maxFrom && date < maxFrom ? maxFrom : date);
+                            }}
+                            onDateToChange={(date) => {
+                                if (!date) { setOccTo(date); return; }
+                                const maxTo = occFrom ? addMonths(occFrom, 6) : null;
+                                setOccTo(maxTo && date > maxTo ? maxTo : date);
+                            }}
                             viewBy={occViewBy}
                             onViewByChange={setOccViewBy}
+                            granularity={occGranularity}
+                            onGranularityChange={(v) => setOccGranularity(v)}
                             data={occData}
                             loading={occLoading}
+                            useLive={occUseLive}
+                            onToggleLive={() => setOccUseLive((prev) => !prev)}
                         />
                     </section>
 
