@@ -42,11 +42,6 @@ export default function Register() {
     setError,
   } = useRegisterForm();
 
-  const phoneNumber = watch("phoneNumber");
-
-  useEffect(() => {
-    console.log("phoneNumber เปลี่ยน:", phoneNumber);
-  }, [phoneNumber]);
 
   const profilePicture = watch("profilePicture");
 
@@ -92,8 +87,6 @@ export default function Register() {
   };
 
   const onSubmit = async (data) => {
-    console.log("form data ทั้งก้อน:", data);
-    console.log("phoneNumber ตอน submit:", data.phoneNumber);
     setIsSubmitting(true);
     setSubmitError(null);
 

@@ -9,7 +9,6 @@ const VARIANT_CLASS = {
 function Button(props) {
   const variant = VARIANT_CLASS[props.buttonStyle] ?? `${props.className}`;
   const className = ["btn", variant, props.className].filter(Boolean).join(" ");
-    console.log(className);
     
   return (
     <button

@@ -48,8 +48,6 @@ export const getJwtPayload = () => {
     if (!base64Payload) return null;
 
     const jsonPayload = atob(base64Payload);
-    console.log("jsonPayload", jsonPayload)
-    console.log("jsonPayload-->Json",JSON.parse(jsonPayload))
     return JSON.parse(jsonPayload);
   } catch {
     return null;
