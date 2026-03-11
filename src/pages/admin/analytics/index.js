@@ -23,7 +23,6 @@ import {
   startOfDay,
   addDays,
   differenceInDays,
-  startOfMonth,
   endOfMonth,
   addMonths,
   eachDayOfInterval,
@@ -134,7 +133,7 @@ function transformRoomAvailability(apiResponse) {
 
 function fetchRoomAvailability(period) {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(ROOM_AVAILABILITY_MOCK[period]), 500);
+        setTimeout(() => resolve(ROOM_AVAILABILITY_MOCK[period]), 50);
     });
 }
 
@@ -198,7 +197,7 @@ function transformBookingTrends(apiResponse) {
 
 function fetchBookingTrends(period) {
     return new Promise((resolve) => {
-        setTimeout(() => resolve(BOOKING_TRENDS_MOCK[period]), 500);
+        setTimeout(() => resolve(BOOKING_TRENDS_MOCK[period]), 50);
     });
 }
 
@@ -277,7 +276,7 @@ function fetchRevenueTrend(dateFrom, dateTo, mode = "booking_date") {
                 });
 
             resolve({ data, granularity });
-        }, 500);
+        }, 50);
     });
 }
 
@@ -318,10 +317,8 @@ async function fetchRevenueTrendLive(dateFrom, dateTo, mode = "booking_date") {
 // จำนวนห้องรวมจาก DB จริง (room_types.total_rooms)
 const TOTAL_ROOMS = ROOM_TYPES.reduce((sum, rt) => sum + (rt.total_rooms ?? 0), 0);
 
-function isOrderActiveOnDay(order, day) {
-    const ci = parseISO(order.check_in_date);
-    const co = parseISO(order.check_out_date);
-    return day >= ci && day < co;
+function isOrderActiveOnDay(parsedOrder, day) {
+    return day >= parsedOrder.ci && day < parsedOrder.co;
 }
 
 function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
@@ -332,6 +329,15 @@ function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
         if (!o.check_in_date || !o.check_out_date) return false;
         return o.check_in_date < toStr && o.check_out_date > fromStr;
     });
+
+    // Pre-parse ครั้งเดียว (ลดการ parseISO ซ้ำใน loop)
+    const parsed = ordersList.map((o) => ({
+        ci: parseISO(o.check_in_date),
+        co: parseISO(o.check_out_date),
+        room_type_id: o.room_type_id,
+        is_returning_guest: o.is_returning_guest,
+        payment_method: o.payment_method,
+    }));
 
     const roomTypesMeta = ROOM_TYPES.map((rt) => ({
         id: rt.id,
@@ -346,7 +352,7 @@ function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
             ? (() => {
                   const allDays = eachDayOfInterval({ start: dateFrom, end: dateTo });
                   return allDays.map((day) => {
-                      const raw = ordersList.filter((o) => isOrderActiveOnDay(o, day)).length;
+                      const raw = parsed.filter((o) => isOrderActiveOnDay(o, day)).length;
                       const occupied = Math.min(raw, TOTAL_ROOMS);
                       return {
                           date: format(day, "yyyy-MM-dd"),
@@ -360,7 +366,7 @@ function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
                   const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
                   let totalPercent = 0;
                   for (const day of allDays) {
-                      const raw = ordersList.filter((o) => isOrderActiveOnDay(o, day)).length;
+                      const raw = parsed.filter((o) => isOrderActiveOnDay(o, day)).length;
                       const occupied = Math.min(raw, TOTAL_ROOMS);
                       totalPercent += TOTAL_ROOMS > 0 ? (occupied / TOTAL_ROOMS) * 100 : 0;
                   }
@@ -375,10 +381,10 @@ function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
         const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
         const occupancyPercentByRoomType = {};
         for (const rt of roomTypesMeta) {
-            const rtOrders = ordersList.filter((o) => o.room_type_id === rt.id);
+            const rtParsed = parsed.filter((o) => o.room_type_id === rt.id);
             let totalPercent = 0;
             for (const day of allDays) {
-                const raw = rtOrders.filter((o) => isOrderActiveOnDay(o, day)).length;
+                const raw = rtParsed.filter((o) => isOrderActiveOnDay(o, day)).length;
                 const occupied = Math.min(raw, rt.totalRooms);
                 totalPercent += rt.totalRooms > 0 ? (occupied / rt.totalRooms) * 100 : 0;
             }
@@ -388,9 +394,11 @@ function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
         return { month: format(monthStart, "yyyy-MM-01"), occupancyPercentByRoomType };
     });
 
-    const ordersInRange = ordersList.filter((o) => {
-        const ci = parseISO(o.check_in_date);
-        return ci >= dateFrom && ci <= dateTo;
+    const dateFromT = startOfDay(dateFrom).getTime();
+    const dateToT = startOfDay(dateTo).getTime();
+    const ordersInRange = parsed.filter((o) => {
+        const t = o.ci.getTime();
+        return t >= dateFromT && t <= dateToT;
     });
 
     const returningCount = ordersInRange.filter((o) => o.is_returning_guest === true).length;
@@ -450,7 +458,7 @@ function fetchCheckInCheckOutAverages() {
                     source: "mock",
                 },
             });
-        }, 500);
+        }, 50);
     });
 }
 
@@ -492,10 +500,11 @@ function fetchOccupancyGuest(dateFrom, dateTo, viewBy, granularity = "month") {
     return new Promise((resolve) => {
         setTimeout(() => {
             if (!dateFrom || !dateTo) {
+                const today = new Date();
                 resolve({
                     data: computeOccupancyFromMockOrders(
-                        new Date(2025, 0, 1),
-                        new Date(),
+                        addMonths(today, -6),
+                        today,
                         granularity
                     ),
                     meta: { from: null, to: null, viewBy, granularity },
@@ -520,15 +529,16 @@ function fetchOccupancyGuest(dateFrom, dateTo, viewBy, granularity = "month") {
                     granularity: effectiveGranularity,
                 },
             });
-        }, 500);
+        }, 50);
     });
 }
 
 async function fetchOccupancyGuestLive(dateFrom, dateTo, granularity = "month") {
     if (!dateFrom || !dateTo) {
+        const today = new Date();
         const fallback = computeOccupancyFromMockOrders(
-            new Date(2025, 0, 1),
-            new Date(),
+            addMonths(today, -6),
+            today,
             "month"
         );
         return { data: fallback };
@@ -583,7 +593,7 @@ function AnalyticDashboard() {
     const [revenueLoading, setRevenueLoading] = useState(true);
     const [revenueUseLive, setRevenueUseLive] = useState(false);
     // ── Occupancy & Guest ---------------------------------------------------------------------------
-    const [occFrom, setOccFrom] = useState(() => new Date(2025, 0, 1));
+    const [occFrom, setOccFrom] = useState(() => addMonths(new Date(), -6));
     const [occTo, setOccTo] = useState(() => new Date());
     const [occViewBy, setOccViewBy] = useState("overall");
     const [occGranularity, setOccGranularity] = useState("month");

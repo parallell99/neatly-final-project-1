@@ -164,8 +164,10 @@ function OccupancyGuestCard({
   const roomTypeColors = [
     "var(--orange-500)", // orange
     "var(--green-700)", // green
-    "#E5A5A5", // indigo
-    "#F5DA81", // pink
+    "#E5A5A5", // salmon
+    "#F5DA81", // gold
+    "#A8D4E0", // soft teal
+    "#C4B5D4", // lavender
   ];
 
   const handleExport = () => {
