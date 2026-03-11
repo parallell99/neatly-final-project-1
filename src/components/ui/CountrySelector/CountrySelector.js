@@ -25,8 +25,6 @@ export default function CountrySelector({
 }) {
   // for react-hook-form support: set value back to '' (if undefined) and treat as controlled
   const selectedCountry = value ?? "";
-  console.log(1);
-  console.log(selectedCountry);
   const selectedCountryObj = countries.find(
     (c) => c.code === selectedCountry
   );
