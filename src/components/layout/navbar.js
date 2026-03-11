@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { useAuth } from "@/contexts/authentication";
 import * as Popover from "@radix-ui/react-popover";
 import LogoNav from "@/assets/logo/logo-nav.svg";
@@ -11,6 +12,7 @@ import paymentIcon from "@/assets/icons/credit.svg?url";
 import bookingIcon from "@/assets/icons/cs_booking.svg?url";
 import logoutIcon from "@/assets/icons/logout.svg?url";
 import adminIcon from "@/assets/icons/manage.svg?url";
+import promotionIcon from "@/assets/icons/ticket-percent.svg?url";
 
 // Helper function to get image source (handles both string and object)
 const getImageSrc = (img) => {
@@ -20,6 +22,8 @@ const getImageSrc = (img) => {
 };
 
 export default function Navbar() {
+  const router = useRouter();
+  const isHome = router.pathname === "/";
   const { isAuthenticated, user, userRole, logout } = useAuth();
   const isAgent = userRole === "agent";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,7 +45,7 @@ export default function Navbar() {
         const url = json?.data?.hotelLogoUrl ?? null;
         setNavLogoUrl(url || null);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const NOTIFICATION_READ_KEY = "neatly_admin_orders_read_at";
@@ -60,7 +64,7 @@ export default function Navbar() {
     if (typeof window !== "undefined" && userNotifications.length > 0) {
       try {
         window.localStorage.setItem(USER_NOTIFICATIONS_VIEWED_COUNT_KEY, String(userNotifications.length));
-      } catch (_) {}
+      } catch (_) { }
     }
   };
 
@@ -69,7 +73,7 @@ export default function Navbar() {
     if (typeof window !== "undefined") {
       try {
         window.localStorage.setItem(NOTIFICATION_READ_KEY, now);
-      } catch (_) {}
+      } catch (_) { }
     }
     setNewOrdersCount(0);
   };
@@ -83,7 +87,7 @@ export default function Navbar() {
         try {
           const readAt = window.localStorage.getItem(NOTIFICATION_READ_KEY);
           if (readAt) url += "?since=" + encodeURIComponent(readAt);
-        } catch (_) {}
+        } catch (_) { }
       }
       fetch(url)
         .then((res) => res.json())
@@ -140,7 +144,7 @@ export default function Navbar() {
   useEffect(() => {
     // ให้ body scroll ได้เสมอ
     document.body.style.overflow = 'auto';
-    
+
     // Cleanup
     return () => {
       document.body.style.overflow = 'auto';
@@ -163,42 +167,73 @@ export default function Navbar() {
         {/* Desktop Navigation - แสดงเฉพาะบน desktop */}
         <div className="hidden lg:flex items-center gap-10 flex-1 justify-between ml-10">
           <div className="flex items-center gap-8">
-            <a 
-              href="#about" 
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection('about');
-              }}
+            {isHome ? (
+              <>
+                <a
+                  href="#about"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection('about');
+                  }}
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                >
+                  About Neatly
+                </a>
+                <a
+                  href="#service"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection('service');
+                  }}
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                >
+                  Service & Facilities
+                </a>
+                <a
+                  href="#rooms"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection('rooms');
+                  }}
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                >
+                  Rooms & Suites
+                </a>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/#about"
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                >
+                  About Neatly
+                </Link>
+                <Link
+                  href="/#service"
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                >
+                  Service & Facilities
+                </Link>
+                <Link
+                  href="/#rooms"
+                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                >
+                  Rooms & Suites
+                </Link>
+              </>
+            )}
+            <Link
+              href="/special-offers"
               className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
             >
-              About Neatly
-            </a>
-            <a 
-              href="#service" 
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection('service');
-              }}
-              className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
-            >
-              Service & Facilities
-            </a>
-            <a 
-              href="#rooms" 
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection('rooms');
-              }}
-              className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
-            >
-              Rooms & Suites
-            </a>
+              Special Offers
+            </Link>
           </div>
 
           {/* Desktop Login/User */}
           <div className="flex items-center gap-6">
-              {/* Notification Bell - desktop (agent: แจ้งเตือนมี order ใหม่) */}
-              {isAuthenticated && user && (
+            {/* Notification Bell - desktop (agent: แจ้งเตือนมี order ใหม่) */}
+            {isAuthenticated && user && (
               isAgent ? (
                 <Popover.Root
                   onOpenChange={(open) => {
@@ -334,19 +369,19 @@ export default function Navbar() {
                     <span className="text-[#666666] font-sans text-base">
                       {user?.username || user?.first_name || user?.email || "User"}
                     </span>
-                    <svg 
-                      width="12" 
-                      height="12" 
-                      viewBox="0 0 12 12" 
-                      fill="none" 
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                       className="text-[#666666]"
                     >
-                      <path 
-                        d="M2 4L6 8L10 4" 
-                        stroke="currentColor" 
-                        strokeWidth="1.5" 
-                        strokeLinecap="round" 
+                      <path
+                        d="M2 4L6 8L10 4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
@@ -359,8 +394,8 @@ export default function Navbar() {
                     align="end"
                   >
                     <div className="flex flex-col gap-1">
-                      <Link 
-                        href="/userProfile" 
+                      <Link
+                        href="/userProfile"
                         className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                       >
                         <img src={getImageSrc(profileIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
@@ -368,15 +403,15 @@ export default function Navbar() {
                       </Link>
                       {!isAgent && (
                         <>
-                          <Link 
-                            href="/payment-method" 
+                          <Link
+                            href="/payment-method"
                             className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                           >
                             <img src={getImageSrc(paymentIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                             Payment Method
                           </Link>
-                          <Link 
-                            href="/booking" 
+                          <Link
+                            href="/booking"
                             className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                           >
                             <img src={getImageSrc(bookingIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
@@ -385,8 +420,8 @@ export default function Navbar() {
                         </>
                       )}
                       {isAgent && (
-                        <Link 
-                          href="/admin/customer-booking" 
+                        <Link
+                          href="/admin/customer-booking"
                           className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
                         >
                           <img src={getImageSrc(adminIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
@@ -394,7 +429,7 @@ export default function Navbar() {
                         </Link>
                       )}
                       <div className="border-t border-gray-200 my-1"></div>
-                      <button 
+                      <button
                         onClick={logout}
                         className="flex items-center gap-3 px-4 py-2 text-left text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded hover:cursor-pointer"
                       >
@@ -472,7 +507,7 @@ export default function Navbar() {
               </>
             )
           )}
-          
+
           {/* Hamburger Menu Button */}
           <button
             onClick={() => {
@@ -565,9 +600,9 @@ export default function Navbar() {
 
       {/* Dropdown Menu - แสดงเมื่อเปิด menu บน mobile */}
       {isMenuOpen && (
-        <div 
+        <div
           className="fixed left-0 right-0 w-full bg-white shadow-lg z-40 lg:hidden overflow-y-auto"
-          style={{ 
+          style={{
             top: `${navbarHeight}px`,
             height: `calc(100vh - ${navbarHeight}px)`
           }}
@@ -576,46 +611,80 @@ export default function Navbar() {
           <div className="flex flex-col px-8 gap-6 py-4">
             {!isAuthenticated ? (
               <>
-                <a 
-                  href="#about" 
+                {isHome ? (
+                  <>
+                    <a
+                      href="#about"
+                      className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToSection('about');
+                        toggleMenu();
+                      }}
+                    >
+                      About Neatly
+                    </a>
+                    <a
+                      href="#service"
+                      className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToSection('service');
+                        toggleMenu();
+                      }}
+                    >
+                      Service & Facilities
+                    </a>
+                    <a
+                      href="#rooms"
+                      className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToSection('rooms');
+                        toggleMenu();
+                      }}
+                    >
+                      Rooms & Suites
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/#about"
+                      className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                      onClick={toggleMenu}
+                    >
+                      About Neatly
+                    </Link>
+                    <Link
+                      href="/#service"
+                      className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                      onClick={toggleMenu}
+                    >
+                      Service & Facilities
+                    </Link>
+                    <Link
+                      href="/#rooms"
+                      className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
+                      onClick={toggleMenu}
+                    >
+                      Rooms & Suites
+                    </Link>
+                  </>
+                )}
+                <Link
+                  href="/special-offers"
                   className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    scrollToSection('about');
-                    toggleMenu();
-                  }}
                 >
-                  About Neatly
-                </a>
-                <a 
-                  href="#service" 
-                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    scrollToSection('service');
-                    toggleMenu();
-                  }}
-                >
-                  Service & Facilities
-                </a>
-                <a 
-                  href="#rooms" 
-                  className="text-[#666666] font-sans text-base hover:text-[#4A6D6C] transition-colors cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    scrollToSection('rooms');
-                    toggleMenu();
-                  }}
-                >
-                  Rooms & Suites
-                </a>
+                  Special Offers
+                </Link>
 
                 {/* Separator */}
                 <div className="border-t border-gray-300"></div>
 
                 {/* Login Link */}
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="text-[#EB8D61] font-sans text-base hover:text-[#C14817] transition-colors"
                   onClick={toggleMenu}
                 >
@@ -641,8 +710,8 @@ export default function Navbar() {
                     {user?.username ?? user?.first_name ?? "User"}
                   </span>
                 </div>
-                <Link 
-                  href="/userProfile" 
+                <Link
+                  href="/userProfile"
                   className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                   onClick={toggleMenu}
                 >
@@ -651,27 +720,34 @@ export default function Navbar() {
                 </Link>
                 {!isAgent && (
                   <>
-                    <Link 
-                      href="/payment-method" 
+                    <Link
+                      href="/payment-method"
                       className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                       onClick={toggleMenu}
                     >
                       <img src={paymentIcon?.src || paymentIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                       Payment Method
                     </Link>
-                    <Link 
-                      href="/booking" 
+                    <Link
+                      href="/booking"
                       className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                       onClick={toggleMenu}
                     >
                       <img src={bookingIcon?.src || bookingIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                       Booking History
                     </Link>
+                    <Link
+                      href="/special-offers"
+                      className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                    >
+                      <img src={getImageSrc(promotionIcon)} alt="Special offers" className="w-5 h-5 brightness-0 opacity-60" />
+                      Special Offers
+                    </Link>
                   </>
                 )}
                 {isAgent && (
-                  <Link 
-                    href="/admin/customer-booking" 
+                  <Link
+                    href="/admin/customer-booking"
                     className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                     onClick={toggleMenu}
                   >
@@ -684,7 +760,7 @@ export default function Navbar() {
                 <div className="border-t border-gray-300"></div>
 
                 {/* Logout Button */}
-                <button 
+                <button
                   onClick={() => {
                     logout();
                     toggleMenu();
