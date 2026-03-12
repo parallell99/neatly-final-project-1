@@ -27,21 +27,14 @@ export default function HeroServeice() {
           Service & Facilities
         </h3>
 
-        <div className="flex flex-wrap justify-center gap-8 lg:flex-nowrap lg:justify-between lg:items-center lg:max-w-[1200px] lg:mx-auto">
+        <div className="flex flex-wrap justify-center gap-8 lg:flex-nowrap lg:justify-center lg:items-center lg:max-w-[1200px] lg:mx-auto">
           {services.map((service, index) => {
             const IconComponent = service.icon;
-            const isLastItem = index === services.length - 1;
-            const isOddCount = services.length % 2 !== 0;
-            const shouldCenter = isLastItem && isOddCount;
 
             return (
               <div
                 key={index}
-                className={`flex flex-col items-center gap-8 text-center ${
-                  shouldCenter
-                    ? "w-full md:w-auto lg:w-auto"
-                    : "w-[calc(50%-1rem)] md:w-[calc(33.333%-1.5rem)] lg:w-auto"
-                }`}
+                className="flex flex-col items-center gap-8 text-center w-[calc(50%-1rem)] md:w-[calc(33.333%-1.5rem)] lg:flex-1 lg:min-w-0"
               >
                 <div className="w-15 h-12 flex items-center justify-center text-white">
                   <IconComponent className="w-12 h-12 brightness-0 invert" aria-hidden />
