@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/router"
+import { useAuth } from "@/contexts/authentication"
 import Logo from "@/assets/logo/logo-foot.svg?url"
 import CustomerBookingLogo from "@/assets/icons/cs_booking.svg"
 import RoomManagementLogo from "@/assets/icons/manage.svg"
@@ -25,6 +26,7 @@ const menuItems = [
 
 export default function SideBarAdmin() {
   const router = useRouter()
+  const { logout } = useAuth()
   const pathname = router?.pathname ?? ""
   const [sidebarLogoUrl, setSidebarLogoUrl] = useState(null)
 
@@ -64,10 +66,14 @@ export default function SideBarAdmin() {
             )
           })}
         </div>
-        <div className="flex gap-4 border-t border-green-700 p-6 mt-auto mb-[210px] text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 cursor-pointer">
+        <button
+          type="button"
+          onClick={logout}
+          className="flex gap-4 border-t border-green-700 p-6 mt-auto mb-[210px] w-full text-left bg-transparent text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 cursor-pointer"
+        >
           <LogoutLogo className="w-6 h-6 shrink-0 text-green-500" aria-hidden />
           <span>Log Out</span>
-        </div>
+        </button>
       </div>
     </>
   )

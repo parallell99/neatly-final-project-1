@@ -62,11 +62,10 @@ export default function CustomerBooking() {
       <SideBarAdmin />
       <div className="flex flex-col flex-1 bg-gray-100 min-h-screen">
         <div className="flex-1 pt-px pb-px pl-0 pr-0">
-          <div className="bg-white rounded border border-gray-300 h-[900px] py-2.5 px-5">
-            {/* Header: title + search */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 py-[25px] px-[7px]">
-              <h1 className="font-serif text-2xl font-semibold text-gray-900">Customer Booking</h1>
-              <div className="relative w-full sm:w-64">
+           {/* Header: title + search - separate box */}
+           <div className="w-full h-[73px] flex items-center justify-between border-b border-gray-300 px-[60px]">
+              <h1 className="headline-5 text-gray-900">Customer Booking</h1>
+              <div className="relative w-full sm:w-[320px]">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" aria-hidden>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -80,10 +79,12 @@ export default function CustomerBooking() {
                     setSearch(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full h-[48px] pl-10 pr-4 py-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
             </div>
+          <div className="bg-white rounded border border-gray-300 h-[900px] py-2.5 px-[60px] pt-[48px]">
+           
 
             {error && (
               <p className="text-red-600 mb-4">{error}</p>
@@ -97,13 +98,13 @@ export default function CustomerBooking() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="text-left text-gray-700 font-medium bg-gray-300">
-                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Customer name</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Guest(s)</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Room type</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Amount</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Bed Type</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Check-in</th>
-                        <th className="px-3 py-4 border-b border-gray-200 bg-gray-300 w-[180px]">Check-out</th>
+                        <th className="body-2 px-3 py-2 border-b border-gray-200 bg-gray-300 w-[180px]">Customer name</th>
+                        <th className="body-2 px-3 py-2 border-b border-gray-200 bg-gray-300 w-[180px]">Guest(s)</th>
+                        <th className="body-2 px-3 py-2 border-b border-gray-200 bg-gray-300 w-[180px]">Room type</th>
+                        <th className="body-2 px-3 py-2 border-b border-gray-200 bg-gray-300 w-[180px]">Amount</th>
+                        <th className="body-2 px-3 py-2 border-b border-gray-200 bg-gray-300 w-[180px]">Bed Type</th>
+                        <th className="body-2 px-3 py-2 border-b border-gray-200 bg-gray-300 w-[180px]">Check-in</th>
+                        <th className="body-2 px-3 py-2 border-b border-gray-200 bg-gray-300 w-[180px]">Check-out</th>
                       </tr>
                     </thead>
                     
@@ -117,17 +118,17 @@ export default function CustomerBooking() {
                       ) : (
                         rows.map((row) => (
                           <tr key={row.id} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="px-3 py-4 text-gray-900">
-                              <Link href={`/admin/customer-booking-detail?id=${row.id}`} className="text-green-700 hover:underline font-medium">
+                            <td className="body-2 px-3 py-2 text-gray-900 border-b border-gray-200 h-[72px]">
+                              <Link href={`/admin/customer-booking-detail?id=${row.id}`} className="body-2 text-green-700 hover:underline">
                                 {row.customerName}
                               </Link>
                             </td>
-                            <td className="px-3 py-4 text-gray-900">{row.guests}</td>
-                            <td className="px-3 py-4 text-gray-900">{row.roomType}</td>
-                            <td className="px-3 py-4 text-gray-900">{row.amount}</td>
-                            <td className="px-3 py-4 text-gray-900">{row.bedType}</td>
-                            <td className="px-3 py-4 text-gray-900">{formatTableDate(row.checkIn)}</td>
-                            <td className="px-3 py-4 text-gray-900">{formatTableDate(row.checkOut)}</td>
+                            <td className="body-2 px-3 py-4 text-gray-900 border-b border-gray-200">{row.guests}</td>
+                            <td className="body-2 px-3 py-4 text-gray-900 border-b border-gray-200">{row.roomType}</td>
+                            <td className="body-2 px-3 py-4 text-gray-900 border-b border-gray-200">{row.amount}</td>
+                            <td className="body-2 px-3 py-4 text-gray-900 border-b border-gray-200">{row.bedType}</td>
+                            <td className="body-2 px-3 py-4 text-gray-900 border-b border-gray-200">{formatTableDate(row.checkIn)}</td>
+                            <td className="body-2 px-3 py-4 text-gray-900 border-b border-gray-200">{formatTableDate(row.checkOut)}</td>
                           </tr>
                         ))
                       )}

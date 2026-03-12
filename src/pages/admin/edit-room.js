@@ -884,8 +884,8 @@ export default function EditRoom() {
               <span className="text-lg leading-none">×</span>
             </button>
           </div>
-          <div className="px-6 pb-5  text-center">
-            <p className="text-sm text-gray-700">Are you sure you want to delete this room?</p>
+          <div className="px-6 pb-5 text-center">
+            <p className="text-sm text-gray-700 text-left">Are you sure you want to delete this room?</p>
           </div>
           <div className="px-6 pb-5 flex  gap-3 items-center justify-center">
             <button
