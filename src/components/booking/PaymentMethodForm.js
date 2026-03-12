@@ -15,7 +15,7 @@ const inputBase =
   "w-full px-4 py-3 border border-[#D6D9E4] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E76B39] focus:border-transparent font-sans text-base text-[#2A2E3F] bg-white";
 
 const tabBase =
-  "flex items-center justify-center gap-2 w-[167.5px] h-[60px] py-3 rounded-sm border-2 shadow-lg font-sans text-base font-medium transition-colors lg:w-[322px] lg:h-[80px]";
+  "flex items-center justify-center gap-2 w-[167.5px] h-[60px] py-3 rounded-sm border-2 shadow-lg font-sans text-base font-medium transition-colors lg:w-[322px] lg:h-[80px] hover:cursor-pointer";
 const tabActive = "border-[#E76B39] text-orange-500 bg-white";
 const tabInactive = "border-[#E4E6ED] text-gray-600 bg-white hover:border-gray-400";
 

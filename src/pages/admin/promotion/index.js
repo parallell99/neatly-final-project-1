@@ -5,6 +5,7 @@ import { Pencil, XCircle, CheckCircle } from "lucide-react";
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
 import PromotionFormModal from "@/components/admin/PromotionFormModal";
 import PromotionCloseConfirmModal from "@/components/admin/PromotionCloseConfirmModal";
+import Button from "@/components/ui/buttons/buttons";
 
 const PER_PAGE = 10;
 
@@ -250,87 +251,97 @@ export default function PromotionPage() {
   };
 
   return (
-    <div className="flex">
-      <SideBarAdmin />
-      <div className="flex flex-col flex-1 bg-gray-100 min-h-screen">
-        <div className="flex-1 pt-px pb-px pl-0 pr-0">
-          <div className="bg-white rounded border border-gray-300 min-h-[600px] py-2.5 px-5">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 py-[25px] px-[7px]">
-              <h1 className="font-serif text-2xl font-semibold text-gray-900">Promotions</h1>
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="relative w-full sm:w-64">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" aria-hidden>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Search code, name..."
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setPage(1);
-                    }}
-                    className="w-full h-12 pl-10 pr-4 py-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={openCreate}
-                  className="w-[200px] inline-flex items-center gap-2 px-4 py-2 rounded bg-orange-600 text-white font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 h-12"
+    <>
+      <div className="flex">
+        <SideBarAdmin />
+        <div className="flex flex-col flex-1 bg-gray-100 min-h-screen">
+        {/* Header bar same style as Room Management */}
+        <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300 bg-white">
+          <span className="headline-5 text-gray-900">Promotions</span>
+          <div className="flex gap-4">
+            <div className="h-[48px] w-[320px]">
+              <div className="relative h-full">
+                <svg
+                  className="w-6 h-6 absolute translate-y-1/2 text-gray-700 left-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  aria-hidden
                 >
-                  <span className="text-lg leading-none">+</span>
-                  Create Promotion
-                </button>
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="pl-12 py-2 w-full h-full body-1 text-gray-800 border border-gray-400 focus:border-transparent rounded focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-gray-500"
+                  placeholder="Search code, name..."
+                />
               </div>
             </div>
+            <Button
+              type="button"
+              onClick={openCreate}
+              buttonStyle="primary"
+              buttonText="+ Create Promotion"
+              className="w-[240px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px]"
+            />
+          </div>
+        </div>
 
-            {error && <p className="text-red-600 mb-4">{error}</p>}
-
-            {/* Usage Stats */}
-            <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-700">Total Promotions</p>
-                <p className="text-xl font-semibold text-gray-900">{list.length}</p>
-              </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-700">Active Promotions</p>
-                <p className="text-xl font-semibold text-green-600">
-                  {list.filter((p) => !isUnusable(p)).length}
-                </p>
-              </div>
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-700">Total Usages</p>
-                <p className="text-xl font-semibold text-gray-900">
-                  {Object.values(usageStats).reduce((a, b) => a + b, 0)}
-                </p>
-              </div>
+        <div className="flex-1 px-[60px] pt-[48px] pb-[40px] bg-gray-100">
+          <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm text-gray-700">Total Promotions</p>
+              <p className="text-xl font-semibold text-gray-900">{list.length}</p>
             </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm text-gray-700">Active Promotions</p>
+              <p className="text-xl font-semibold text-green-600">
+                {list.filter((p) => !isUnusable(p)).length}
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+              <p className="text-sm text-gray-700">Total Usages</p>
+              <p className="text-xl font-semibold text-gray-900">
+                {Object.values(usageStats).reduce((a, b) => a + b, 0)}
+              </p>
+            </div>
+          </div>
 
-            {loading ? (
-              <div className="py-12 text-center text-gray-500">Loading...</div>
-            ) : (
-              <>
-                <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                  <table className="w-full border-collapse bg-white">
-                    <thead>
-                      <tr className="text-left text-gray-700 font-medium bg-gray-50 border-b border-gray-200">
-                        <th className="px-4 py-3 border-b border-gray-200">Code</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Name</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Discount</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Max Discount</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Min Spend</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Start</th>
-                        <th className="px-4 py-3 border-b border-gray-200">End</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Used</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Per User Limit</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Global Limit</th>
-                        <th className="px-4 py-3 border-b border-gray-200">Status</th>
-                        <th className="px-4 py-3 border-b border-gray-200"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
+          {error && <p className="text-red-600 mb-4">{error}</p>}
+
+          {loading ? (
+            <div className="py-12 text-center text-gray-500">Loading...</div>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-[4px] border border-gray-300 bg-white">
+                <table className="min-w-full text-left">
+                  <thead className="bg-gray-300">
+                    <tr className="body-2 text-gray-800 h-[41px]">
+                      <th className="px-6 py-3 font-medium">Code</th>
+                      <th className="px-6 py-3 font-medium">Name</th>
+                      <th className="px-6 py-3 font-medium">Discount</th>
+                      <th className="px-6 py-3 font-medium">Max Discount</th>
+                      <th className="px-6 py-3 font-medium">Min Spend</th>
+                      <th className="px-6 py-3 font-medium">Start</th>
+                      <th className="px-6 py-3 font-medium">End</th>
+                      <th className="px-6 py-3 font-medium">Used</th>
+                      <th className="px-6 py-3 font-medium">Per User Limit</th>
+                      <th className="px-6 py-3 font-medium">Global Limit</th>
+                      <th className="px-6 py-3 font-medium">Status</th>
+                      <th className="px-6 py-3 font-medium"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
                       {rows.length === 0 ? (
                         <tr>
                           <td colSpan={12} className="p-8 text-center text-gray-500">
@@ -396,7 +407,7 @@ export default function PromotionPage() {
                                 <button
                                   type="button"
                                   onClick={() => openEdit(p)}
-                                  className={`p-2 rounded ${unusable ? "text-gray-400 hover:text-gray-500 hover:bg-gray-200" : "text-orange-600 hover:text-orange-700 hover:bg-orange-50"}`}
+                                  className={`p-2 rounded hover:cursor-pointer ${unusable ? "text-gray-400 hover:text-gray-500 hover:bg-gray-200" : "text-orange-600 hover:text-orange-700 hover:bg-orange-50"}`}
                                   title="Edit"
                                   aria-label="Edit promotion"
                                 >
@@ -409,7 +420,7 @@ export default function PromotionPage() {
                                       setCloseConfirm(p);
                                       setEnableDisableAction("disable");
                                     }}
-                                    className="p-2 rounded text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                    className="p-2 rounded text-orange-600 hover:text-orange-700 hover:bg-orange-50 hover:cursor-pointer"
                                     title="Disable"
                                     aria-label="Disable promotion"
                                   >
@@ -426,7 +437,7 @@ export default function PromotionPage() {
                                     title="Enable"
                                     aria-label="Enable promotion"
                                   >
-                                    <CheckCircle className="w-4 h-4" aria-hidden />
+                                    <CheckCircle className="w-4 h-4 hover:cursor-pointer" aria-hidden />
                                   </button>
                                 ) : null}
                               </div>
@@ -504,6 +515,6 @@ export default function PromotionPage() {
           else if (enableDisableAction === "enable") handleEnablePromotion(closeConfirm);
         }}
       />
-    </div>
+    </>
   );
 }

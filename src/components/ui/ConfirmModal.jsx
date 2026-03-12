@@ -22,12 +22,16 @@ function ConfirmModal({
   onConfirm,
   onCancel,
   className,
+  errorMessage,
 }) {
   const descriptionId = React.useId();
 
-  const handleConfirm = () => {
-    onConfirm?.();
-    onOpenChange?.(false);
+  const handleConfirm = async () => {
+    const result = onConfirm?.();
+    if (result && typeof result.then === "function") {
+      await result;
+    }
+    // Parent may close the modal (e.g. after successful API call and redirect)
   };
 
   const handleCancel = () => {
@@ -64,6 +68,11 @@ function ConfirmModal({
             >
               {description}
             </DialogDescription>
+            {errorMessage ? (
+              <p className="mt-3 font-sans text-sm text-red-600" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
           </div>
 
           {/* Footer: Cancel + Confirm */}

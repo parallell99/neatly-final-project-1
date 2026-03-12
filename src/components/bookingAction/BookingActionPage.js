@@ -23,6 +23,7 @@ export default function BookingActionPage({ orderId, action }) {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmError, setConfirmError] = useState(null);
 
   const config = BOOKING_ACTIONS[action];
   const isValidAction = config && VALID_ACTIONS.includes(action);
@@ -68,10 +69,37 @@ export default function BookingActionPage({ orderId, action }) {
   };
 
   const handleConfirmClick = () => {
+    setConfirmError(null);
     setConfirmOpen(true);
   };
 
-  const handleConfirmSuccess = () => {
+  const handleConfirmSuccess = async () => {
+    const isCancelOrRefund = action === "cancel" || action === "refund";
+    if (isCancelOrRefund && orderId) {
+      const newStatus = action === "cancel" ? "cancelled" : "refunded";
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      setConfirmError(null);
+      try {
+        const res = await fetch("/api/booking/update-order-status", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ orderId, status: newStatus }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setConfirmError(data?.message || "Update failed. Please try again.");
+          return;
+        }
+      } catch (err) {
+        console.error("Update order status error:", err);
+        setConfirmError("Something went wrong. Please try again.");
+        return;
+      }
+    }
     if (config?.successPath) {
       router.push(config.successPath(orderId));
     }
@@ -124,12 +152,16 @@ export default function BookingActionPage({ orderId, action }) {
       />
       <ConfirmModal
         open={confirmOpen}
-        onOpenChange={setConfirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) setConfirmError(null);
+        }}
         title={config.modalTitle}
         description={config.modalDescription}
         cancelLabel={config.modalCancelLabel}
         confirmLabel={config.modalConfirmLabel}
         onConfirm={handleConfirmSuccess}
+        errorMessage={confirmError}
       />
     </div>
   );
