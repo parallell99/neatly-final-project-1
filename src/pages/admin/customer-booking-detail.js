@@ -107,9 +107,9 @@ export default function CustomerBookingDetail() {
     <div className="flex">
       <SideBarAdmin />
       <div className="flex flex-col flex-1 bg-[#e8eef2] min-h-screen">
-        <div className="flex-1 pt-px pb-px pl-0 pr-0 py-6 px-6">
+        <div className="flex-1 pt-px pb-px pl-0 pr-0 py-6 px-6 bg-white">
           {/* Back + Title */}
-          <div className="mb-6">
+          <div className="mb-6 border-b border-gray-300 px-[60px] py-6 h-[80px]">
             <Link
               href="/admin/customer-booking"
               className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium"
@@ -121,7 +121,7 @@ export default function CustomerBookingDetail() {
           </div>
 
           {/* White card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 max-w-4xl mx-auto overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 max-w-[1292px] mx-auto overflow-hidden">
             <div className="p-8 md:p-10">
               {/* Booking Details (top, full width) */}
               <div className="space-y-5">
@@ -140,11 +140,19 @@ export default function CustomerBookingDetail() {
               {detail.paymentMethod && detail.paymentMethod !== "—" && (
                 <div className="mt-8 pt-8">
                   <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
-                    <p className="text-sm text-gray-500 text-right">
-                      Payment success
-                      {detail.paymentMethod === "Credit Card" && detail.cardLast4
-                        ? ` · via credit card - *${String(detail.cardLast4).slice(-3)}`
-                        : " ·via - Cash"}
+                    <p className="text-sm text-gray-600 text-right body-1">
+                      <span>Payment success</span>
+                      {detail.paymentMethod === "Credit Card" && detail.cardLast4 ? (
+                        <>
+                          <span className="text-gray-600"> · </span>
+                          <span className="font-sans font-semibold">via credit card - *{String(detail.cardLast4).slice(-3)}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-gray-600"> · </span>
+                          <span>via - Cash</span>
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -155,34 +163,34 @@ export default function CustomerBookingDetail() {
                 <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
                   <div className="space-y-3 text-gray-700">
                     <div className="flex justify-between gap-4">
-                      <span>{detail.roomTypeName}</span>
-                      <span className="font-medium">{roomSubtotalDisplay}</span>
+                      <span className="body-1 text-gray-900">{detail.roomTypeName}</span>
+                      <span className="font-sans font-semibold text-gray-900">{roomSubtotalDisplay}</span>
                     </div>
                     {extras.map((extra, i) => (
                       <div key={i} className="flex justify-between gap-4">
-                        <span>{extra.name}</span>
-                        <span className="font-medium">{formatPrice(extra.price)}</span>
+                        <span className="body-1 text-gray-900">{extra.name}</span>
+                        <span className="font-sans font-semibold text-gray-900">{formatPrice(extra.price)}</span>
                       </div>
                     ))}
                     {promotionDiscountAmount > 0 && (
                       <div className="flex justify-between gap-4">
-                        <span>{promotionLabel}</span>
-                        <span className="font-medium">-{formatPrice(promotionDiscountAmount)}</span>
+                        <span className="body-1 text-gray-900">{promotionLabel}</span>
+                        <span className="font-sans font-semibold text-gray-900">-{formatPrice(promotionDiscountAmount)}</span>
                       </div>
                     )}
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-baseline">
-                    <span className="font-semibold text-gray-900">Total</span>
-                    <span className="text-lg font-bold text-gray-900">THB {totalDisplay}</span>
+                    <span className="body-1 text-gray-900">Total</span>
+                    <span className="headline-5 text-gray-900">THB {totalDisplay}</span>
                   </div>
                 </div>
               </div>
 
               {/* Additional Request */}
               <div className="mt-6">
-                <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
-                  <h3 className="font-semibold text-gray-900 mb-2">Additional Request</h3>
-                  <p className="text-gray-600 text-sm">
+                <div className="bg-gray-300 rounded-lg border border-gray-200 p-5">
+                  <h3 className="font-semibold text-gray-900 font-sans mb-2">Additional Request</h3>
+                  <p className="body-1 text-gray-700">
                     {detail.additionalRequest || "—"}
                   </p>
                 </div>
@@ -198,8 +206,8 @@ export default function CustomerBookingDetail() {
 function DetailRow({ label, value }) {
   return (
     <div>
-      <p className="text-sm font-medium text-gray-700">{label}</p>
-      <p className="text-gray-600 mt-0.5">{value}</p>
+      <p className="headline-5 text-gray-600">{label}</p>
+      <p className="body-1 text-black">{value}</p>
     </div>
   );
 }

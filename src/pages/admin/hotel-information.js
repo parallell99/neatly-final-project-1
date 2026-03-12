@@ -281,7 +281,7 @@ export default function HotelInformation() {
       <div className="flex flex-col flex-1 bg-gray-100 min-h-screen">
         <div className="flex-1 py-6 px-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h1 className="font-serif text-2xl font-semibold text-gray-900">Hotel Information</h1>
+            <h1 className="headline-5 text-gray-900">Hotel Information</h1>
             <button
               type="button"
               onClick={handleUpdate}
