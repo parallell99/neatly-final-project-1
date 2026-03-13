@@ -145,7 +145,7 @@ export default function RoomProperty() {
                             </td>
                             <td className="body-2 px-4 py-3 text-gray-900 border-b border-gray-200">{formatPrice(room.price_per_night)}</td>
                             <td className="body-2 px-4 py-3 text-gray-900 border-b border-gray-200">
-                              {room.promotion_price != null ? formatPrice(room.promotion_price) : (room.price_per_night != null ? formatPrice(Number(room.price_per_night) - 500) : "—")}
+                              {room.promotion_price != null ? formatPrice(room.promotion_price) : "-"}
                             </td>
                             <td className="body-2 px-4 py-3 text-gray-900 border-b border-gray-200">
                               {room.room_guest_adult != null ? String(room.room_guest_adult) : "2"}
