@@ -531,9 +531,10 @@ export default function EditRoom() {
                         value={form.pricePerNight}
                         onChange={(e) => {
                           const raw = e.target.value;
-                          const num = parsePriceString(raw);
+                          const cleaned = raw.replace(/[^\d.,]/g, "");
+                          const num = parsePriceString(cleaned);
                           if (num !== null && num < 0) return;
-                          setForm((f) => ({ ...f, pricePerNight: raw }));
+                          setForm((f) => ({ ...f, pricePerNight: cleaned }));
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                         placeholder="e.g. 3,000.00"
@@ -558,12 +559,13 @@ export default function EditRoom() {
                         value={form.promotionPrice}
                         onChange={(e) => {
                           const raw = e.target.value;
-                          const num = parsePriceString(raw);
+                          const cleaned = raw.replace(/[^\d.,]/g, "");
+                          const num = parsePriceString(cleaned);
                           if (num !== null && num < 0) return;
                           setForm((f) => {
                             const priceNum = parsePriceString(f.pricePerNight);
                             if (num !== null && priceNum !== null && num > priceNum) return f;
-                            return { ...f, promotionPrice: raw };
+                            return { ...f, promotionPrice: cleaned };
                           });
                         }}
                         disabled={!form.promotionChecked}
