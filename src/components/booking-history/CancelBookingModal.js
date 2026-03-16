@@ -65,9 +65,9 @@ export default function CancelBookingModal({
             onClick={onConfirm}
             className="border border-orange-500 text-orange-500 py-3 rounded-md body-1 text-center"
           >
-            {isRefund
-              ?     <>
-              Yes, I want to cancel and
+            {isRefund?     
+            <>
+              Yes, I want to cancel and{" "}
               <br className="block lg:hidden" />
               request refund
             </>

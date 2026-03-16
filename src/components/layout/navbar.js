@@ -729,7 +729,7 @@ export default function Navbar() {
                       Payment Method
                     </Link>
                     <Link
-                      href="/booking"
+                      href="/booking-history"
                       className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                       onClick={toggleMenu}
                     >
