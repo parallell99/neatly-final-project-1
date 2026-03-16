@@ -168,7 +168,7 @@ export default function SearchSection({
                     selected={date?.from}
                     month={checkInMonth}
                     onMonthChange={setCheckInMonth}
-                    // disabled={{ before: today }}
+                    disabled={{ before: today }}
                     onSelect={(selectedDate) => {
                       if (!selectedDate) return;
 
@@ -210,7 +210,7 @@ export default function SearchSection({
               <Popover open={openCheckOut} onOpenChange={setOpenCheckOut}>
                 <PopoverTrigger asChild>
                   <button
-                    // disabled={!date?.from}
+                    disabled={!date?.from}
                     className={`group w-full h-[48px] px-4 border rounded text-left text-sm flex items-center justify-between transition ${
                       date?.from
                         ? "border-gray-300 hover:border-orange-500"

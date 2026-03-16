@@ -97,7 +97,9 @@ export default function RoomPopup({ room, open, onOpenChange }) {
   if (!room) return null;
 
   const images =
-    room.image_gallery?.length ? room.image_gallery : [room.image_main];
+  room.image_gallery?.length
+    ? room.image_gallery
+    : [{ image_url: room.image_main }];
   console.log("IMAGES=", images);
 
   const nextImage = () => {
