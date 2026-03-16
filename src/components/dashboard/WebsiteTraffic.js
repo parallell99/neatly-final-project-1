@@ -144,7 +144,7 @@ function WebsiteTrafficCard({
       className="flex flex-col gap-[24px]"
       aria-labelledby="website-traffic-title"
     >
-      <header className="flex justify-between">
+      <header className="flex flex-row items-center justify-between gap-2">
         <h2
           id="website-traffic-title"
           className="headline-5 text-gray-600"
@@ -152,27 +152,47 @@ function WebsiteTrafficCard({
           Website traffic
         </h2>
 
-        <div className="min-w-[140px]">
-          <Select value={pageId} onValueChange={onPageChange}>
-            <SelectTrigger className="w-[136px]! min-w-[136px] h-[40px]! border border-gray-300 rounded-[8px] px-3 **:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              {PAGE_OPTIONS.map((page) => (
-                <SelectItem
-                  key={page.id}
-                  value={page.id}
-                  className="**:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900"
-                >
-                  {page.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col items-stretch gap-2 xl:flex-row xl:items-center xl:gap-3">
+          <div className="min-w-[140px]">
+            <Select value={pageId} onValueChange={onPageChange}>
+              <SelectTrigger className="w-[136px]! min-w-[136px] h-[40px]! border border-gray-300 rounded-[8px] px-3 **:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                {PAGE_OPTIONS.map((page) => (
+                  <SelectItem
+                    key={page.id}
+                    value={page.id}
+                    className="**:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900"
+                  >
+                    {page.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Period filter inline with select on xl, hidden on smaller screens */}
+          <div className="hidden xl:flex flex-row gap-[8px] overflow-x-auto whitespace-nowrap scrollbar-hide">
+            {PERIODS.map((period) => (
+              <button
+                key={period.id}
+                type="button"
+                className={`px-[12px] py-[4px] w-fit font-normal text-[16px] rounded-[4px] border ${periodId === period.id
+                  ? "text-orange-500 bg-orange-100 border-orange-500"
+                  : " text-gray-900"
+                  }`}
+                onClick={() => onPeriodChange(period.id)}
+              >
+                {period.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
-      <div className="flex flex-row gap-[8px] overflow-x-auto whitespace-nowrap scrollbar-hide">
+      {/* Period filter below header on mobile/tablet */}
+      <div className="flex flex-row gap-[8px] overflow-x-auto whitespace-nowrap scrollbar-hide xl:hidden">
         {PERIODS.map((period) => (
           <button
             key={period.id}
@@ -184,9 +204,7 @@ function WebsiteTrafficCard({
             onClick={() => onPeriodChange(period.id)}
           >
             {period.label}
-
           </button>
-
         ))}
       </div>
 

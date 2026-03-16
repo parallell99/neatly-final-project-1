@@ -249,11 +249,10 @@ function OccupancyGuestCard({
                 type="button"
                 onClick={onToggleLive}
                 aria-label={useLive ? "Using live database data" : "Using mock data"}
-                className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors ${
-                  useLive
+                className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors ${useLive
                     ? "bg-green-50 border-green-400 text-green-700"
                     : "bg-gray-100 border-gray-300 text-gray-500"
-                }`}
+                  }`}
               >
                 {useLive ? "● Live DB" : "○ Mock"}
               </button>
@@ -392,218 +391,219 @@ function OccupancyGuestCard({
         <OccupancyGuestSkeleton />
       ) : (
         <>
-      {/* Occupancy rate chart / Room type chart */}
-      <section aria-label="Occupancy rate" className="flex flex-col gap-2">
-        <h3 className="font-semibold text-[16px] text-gray-700">Occupancy Rate</h3>
-        <div className="w-full min-h-[240px] [&_*[tabindex]:focus]:outline-none">
-          {isOverall ? (
-            occupancyChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-[295px] body-2 text-gray-400">
-                No data for selected range
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={295}>
-                <AreaChart
-                  data={occupancyChartData}
-                  margin={{ top: 8, right: 0, left: -1, bottom: 8 }}
-                >
-                  <defs>
-                    <linearGradient
-                      id="occGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
+          {/* Occupancy rate chart / Room type chart */}
+          <section aria-label="Occupancy rate" className="flex flex-col gap-2">
+            <h3 className="font-semibold text-[16px] text-gray-700">Occupancy Rate</h3>
+            <div className="w-full min-h-[240px] [&_*[tabindex]:focus]:outline-none">
+              {isOverall ? (
+                occupancyChartData.length === 0 ? (
+                  <div className="flex items-center justify-center h-[295px] body-2 text-gray-400">
+                    No data for selected range
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={295}>
+                    <AreaChart
+                      data={occupancyChartData}
+                      margin={{ top: 8, right: 0, left: -1, bottom: 8 }}
                     >
-                      <stop
-                        offset="0%"
-                        stopColor="var(--orange-500)"
-                        stopOpacity={0.3}
+                      <defs>
+                        <linearGradient
+                          id="occGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="0%"
+                            stopColor="var(--orange-500)"
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="100%"
+                            stopColor="var(--orange-500)"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        stroke="var(--gray-300)"
+                        horizontal
+                        vertical={false}
                       />
-                      <stop
-                        offset="100%"
-                        stopColor="var(--orange-500)"
-                        stopOpacity={0}
+                      <ReferenceLine y={80} stroke="var(--gray-300)" zIndex={0} />
+                      <XAxis
+                        dataKey="label"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "var(--gray-700)", fontSize: 12 }}
+                        tickMargin={8}
+                        ticks={xTicks}
                       />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    stroke="var(--gray-300)"
-                    horizontal
-                    vertical={false}
-                  />
-                  <ReferenceLine y={80} stroke="var(--gray-300)" zIndex={0} />
-                  <XAxis
-                    dataKey="label"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "var(--gray-700)", fontSize: 12 }}
-                    tickMargin={8}
-                    ticks={xTicks}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    ticks={[0, 20, 40, 60, 80, 100]}
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{
-                      fill: "var(--gray-700)",
-                      fontSize: 12,
-                      textAnchor: "start",
-                      dx: -45,
-                    }}
-                    tickFormatter={(v) => `${v}%`}
-                    tickMargin={8}
-                  />
-                  <Tooltip
-                    content={<OccupancyTooltip />}
-                    cursor={{ stroke: "var(--gray-300)" }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="percent"
-                    stroke="var(--orange-500)"
-                    strokeWidth={2}
-                    fill="url(#occGradient)"
-                   
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            )
-          ) : (
-            <div className="w-full min-h-[200px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:[display:none]">
-              
-                <ResponsiveContainer width="100%" height={295}>
-                  <BarChart
-                    data={data.occupancyByRoomTypeSeries}
-                    margin={{ top: 8, right: 8, left: -1, bottom: 0 }}
-                  >
-                    <CartesianGrid stroke="var(--gray-300)" horizontal vertical={false} />
-                    <XAxis
-                      dataKey="monthLabel"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "var(--gray-700)", fontSize: 12 }}
-                      tickMargin={8}
-                    />
-                    <YAxis
-                      domain={[0, 100]}
-                      ticks={[0, 20, 40, 60, 80, 100]}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fill: "var(--gray-700)", fontSize: 12, textAnchor: "start", dx: -45,}}
-                      tickFormatter={(v) => `${v}%`}
-                      tickMargin={8}
-                    />
-                    <Tooltip
-                      content={
-                        <OccupancyByRoomTypeTooltip
-                          roomTypes={data.roomTypes}
-                          colors={roomTypeColors}
+                      <YAxis
+                        domain={[0, 100]}
+                        ticks={[0, 20, 40, 60, 80, 100]}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                          fill: "var(--gray-700)",
+                          fontSize: 12,
+                          textAnchor: "start",
+                          dx: -45,
+                        }}
+                        tickFormatter={(v) => `${v}%`}
+                        tickMargin={8}
+                      />
+                      <Tooltip
+                        content={<OccupancyTooltip />}
+                        cursor={{ stroke: "var(--gray-300)" }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="percent"
+                        stroke="var(--orange-500)"
+                        strokeWidth={2}
+                        fill="url(#occGradient)"
+
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )
+              ) : (
+                <div className="w-full min-h-[200px] overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:[display:none]">
+
+                  <ResponsiveContainer width="100%" height={295}>
+                    <BarChart
+                      data={data.occupancyByRoomTypeSeries}
+                      margin={{ top: 8, right: 8, left: -1, bottom: 0 }}
+                    >
+                      <CartesianGrid stroke="var(--gray-300)" horizontal vertical={false} />
+                      <XAxis
+                        dataKey="monthLabel"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "var(--gray-700)", fontSize: 12 }}
+                        tickMargin={8}
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        ticks={[0, 20, 40, 60, 80, 100]}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "var(--gray-700)", fontSize: 12, textAnchor: "start", dx: -45, }}
+                        tickFormatter={(v) => `${v}%`}
+                        tickMargin={8}
+                      />
+                      <Tooltip
+                        content={
+                          <OccupancyByRoomTypeTooltip
+                            roomTypes={data.roomTypes}
+                            colors={roomTypeColors}
+                          />
+                        }
+                      />
+                      <Legend
+                        verticalAlign="top"
+                        align="right"
+                        iconType="circle"
+                        formatter={(value) =>
+                          data.roomTypes.find((rt) => rt.id === value)?.label ?? value
+                        }
+                      />
+                      {data.roomTypes.map((rt, index) => (
+                        <Bar
+                          key={rt.id}
+                          dataKey={rt.id}
+                          fill={roomTypeColors[index % roomTypeColors.length]}
+                          radius={[4, 4, 0, 0]}
+                          barSize={16}
                         />
-                      }
-                    />
-                    <Legend
-                      verticalAlign="top"
-                      align="right"
-                      iconType="circle"
-                      formatter={(value) =>
-                        data.roomTypes.find((rt) => rt.id === value)?.label ?? value
-                      }
-                    />
-                    {data.roomTypes.map((rt, index) => (
-                      <Bar
-                        key={rt.id}
-                        dataKey={rt.id}
-                        fill={roomTypeColors[index % roomTypeColors.length]}
-                        radius={[4, 4, 0, 0]}
-                        barSize={16}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              
-            </div>
-          )}
-        </div>
-      </section>
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
 
-      {/* Guest Visit */}
-      <section aria-label="Guest visit summary" className="flex flex-col gap-[16px]">
-        <h3 className="font-semibold text-[16px] text-gray-700">Guest Visit</h3>
-        <div className="flex flex-col gap-[16px]">
-          {data.guestVisit.segments.map((segment) => (
-            <div key={segment.id} className="flex flex-col gap-1">
-              <div className="flex items-center justify-between body-2 ">
-                <span className="text-black ">
-                  {segment.label}{" "}
-                  <span className="text-gray-700">
-                    {segment.count} people
-                  </span>
-                </span>
-
-              </div>
-
-              <div className="flex flex-row items-center gap-2">
-                <div className="flex-1 h-[10px] rounded-full bg-gray-300 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-orange-500"
-                    style={{ width: `${segment.percent}%` }}
-                    aria-hidden
-                  />
                 </div>
-                <span className="body-2 font-medium text-gray-900 min-w-[40px] text-right">
-                  {segment.percent}%
-                </span>
-              </div>
+              )}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
 
-      {/* Payment Method */}
-      <section aria-label="Payment method summary" className="flex flex-col gap-3">
-        <h3 className="body-2 font-medium text-gray-700">Payment Method</h3>
-        <div className="flex flex-col gap-2">
-          {data.paymentMethods.map((method) => {
-            const isCash =
-              method.id?.toLowerCase().includes("cash") ||
-              method.label?.toLowerCase().includes("cash");
-            const Icon = isCash ? Cash : CreditCard;
-
-            return (
-              <div key={method.id} className="flex flex-row gap-2">
-                <div className="flex bg-gray-300 w-[40px] h-[40px] rounded-full justify-center items-center shrink-0">
-                  <Icon className="text-gray-700" aria-hidden />
-                </div>
-                <div className="flex flex-col gap-1 flex-1">
-                  <div className="flex items-center justify-between body-2">
-                    <span className="text-black">
-                      {method.label}{" "}
-                      <span className="text-gray-700">
-                        {method.count} people
+          {/* Guest Visit */}
+          <div className="xl:grid xl:grid-cols-2 xl:gap-[48px]">
+            <section aria-label="Guest visit summary" className="flex flex-col gap-[16px] xl:gap-[24px]">
+              <h3 className="font-semibold text-[16px] text-gray-700">Guest Visit</h3>
+              <div className="flex flex-col gap-[16px]">
+                {data.guestVisit.segments.map((segment) => (
+                  <div key={segment.id} className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between body-2 ">
+                      <span className="text-black ">
+                        {segment.label}{" "}
+                        <span className="text-gray-700">
+                          {segment.count} people
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                  <div className="flex flex-row items-center gap-2">
-                    <div className="flex-1 h-[10px] rounded-full bg-gray-300 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-orange-500"
-                        style={{ width: `${method.percent}%` }}
-                        aria-hidden
-                      />
-                    </div>
-                    <span className="body-2 font-medium text-gray-900 min-w-[40px] text-right">
-                      {method.percent}%
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
 
+                    </div>
+
+                    <div className="flex flex-row items-center gap-2">
+                      <div className="flex-1 h-[10px] rounded-full bg-gray-300 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-orange-500"
+                          style={{ width: `${segment.percent}%` }}
+                          aria-hidden
+                        />
+                      </div>
+                      <span className="body-2 font-medium text-gray-900 min-w-[40px] text-right">
+                        {segment.percent}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Payment Method */}
+            <section aria-label="Payment method summary" className="flex flex-col gap-[16px] xl:gap-[24px]">
+              <h3 className="font-semibold text-[16px] text-gray-700">Payment Method</h3>
+              <div className="flex flex-col gap-[16px]">
+                {data.paymentMethods.map((method) => {
+                  const isCash =
+                    method.id?.toLowerCase().includes("cash") ||
+                    method.label?.toLowerCase().includes("cash");
+                  const Icon = isCash ? Cash : CreditCard;
+
+                  return (
+                    <div key={method.id} className="flex flex-row gap-2">
+                      <div className="flex bg-gray-300 w-[40px] h-[40px] rounded-full justify-center items-center shrink-0">
+                        <Icon className="text-gray-700" aria-hidden />
+                      </div>
+                      <div className="flex flex-col gap-1 flex-1">
+                        <div className="flex items-center justify-between body-2">
+                          <span className="text-black">
+                            {method.label}{" "}
+                            <span className="text-gray-700">
+                              {method.count} people
+                            </span>
+                          </span>
+                        </div>
+                        <div className="flex flex-row items-center gap-2">
+                          <div className="flex-1 h-[10px] rounded-full bg-gray-300 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-orange-500"
+                              style={{ width: `${method.percent}%` }}
+                              aria-hidden
+                            />
+                          </div>
+                          <span className="body-2 font-medium text-gray-900 min-w-[40px] text-right">
+                            {method.percent}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          </div>
         </>
       )}
     </section>
@@ -756,29 +756,29 @@ function OccupancyGuestSkeleton() {
                         aria-hidden
                       >
                         {" "}
+                      </span>
+                      people
                     </span>
-                    people
                   </span>
-                </span>
-              </div>
-              <div className="flex flex-row items-center gap-2">
-                <div className="flex-1 h-[10px] rounded-full bg-gray-300 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gray-200 animate-pulse"
-                    style={{ width: "65%" }}
-                    aria-hidden
-                  />
                 </div>
-                <span
-                  className="body-2 font-medium text-gray-900 min-w-[40px] text-right"
-                  aria-hidden
-                >
-                  <span className="inline-block h-4 w-8 rounded bg-gray-200 animate-pulse">
-                    {" "}
-                  </span>%
-                </span>
+                <div className="flex flex-row items-center gap-2">
+                  <div className="flex-1 h-[10px] rounded-full bg-gray-300 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gray-200 animate-pulse"
+                      style={{ width: "65%" }}
+                      aria-hidden
+                    />
+                  </div>
+                  <span
+                    className="body-2 font-medium text-gray-900 min-w-[40px] text-right"
+                    aria-hidden
+                  >
+                    <span className="inline-block h-4 w-8 rounded bg-gray-200 animate-pulse">
+                      {" "}
+                    </span>%
+                  </span>
+                </div>
               </div>
-            </div>
             </div>
           ))}
         </div>
