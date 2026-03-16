@@ -12,13 +12,16 @@ async function getBookingsByUserId(userId) {
     const extras = order.extras ?? [];
     const extrasTotal = extras.reduce((sum, e) => sum + (e.price ?? 0), 0);
 
+    const roomTotal = order.promotion_price_per_night * nights;
+    const subtotal = roomTotal + extrasTotal;
+    
     const discount =
-    order.discount_type === "percent"
-      ? Math.min(
-          (order.promotion_price_per_night * nights * order.discount_value) / 100,
-          order.max_discount ?? Infinity
-        )
-      : order.discount_value ?? 0;
+      order.discount_type === "percent"
+        ? Math.min(
+            (subtotal * order.discount_value) / 100,
+            order.max_discount ?? Infinity
+          )
+        : order.discount_value ?? 0;
 
     return {
       id: order.id,
@@ -33,7 +36,10 @@ async function getBookingsByUserId(userId) {
       extras,
       extrasTotal,
       discount,
-      payment: `${order.card_brand} •••• ${order.card_last4}`,
+      payment:
+      order.payment_method === "card"
+        ? `${order.card_brand} •••• ${order.card_last4}`
+        : null,
       request: order.additional_request,
       bookingDate: order.created_at,
       promotion_code: order.promotion_code,

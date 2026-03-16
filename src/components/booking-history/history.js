@@ -44,7 +44,7 @@ function getBookingPolicy(booking) {
         // 2. after 24h booking (but not near check-in)
         canChangeDate = false;
         canCancel = true;
-        canRefund = true;
+        canRefund = false;
     }
 
     return { canChangeDate, canCancel, canRefund };
@@ -61,7 +61,7 @@ export default function BookingHistory() {
     const [bookings, setBookings] = useState([]);
 
     const [page, setPage] = useState(1);
-    const itemsPerPage = 3;
+    const itemsPerPage = 5;
     const totalPages = Math.ceil(bookings.length / itemsPerPage);
 
     const [selectedBookingId, setSelectedBookingId] = useState(null);
@@ -205,14 +205,18 @@ export default function BookingHistory() {
                                                             {booking.guests} Guests ({booking.nights} Night)
                                                         </p>
                                                         <p className="font-semibold">
-                                                            Payment success via {booking.payment || "Credit Card"}
+                                                            {booking.paymentMethod === "card" ? (
+                                                                <>Payment success via {booking.payment}</>
+                                                            ) : (
+                                                                <span className="text-gray-700">Pay at property (Cash)</span>
+                                                            )}
                                                         </p>
                                                     </div>
 
                                                     <div className="flex justify-between body-1 py-2">
                                                         <p className="text-gray-700">{booking.room}</p>
                                                         <p className="font-semibold text-gray-900">
-                                                            {booking.roomPrice.toLocaleString()}
+                                                            {booking.roomPrice.toLocaleString()}.00
                                                         </p>
                                                     </div>
 
@@ -223,7 +227,7 @@ export default function BookingHistory() {
                                                         >
                                                             <p className="text-gray-700">{extra.name}</p>
                                                             <p className="font-semibold text-gray-900">
-                                                                {extra.price.toLocaleString()}
+                                                                {extra.price.toLocaleString()}.00
                                                             </p>
                                                         </div>
                                                     ))}
@@ -232,7 +236,7 @@ export default function BookingHistory() {
                                                         <div className="flex justify-between py-2">
                                                             <p className="text-gray-700">Promotion Code</p>
                                                             <p className="font-semibold text-gray-900">
-                                                               - {booking.discount.toLocaleString()}
+                                                                - {booking.discount}.00
                                                             </p>
                                                         </div>
                                                     )}
@@ -255,7 +259,7 @@ export default function BookingHistory() {
 
                                             {/* ACTION BUTTONS */}
                                             <div className="p-4 border-t flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                                                <div className="flex items-center justify-center h-[48px] w-full lg:w-auto lg:order-2 lg:gap-4">
+                                                <div className="flex items-center justify-center h-[48px] w-full gap-8 lg:w-auto lg:order-2 lg:gap-4">
                                                     <Button
                                                         type="button"
                                                         buttonStyle="ghost"
@@ -270,7 +274,11 @@ export default function BookingHistory() {
                                                             type="button"
                                                             buttonStyle="primary"
                                                             buttonText="Change Date"
-                                                            className="w-[190px] h-[50px]"
+                                                            style={{
+                                                                whiteSpace: "nowrap",
+                                                                padding: "12px 20px"
+                                                            }}
+                                                            className="w-[150px] lg:w-[150px]"
                                                             onClick={() =>
                                                                 router.push(`/booking-action/${booking.id}/change-date`)
                                                             }

@@ -29,7 +29,7 @@ export default function CancelBookingModal({
         </div>
 
         {/* BODY */}
-        <div className="p-5 text-gray-700 body-1 space-y-2">
+        <div className="p-5 text-gray-700 body-1">
 
           {isRefund ? (
             <>
