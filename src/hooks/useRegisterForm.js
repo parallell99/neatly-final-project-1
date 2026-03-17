@@ -13,8 +13,8 @@ const registerSchema = z
     email: z.string().trim().email("Please enter a valid email address."),
     password: z.string().trim().min(6, "Password must be at least 6 characters long."),/*.regex(/[A-Z]/, "Must include uppercase").regex(/[0-9]/, "Must include number")*/
     confirmPassword: z.string().trim(),
-    dateOfBirth: z.string().trim().min(1, "Date of birth is required."),
-    country: z.string().min(1, "Please select your country."),
+    dateOfBirth: z.string().trim().optional(),
+    country: z.string().trim().optional(),
     profilePicture: z
       .any()
       .optional()

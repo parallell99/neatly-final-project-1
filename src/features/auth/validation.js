@@ -3,6 +3,13 @@ import { AppError } from "@/utils/AppError";
 
 // Coerce null/undefined from form to empty string so we get clear validation messages
 const requiredString = (schema) => z.preprocess((val) => (val == null ? "" : val), schema);
+const optionalStringToNull = () =>
+  z.preprocess((val) => {
+    if (val == null) return null;
+    if (typeof val !== "string") return val;
+    const trimmed = val.trim();
+    return trimmed === "" ? null : trimmed;
+  }, z.string().nullable());
 
 export const registerSchema = z.object({
   email: requiredString(z.email()),
@@ -11,8 +18,8 @@ export const registerSchema = z.object({
   lastName: requiredString(z.string().min(1)),
   username: requiredString(z.string().min(3)),
   phoneNumber: z.string().nullish(),
-  dateOfBirth: requiredString(z.string().min(1)),
-  country: requiredString(z.string().min(1)),
+  dateOfBirth: optionalStringToNull(),
+  country: optionalStringToNull(),
   profilePictureUrl: z.string().nullish(),
 }).strict();
 
@@ -40,7 +47,8 @@ export function validateRegister(data) {
     );
   }
 
-  return data;
+  // Return parsed data so preprocess/normalization takes effect (e.g. "" -> null)
+  return result.data;
 }
 
 export function validateLogin(data) {
