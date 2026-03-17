@@ -2,6 +2,8 @@ import {
   parseISO,
   format,
   endOfMonth,
+  max,
+  min,
   eachMonthOfInterval,
   eachDayOfInterval,
 } from "date-fns";
@@ -39,7 +41,7 @@ export async function getOccupancyGuest(from, to, granularity = "month") {
   const occupancyPoints =
     granularity === "day"
       ? computeOccupancyDaily(ordersList, totalRooms, dateFrom, dateTo)
-      : computeOccupancyMonthly(ordersList, totalRooms, months);
+      : computeOccupancyMonthly(ordersList, totalRooms, months, dateFrom, dateTo);
 
   const roomTypesMeta = roomTypes.map((rt) => ({
     id: rt.id,
@@ -50,7 +52,9 @@ export async function getOccupancyGuest(from, to, granularity = "month") {
   const occupancyByRoomTypeMonthly = computeOccupancyByRoomType(
     ordersList,
     roomTypesMeta,
-    months
+    months,
+    dateFrom,
+    dateTo
   );
 
   const ordersInRange = ordersList.filter((o) => {
@@ -64,7 +68,7 @@ export async function getOccupancyGuest(from, to, granularity = "month") {
   return {
     from: fromStr,
     to: toStr,
-    occupancy: { points: occupancyPoints },
+    occupancy: { points: occupancyPoints, totalRooms },
     occupancyByRoomType: {
       roomTypes: roomTypesMeta.map(({ id, label }) => ({ id, label })),
       monthly: occupancyByRoomTypeMonthly,
@@ -84,38 +88,51 @@ function computeOccupancyDaily(ordersList, totalRooms, dateFrom, dateTo) {
   const allDays = eachDayOfInterval({ start: dateFrom, end: dateTo });
   return allDays.map((day) => {
     const occupied = ordersList.filter((o) => isOrderActiveOnDay(o, day)).length;
+    const occupiedRooms = Math.min(occupied, totalRooms);
     return {
       date: format(day, "yyyy-MM-dd"),
       occupancyPercent:
-        totalRooms > 0 ? Math.round((occupied / totalRooms) * 100) : 0,
+        totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0,
+      occupiedRooms: occupiedRooms,
     };
   });
 }
 
-function computeOccupancyMonthly(ordersList, totalRooms, months) {
+function computeOccupancyMonthly(ordersList, totalRooms, months, dateFrom, dateTo) {
   return months.map((monthStart) => {
     const monthEnd = endOfMonth(monthStart);
-    const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    const rangeStart = dateFrom ? max([monthStart, dateFrom]) : monthStart;
+    const rangeEnd = dateTo ? min([monthEnd, dateTo]) : monthEnd;
+    const allDays = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
     let totalPercent = 0;
+    let totalOccupiedRooms = 0;
 
     for (const day of allDays) {
       const occupied = ordersList.filter((o) => isOrderActiveOnDay(o, day))
         .length;
-      totalPercent += totalRooms > 0 ? (occupied / totalRooms) * 100 : 0;
+      const occupiedRooms = Math.min(occupied, totalRooms);
+      totalOccupiedRooms += occupiedRooms;
+      totalPercent += totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
     }
+
+    const avgOccupiedRooms =
+      allDays.length > 0 ? totalOccupiedRooms / allDays.length : 0;
 
     return {
       date: format(monthStart, "yyyy-MM-01"),
       occupancyPercent:
-        allDays.length > 0 ? Math.round(totalPercent / allDays.length) : 0,
+        allDays.length > 0 ? totalPercent / allDays.length : 0,
+      occupiedRooms: avgOccupiedRooms,
     };
   });
 }
 
-function computeOccupancyByRoomType(ordersList, roomTypesMeta, months) {
+function computeOccupancyByRoomType(ordersList, roomTypesMeta, months, dateFrom, dateTo) {
   return months.map((monthStart) => {
     const monthEnd = endOfMonth(monthStart);
-    const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    const rangeStart = dateFrom ? max([monthStart, dateFrom]) : monthStart;
+    const rangeEnd = dateTo ? min([monthEnd, dateTo]) : monthEnd;
+    const allDays = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
     const occupancyPercentByRoomType = {};
 
     for (const rt of roomTypesMeta) {
@@ -130,11 +147,12 @@ function computeOccupancyByRoomType(ordersList, roomTypesMeta, months) {
       for (const day of allDays) {
         const occupied = rtOrders.filter((o) => isOrderActiveOnDay(o, day))
           .length;
-        totalPercent += (occupied / rt.totalRooms) * 100;
+        const occupiedRooms = Math.min(occupied, rt.totalRooms);
+        totalPercent += (occupiedRooms / rt.totalRooms) * 100;
       }
 
       occupancyPercentByRoomType[rt.id] =
-        allDays.length > 0 ? Math.round(totalPercent / allDays.length) : 0;
+        allDays.length > 0 ? totalPercent / allDays.length : 0;
     }
 
     return {

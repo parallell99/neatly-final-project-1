@@ -7,7 +7,7 @@ import LogoNav from "@/assets/logo/logo-nav-dashboard.svg";
 
 /**
  * Mobile-only nav bar + dropdown (Profile, Homepage, Logout).
- * แสดงเฉพาะ xl:hidden เหมือน navbar หน้า homepage
+ * แสดงเฉพาะ lg:hidden เหมือน navbar หน้า homepage
  */
 export default function AdminMobileNav() {
   const { logout } = useAuth();
@@ -17,7 +17,7 @@ export default function AdminMobileNav() {
   return (
     <>
       <nav
-        className="flex flex-row xl:hidden justify-between items-center bg-green-800 py-[11.5px] px-[16px]"
+        className="flex flex-row lg:hidden justify-between items-center bg-green-800 py-[11.5px] px-[16px]"
         aria-label="Admin mobile navigation"
       >
         <div className="flex flex-row items-end gap-[3px]">
@@ -27,7 +27,7 @@ export default function AdminMobileNav() {
         <button
           type="button"
           onClick={toggleMenu}
-          className="flex flex-col gap-1.5 p-2 relative z-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded"
+          className="flex flex-col gap-1.5 p-2 relative z-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded hover:cursor-pointer"
           aria-label="Toggle menu"
           aria-expanded={isMenuOpen}
         >
@@ -48,7 +48,7 @@ export default function AdminMobileNav() {
 
       {isMenuOpen && (
         <div
-          className="fixed left-0 right-0 top-12 w-full h-[calc(100vh-3rem)] bg-white shadow-lg z-40 xl:hidden overflow-y-auto"
+          className="fixed left-0 right-0 top-16 w-full h-[calc(100vh-3rem)] bg-white shadow-lg z-40 lg:hidden overflow-y-auto"
           role="dialog"
           aria-label="Menu"
         >
@@ -74,7 +74,7 @@ export default function AdminMobileNav() {
                 logout();
                 toggleMenu();
               }}
-              className="text-left text-gray-600 font-sans text-base hover:text-green-700 transition-colors"
+              className="text-left text-gray-600 font-sans text-base hover:text-green-700 transition-colors hover:cursor-pointer"
             >
               Logout
             </button>

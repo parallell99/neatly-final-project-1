@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import {
   Select,
@@ -33,15 +33,15 @@ const ROOM_AVAILABILITY_PERIODS = [
 
 function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
   const chartData = data.map((item) => ({
-     name: item.label,
-     value: item.count,
-   }));
- 
+    name: item.label,
+    value: item.count,
+  }));
+
   const chartColors = data.map((item) => item.strokeColor);
 
   return (
     <article
-      className="flex flex-col gap-[24px] xl:h-full"
+      className="flex flex-col gap-[24px] lg:h-full"
       aria-labelledby="room-availability-title"
     >
       <header className="flex justify-between items-center">
@@ -53,12 +53,12 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
         </h5>
 
         <Select value={periodId} onValueChange={onPeriodChange}>
-          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300" aria-label="Select period">
+          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300 hover:cursor-pointer hover:border-orange-500 " aria-label="Select period">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent position="popper" >
             {ROOM_AVAILABILITY_PERIODS.map((periods) => (
-              <SelectItem key={periods.id} value={periods.id} className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900">
+              <SelectItem key={periods.id} value={periods.id} className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900  data-[highlighted]:bg-gray-100 data-[state=checked]:bg-gray-100 hover:cursor-pointer">
                 {periods.label}
               </SelectItem>
             ))}
@@ -66,12 +66,12 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
         </Select>
       </header>
 
-      <div className="flex flex-row items-center gap-[20px] xl:items-center xl:justify-center xl:h-full [&_*[tabindex]:focus]:outline-none">
+      <div className="flex flex-row items-center gap-[20px] lg:items-center lg:justify-center lg:h-full [&_*[tabindex]:focus]:outline-none">
         {loading ? (
           <RoomAvailabilitySkeleton />
         ) : (
           <>
-            <div className="w-[120px] h-[120px] xl:w-[260px] xl:h-[260px] xl:flex-none">
+            <div className="w-[120px] h-[120px] lg:w-[260px] lg:h-[260px] lg:flex-none">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -94,7 +94,7 @@ function RoomAvailabilityCard({ periodId, onPeriodChange, data, loading }) {
               </ResponsiveContainer>
             </div>
 
-            <ul className="flex flex-col gap-3 w-[160px] shrink-0 xl:self-end">
+            <ul className="flex flex-col gap-3 w-[160px] shrink-0 lg:self-end">
               {data.map((item) => (
                 <li key={item.id} className="flex items-center gap-2">
                   <span
@@ -125,14 +125,14 @@ function RoomAvailabilitySkeleton() {
   return (
     <>
       <div
-        className="w-[120px] h-[120px] xl:w-[260px] xl:h-[260px] xl:flex-none"
+        className="w-[120px] h-[120px] lg:w-[260px] lg:h-[260px] lg:flex-none"
         aria-label="Loading chart"
       >
-        
+
       </div>
 
       <ul
-        className="flex flex-col gap-3 w-[160px] shrink-0 xl:self-end"
+        className="flex flex-col gap-3 w-[160px] shrink-0 lg:self-end"
         aria-busy="true"
         aria-label="Loading legend"
       >

@@ -15,6 +15,7 @@ function CheckInCheckOutTimesCard({ data, loading }) {
   const checkIn = data?.checkIn;
   const checkOut = data?.checkOut;
 
+
   return (
     <article
       className="flex flex-col gap-[24px]"
@@ -35,10 +36,10 @@ function CheckInCheckOutTimesCard({ data, loading }) {
           <CheckCardSkeleton />
         </div>
       ) : (
-        <div className="grid gap-[16px]">
+        <div className="grid gap-[16px] lg:grid-cols-2">
           {/* Check-in card */}
           <section
-            className="flex items-center  justify-between rounded-[16px] px-[12px] py-[16px] bg-green-100"
+            className="flex items-center  justify-between rounded-[16px] px-[12px] lg:px-[24px] py-[16px] bg-green-100"
           >
             <div className="flex items-center w-full gap-3">
 
@@ -50,7 +51,7 @@ function CheckInCheckOutTimesCard({ data, loading }) {
                 <div
                   className="flex h-[19px] w-[19px] absolute justify-center items-center rounded-full bg-green-600 text-white shrink-0 right-[8px] bottom-[8px]"
                 >
-                  <Check width={10} height={7} strokeWidth={1.75}  />
+                  <Check width={10} height={7} strokeWidth={1.75} />
                 </div>
 
               </div>
@@ -78,7 +79,7 @@ function CheckInCheckOutTimesCard({ data, loading }) {
 
           {/* Check-out card */}
           <section
-            className="flex items-center  justify-between rounded-[16px] px-[12px] py-[16px] bg-orange-100"
+            className="flex items-center  justify-between rounded-[16px] px-[12px] lg:px-[24px]  py-[16px] bg-orange-100"
           >
             <div className="flex items-center w-full gap-3">
 
@@ -89,7 +90,7 @@ function CheckInCheckOutTimesCard({ data, loading }) {
                 <div
                   className="flex h-[19px] w-[19px] absolute justify-center items-center rounded-full bg-orange-500 text-white shrink-0 right-[8px] bottom-[8px]"
                 >
-                  <RightDirection width={11} height={10} strokeWidth={1.75}  />
+                  <RightDirection width={11} height={10} strokeWidth={1.75} />
                 </div>
               </div>
 
@@ -101,7 +102,7 @@ function CheckInCheckOutTimesCard({ data, loading }) {
                   </p>
 
                   <p className="headline-5 text-orange-500">
-                    {checkIn?.time ?? "--:--"}
+                    {checkOut?.time ?? "--:--"}
                   </p>
 
                 </div>
