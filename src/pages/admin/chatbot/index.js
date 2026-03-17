@@ -255,7 +255,7 @@ export default function ChatbotAdmin() {
         <SideBarAdmin />
         <Chatbot />
         <div className="flex flex-col flex-1">
-          <span className="headline-5 h-[80px] flex items-center pl-[60px]">Chatbot Setup</span>
+          <span className="headline-5 h-[80px] flex items-center pl-[60px] border-b border-gray-300">Chatbot Setup</span>
           <div className="bg-gray-100 flex-1 p-[60px]">
             <div className="flex flex-col bg-white gap-[40px] px-[80px] pt-[40px] pb-[60px] border border-gray-300">
               {isLoading ? (

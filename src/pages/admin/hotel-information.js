@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
 import { supabase } from "@/lib/supabase";
+import Button from "@/components/ui/buttons/buttons";
 
 const DEFAULT_DESCRIPTION =
   "Set in Bangkok, Thailand. Neatly Hotel offers 5-star accommodation with an outdoor pool, kids' club, sports facilities and a fitness centre. There is also a spa, an indoor pool and saunas.\n\nAll units at the hotel are equipped with a seating area, a flat-screen TV with satellite channels, a dining area and a private bathroom with free toiletries, a bathtub and a hairdryer. Every room in Neatly Hotel features a furnished balcony. Some rooms are equipped with a coffee machine.\n\nFree WIFI and entertainment facilities are available at property and also rentals are provided to explore the area.";
@@ -278,18 +279,18 @@ export default function HotelInformation() {
   return (
     <div className="flex">
       <SideBarAdmin />
-      <div className="flex flex-col flex-1 bg-gray-100 min-h-screen">
-        <div className="flex-1 py-6 px-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col flex-1 min-h-screen">
+        <div className="flex-1">
+          <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300">
             <h1 className="headline-5 text-gray-900">Hotel Information</h1>
-            <button
+            <Button
               type="button"
               onClick={handleUpdate}
               disabled={saving}
-              className="w-[120px] h-12 px-5 py-2.5 rounded bg-orange-500 hover:bg-orange-600 text-white font-medium disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
-            >
-              {saving ? "Updating..." : "Update"}
-            </button>
+              buttonStyle="primary"
+              buttonText={saving ? "Updating..." : "Update"}
+              className="w-[120px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px]"
+            />
           </div>
 
           {error && (
@@ -303,7 +304,7 @@ export default function HotelInformation() {
             </div>
           )}
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 space-y-6 px-[60px] pt-[48px]">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Hotel name *</label>
               <input
