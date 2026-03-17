@@ -41,7 +41,7 @@ export default function CountrySelector({
       )}
       <Combobox
         value={selectedCountryObj?.name || ""}
-        onValueChange={onChange}
+        onValueChange={(nextValue) => onChange?.(nextValue ?? "")}
         disabled={disabled}
         items={countries}
         {...props}

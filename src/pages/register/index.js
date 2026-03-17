@@ -144,6 +144,9 @@ export default function Register() {
             Authorization: `Bearer ${token}`
           }
         });
+
+        // รีเฟรช user ใน context หลังอัปเดตรูป เพื่อให้ Navbar เห็นรูปทันที
+        await fetchUser();
       }
 
       router.push("/");
