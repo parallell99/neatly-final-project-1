@@ -10,44 +10,59 @@ import CancelBookingModal from "./CancelBookingModal";
 import BookingHistorySkeleton from "./BookingHistorySkeleton";
 import Button from "../ui/buttons/buttons";
 
+function createSlug(str) {
+    if (!str || typeof str !== "string") return "";
+    return str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+}
+
 function getBookingPolicy(booking) {
     const now = new Date();
+
     const bookingDate = new Date(booking.bookingDate);
+
     const checkIn = new Date(booking.checkIn);
+    checkIn.setHours(14, 0, 0, 0); // ⭐ FIX: set check-in time = 14:00
 
     const hoursSinceBooking = (now - bookingDate) / (1000 * 60 * 60);
     const hoursBeforeCheckin = (checkIn - now) / (1000 * 60 * 60);
 
     const within24Booking = hoursSinceBooking < 24;
     const within24Checkin = hoursBeforeCheckin < 24;
-    const alreadyCheckedIn = now > checkIn;
+    const alreadyCheckedIn = now >= checkIn;
 
-    let canChangeDate = false;
-    let canCancel = false;
-    let canRefund = false;
-
+    // 4. AFTER CHECK-IN
     if (alreadyCheckedIn) {
-        // 4. after check-in → hide all CTA
-        canChangeDate = false;
-        canCancel = false;
-    } else if (within24Booking) {
-        // 1. within 24h of booking
-        canChangeDate = true;
-        canCancel = true;
-        canRefund = true;
-    } else if (within24Checkin) {
-        // 3. within 24h before check-in
-        canChangeDate = false;
-        canCancel = true;
-        canRefund = false;
-    } else {
-        // 2. after 24h booking (but not near check-in)
-        canChangeDate = false;
-        canCancel = true;
-        canRefund = false;
+        return {
+            canChangeDate: false,
+            canCancel: false,
+            canRefund: false,
+        };
     }
 
-    return { canChangeDate, canCancel, canRefund };
+    // 1. WITHIN 24 HOURS OF BOOKING
+    if (within24Booking) {
+        return {
+            canChangeDate: true,
+            canCancel: true,
+            canRefund: true,
+        };
+    }
+
+    // 3. WITHIN 24 HOURS BEFORE CHECK-IN (หลัง 17:00 14:00 เป็นต้นไป)
+    if (within24Checkin) {
+        return {
+            canChangeDate: false,
+            canCancel: true,
+            canRefund: false,
+        };
+    }
+
+    // 2. NORMAL CASE
+    return {
+        canChangeDate: false,
+        canCancel: true,
+        canRefund: false,
+    };
 }
 
 export default function BookingHistory() {
@@ -131,6 +146,8 @@ export default function BookingHistory() {
                         const open = openId === booking.id;
 
                         const { canChangeDate, canCancel, canRefund } = getBookingPolicy(booking);
+
+                        const hideAllCTA = !canCancel && !canChangeDate;
 
                         return (
                             <div key={booking.id} className="border-b pb-10">
@@ -258,6 +275,7 @@ export default function BookingHistory() {
                                             )}
 
                                             {/* ACTION BUTTONS */}
+                                            {!hideAllCTA && (
                                             <div className="p-4 border-t flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                                                 <div className="flex items-center justify-center h-[48px] w-full gap-8 lg:w-auto lg:order-2 lg:gap-4">
                                                     <Button
@@ -265,7 +283,7 @@ export default function BookingHistory() {
                                                         buttonStyle="ghost"
                                                         buttonText="Room Detail"
                                                         onClick={() => {
-                                                            router.push(`/rooms/${booking.room}`);
+                                                            router.push(`/rooms/${createSlug(booking.room)}`);
                                                         }}
                                                     />
 
@@ -302,6 +320,7 @@ export default function BookingHistory() {
                                                     )}
                                                 </div>
                                             </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
