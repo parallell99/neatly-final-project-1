@@ -44,6 +44,7 @@ async function getBookingsByUserId(userId) {
       request: order.additional_request,
       bookingDate: order.created_at,
       promotion_code: order.promotion_code,
+      cancelDate: order.cancelDate,
     };
   });
 }
