@@ -25,6 +25,7 @@ async function getBookingsByUserId(userId) {
 
     return {
       id: order.id,
+      status: order.status,
       room: order.room_name,
       image: order.room_image,
       roomPrice: order.promotion_price_per_night,

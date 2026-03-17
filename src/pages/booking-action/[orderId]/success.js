@@ -16,6 +16,7 @@ export default function BookingActionSuccessPage() {
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [changeDateSnapshot, setChangeDateSnapshot] = useState(null);
 
   const actionStr = Array.isArray(action) ? action[0] : action;
   const isValidAction = typeof actionStr === "string" && SUCCESS_ACTIONS.includes(actionStr);
@@ -56,6 +57,19 @@ export default function BookingActionSuccessPage() {
     };
   }, [orderId, isValidAction]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!orderId || typeof orderId !== "string") return;
+    if (actionStr !== "change-date") return;
+    try {
+      const raw = window.sessionStorage.getItem(`booking:change-date:${orderId}`);
+      if (!raw) return;
+      setChangeDateSnapshot(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, [orderId, actionStr]);
+
   const handleBackToHome = () => {
     router.push("/");
   };
@@ -92,6 +106,10 @@ export default function BookingActionSuccessPage() {
         roomName={roomName}
         checkInDate={order?.check_in_date}
         checkOutDate={order?.check_out_date}
+        originalCheckInDate={changeDateSnapshot?.originalCheckIn}
+        originalCheckOutDate={changeDateSnapshot?.originalCheckOut}
+        newCheckInDate={changeDateSnapshot?.newCheckIn}
+        newCheckOutDate={changeDateSnapshot?.newCheckOut}
         guests={2}
         bookingDate={order?.created_at}
         cancellationDate={new Date().toISOString()}

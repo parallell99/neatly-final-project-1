@@ -197,6 +197,8 @@ export default function PaymentSuccess({
   const handleCheckBookingDetail = () => {
     if (onCheckBookingDetail) {
       onCheckBookingDetail();
+    } else {
+      window.location.href = "/booking-history";
     }
   };
 

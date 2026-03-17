@@ -2,6 +2,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createClient } from "@supabase/supabase-js";
 
 const ALLOWED_STATUSES = ["cancelled", "refunded"];
+const CANCELLABLE_STATUSES = ["paid", "pending", "awaiting_payment"];
+const REFUNDABLE_STATUSES = ["paid"];
 
 export default async function handler(req, res) {
   if (req.method !== "PATCH") {
@@ -40,23 +42,38 @@ export default async function handler(req, res) {
     });
   }
 
+  const allowedCurrentStatuses =
+    newStatus === "refunded" ? REFUNDABLE_STATUSES : CANCELLABLE_STATUSES;
+
+  const cancelDate = new Date().toISOString();
+
   const { data, error } = await supabaseAdmin
     .from("orders")
-    .update({ status: newStatus })
+    .update({ status: newStatus, cancel_date: cancelDate })
     .eq("id", orderId.trim())
     .eq("user_id", user.id)
-    .in("status", ["paid"])
+    .in("status", allowedCurrentStatuses)
     .select()
     .maybeSingle();
 
   if (error) {
     console.error("[update-order-status]", error);
+    const msg = String(error?.message || "");
+    if (msg.toLowerCase().includes("cancel_date") && msg.toLowerCase().includes("does not exist")) {
+      return res.status(400).json({
+        message: "Missing column orders.cancel_date in DB",
+        missingColumnsSql: "ALTER TABLE orders ADD COLUMN cancel_date timestamptz;",
+      });
+    }
     return res.status(500).json({ message: "Update order status failed" });
   }
 
   if (!data) {
     return res.status(404).json({
-      message: "Order not found or cannot be updated (must be paid and owned by you)",
+      message:
+        newStatus === "refunded"
+          ? "Order not found or cannot be refunded (must be paid and owned by you)"
+          : "Order not found or cannot be cancelled (must be owned by you)",
     });
   }
 
