@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import axios from "axios";
 import { format as formatDateFns, addDays, isLastDayOfMonth, addMonths } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import Button from "@/components/ui/buttons/buttons";
@@ -44,6 +45,7 @@ export default function BookingActionRequest({
   type = "cancel",
   roomName = "Superior Garden View",
   roomImage,
+  roomTypeId,
   checkInDate,
   checkOutDate,
   guests = 2,
@@ -59,7 +61,14 @@ export default function BookingActionRequest({
     checkInDate && checkOutDate
       ? `${formatDate(checkInDate)} - ${formatDate(checkOutDate)}`
       : "Thu, 19 Oct 2022 - Fri, 20 Oct 2022";
-  const bookingDateStr = bookingDate ? formatDate(bookingDate) : "Tue, 18 Oct 2022";
+  const bookingDateStr = bookingDate
+    ? new Date(bookingDate).toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "Tue, 18 Oct 2022";
   const refundFormatted =
     totalRefund != null
       ? Number(totalRefund).toLocaleString("en-US", { minimumFractionDigits: 2 })
@@ -67,12 +76,19 @@ export default function BookingActionRequest({
 
   const initialFrom = useMemo(() => parseISODateToLocalDate(checkInDate), [checkInDate]);
   const initialTo = useMemo(() => parseISODateToLocalDate(checkOutDate), [checkOutDate]);
+  const originalNights = useMemo(() => {
+    if (!initialFrom || !initialTo) return null;
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const diff = Math.round((initialTo - initialFrom) / msPerDay);
+    return diff > 0 ? diff : null;
+  }, [initialFrom, initialTo]);
 
   const [date, setDate] = useState({ from: initialFrom ?? undefined, to: initialTo ?? undefined });
   const [openCheckIn, setOpenCheckIn] = useState(false);
   const [openCheckOut, setOpenCheckOut] = useState(false);
   const [checkInMonth, setCheckInMonth] = useState(initialFrom ?? new Date());
   const [checkOutMonth, setCheckOutMonth] = useState(initialTo ?? new Date());
+  const [availabilityError, setAvailabilityError] = useState("");
 
   const today = useMemo(() => {
     const t = new Date();
@@ -197,19 +213,65 @@ export default function BookingActionRequest({
                             month={checkInMonth}
                             onMonthChange={setCheckInMonth}
                             disabled={{ before: today }}
-                            onSelect={(selectedDate) => {
+                            onSelect={async (selectedDate) => {
                               if (!selectedDate) return;
-                              setDate({ from: selectedDate, to: undefined });
+
+                              const nights = originalNights ?? 1;
+                              const autoCheckOut = addDays(selectedDate, nights);
+
+                              // อัปเดตวันที่ใน UI ทันที ให้ผู้ใช้เห็นวันที่ที่เลือก
+                              setDate({ from: selectedDate, to: autoCheckOut });
                               setCheckInMonth(selectedDate);
-                              if (isLastDayOfMonth(selectedDate)) {
-                                setCheckOutMonth(addMonths(selectedDate, 1));
-                              } else {
-                                setCheckOutMonth(selectedDate);
-                              }
-                              setTimeout(() => {
-                                setOpenCheckOut(true);
+                              setCheckOutMonth(autoCheckOut);
+
+                              // ถ้าไม่มี roomTypeId ให้ถือว่าเปลี่ยนวันได้เลย
+                              if (!roomTypeId) {
+                                setAvailabilityError("");
                                 setOpenCheckIn(false);
-                              }, 500);
+                                return;
+                              }
+
+                              try {
+                                setAvailabilityError("");
+                                const checkInStr = formatDateToISO(selectedDate);
+                                const checkOutStr = formatDateToISO(autoCheckOut);
+
+                                const response = await axios.get("/api/rooms/availablerooms", {
+                                  params: {
+                                    checkIn: checkInStr,
+                                    checkOut: checkOutStr,
+                                  },
+                                });
+
+                                const rooms = response?.data?.data || [];
+
+                                // หา room ที่ตรงกับ roomTypeId ถ้าไม่เจอ ให้ถือว่าจองได้ (กันเคส API ไม่ส่ง room type นั้นมา)
+                                const matchedRoom = rooms.find(
+                                  (room) => String(room.id) === String(roomTypeId)
+                                );
+
+                                const isAvailable = matchedRoom
+                                  ? matchedRoom.available_rooms != null
+                                    ? Number(matchedRoom.available_rooms) > 0
+                                    : true
+                                  : true; // ไม่มีในลิสต์ -> ไม่ถือว่าเต็ม
+
+                                if (!isAvailable) {
+                                  // ให้วันที่ที่เลือกแสดงอยู่ แต่ขึ้น error และไม่ให้กด Confirm
+                                  setAvailabilityError(
+                                    "This room is fully booked for the selected dates. Please choose another date."
+                                  );
+                                  // ไม่ต้องปิดปฏิทิน เพื่อให้ผู้ใช้เลือกวันใหม่ต่อได้ทันที
+                                  return;
+                                }
+
+                                // มีห้องว่าง -> ปิดปฏิทินได้
+                                setOpenCheckIn(false);
+                              } catch {
+                                setAvailabilityError(
+                                  "Cannot check availability right now. Please try again."
+                                );
+                              }
                             }}
                             initialFocus
                             className="p-6"
@@ -225,63 +287,26 @@ export default function BookingActionRequest({
                     {/* Dash */}
                     <div className="hidden sm:block pb-3 text-gray-400">–</div>
 
-                    {/* Check Out */}
+                    {/* Check Out (auto-calculated, read-only to keep nights equal) */}
                     <div className="w-full sm:flex-1">
                       <label className="block font-sans text-xs text-gray-600 mb-2">
                         Check Out
                       </label>
-                      <Popover open={openCheckOut} onOpenChange={setOpenCheckOut}>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            disabled={!date?.from}
-                            className={`group w-full h-[48px] px-4 border rounded text-left text-sm flex items-center justify-between transition ${date?.from
-                                ? "border-gray-300 hover:border-orange-500"
-                                : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                              }`}
-                          >
-                            <span>
-                              {date?.to
-                                ? formatDateFns(date.to, "EEE, dd MMM yyyy")
-                                : "Select date"}
-                            </span>
-                            <CalendarIcon
-                              className={`h-5 w-5 transition ${date?.from
-                                  ? "text-[#98A2B3] group-hover:text-orange-500"
-                                  : "text-gray-400"
-                                }`}
-                              aria-hidden
-                            />
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={date?.to}
-                            month={checkOutMonth}
-                            onMonthChange={setCheckOutMonth}
-                            disabled={{
-                              before: date?.from
-                                ? addDays(date.from, 1)
-                                : today,
-                            }}
-                            onSelect={(selectedDate) => {
-                              if (!selectedDate) return;
-                              setDate((prev) => ({ ...prev, to: selectedDate }));
-                              setCheckOutMonth(selectedDate);
-                              setTimeout(() => setOpenCheckOut(false), 500);
-                            }}
-                            initialFocus
-                            className="p-6"
-                            classNames={{
-                              day_selected:
-                                "bg-orange-600 text-white hover:bg-orange-600",
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <div className="w-full h-[48px] px-4 border border-gray-200 rounded text-left text-sm flex items-center justify-between bg-gray-50 text-gray-700">
+                        <span>
+                          {date?.to
+                            ? formatDateFns(date.to, "EEE, dd MMM yyyy")
+                            : "Auto-calculated from original stay length"}
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  {availabilityError && (
+                    <p className="mt-2 font-sans text-xs text-red-600">
+                      {availabilityError}
+                    </p>
+                  )}
 
                   {isInvalidRange && (
                     <p className="mt-2 font-sans text-xs text-red-600">
@@ -336,7 +361,7 @@ export default function BookingActionRequest({
           }
           type="button"
           onClick={handleConfirm}
-          disabled={isInvalidRange}
+          disabled={isInvalidRange || !!availabilityError}
           className="w-[343px] lg:mx-0"
         />
       </div>

@@ -32,7 +32,7 @@ async function handler(req, res) {
     if (orderId) {
       let q = supabaseAdmin
         .from("orders")
-        .select("id, check_in_date, check_out_date, total_price, expires_at, room_type_id, user_id, quantity")
+        .select("id, check_in_date, check_out_date, total_price, expires_at, room_type_id, user_id, quantity, created_at")
         .eq("id", orderId);
       if (userId) q = q.eq("user_id", userId);
       const { data: orderRows, error: orderError } = await q.maybeSingle();
@@ -41,7 +41,7 @@ async function handler(req, res) {
     } else if (userId) {
       const { data: orderRows, error: orderError } = await supabaseAdmin
         .from("orders")
-        .select("id, check_in_date, check_out_date, total_price, expires_at, room_type_id, user_id, quantity")
+        .select("id, check_in_date, check_out_date, total_price, expires_at, room_type_id, user_id, quantity, created_at")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -63,7 +63,7 @@ async function handler(req, res) {
     try {
       const { data: roomRow, error: roomError } = await supabaseAdmin
         .from("room_types")
-        .select("name, price_per_night, promotion_price_per_night")
+        .select("name, price_per_night, promotion_price_per_night, image_main")
         .eq("id", order.room_type_id)
         .maybeSingle();
       if (!roomError && roomRow) room = roomRow;

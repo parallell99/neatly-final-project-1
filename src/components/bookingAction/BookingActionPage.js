@@ -24,6 +24,7 @@ export default function BookingActionPage({ orderId, action }) {
   const [loading, setLoading] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmError, setConfirmError] = useState(null);
+  const [pendingDates, setPendingDates] = useState(null);
 
   const config = BOOKING_ACTIONS[action];
   const isValidAction = config && VALID_ACTIONS.includes(action);
@@ -68,8 +69,11 @@ export default function BookingActionPage({ orderId, action }) {
     router.back();
   };
 
-  const handleConfirmClick = () => {
+  const handleConfirmClick = (payload) => {
     setConfirmError(null);
+    if (action === "change-date" && payload && typeof payload === "object") {
+      setPendingDates(payload);
+    }
     setConfirmOpen(true);
   };
 
@@ -100,6 +104,62 @@ export default function BookingActionPage({ orderId, action }) {
         return;
       }
     }
+
+    if (action === "change-date" && orderId) {
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const nextCheckIn = pendingDates?.checkInDate;
+      const nextCheckOut = pendingDates?.checkOutDate;
+
+      if (!token) {
+        setConfirmError("Unauthorized. Please sign in again.");
+        return;
+      }
+      if (!nextCheckIn || !nextCheckOut) {
+        setConfirmError("Missing dates. Please select new dates again.");
+        return;
+      }
+
+      setConfirmError(null);
+      try {
+        // เก็บค่าเดิม/ใหม่ไว้ใช้ในหน้า success
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem(
+            `booking:change-date:${orderId}`,
+            JSON.stringify({
+              originalCheckIn: order?.check_in_date ?? null,
+              originalCheckOut: order?.check_out_date ?? null,
+              newCheckIn: nextCheckIn,
+              newCheckOut: nextCheckOut,
+            })
+          );
+        }
+
+        const res = await fetch("/api/booking/update-order-dates", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            orderId,
+            checkInDate: nextCheckIn,
+            checkOutDate: nextCheckOut,
+          }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setConfirmError(data?.message || "Update failed. Please try again.");
+          return;
+        }
+      } catch (err) {
+        console.error("Update order dates error:", err);
+        setConfirmError("Something went wrong. Please try again.");
+        return;
+      }
+    }
+
     if (config?.successPath) {
       router.push(config.successPath(orderId));
     }
@@ -140,6 +200,7 @@ export default function BookingActionPage({ orderId, action }) {
         type={config.type}
         roomName={roomName}
         roomImage={roomImage || undefined}
+        roomTypeId={order?.room_type_id}
         checkInDate={order?.check_in_date}
         checkOutDate={order?.check_out_date}
         guests={2}

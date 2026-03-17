@@ -15,6 +15,10 @@ export default function BookingActionSuccess({
   roomName = "Superior Garden View",
   checkInDate,
   checkOutDate,
+  originalCheckInDate,
+  originalCheckOutDate,
+  newCheckInDate,
+  newCheckOutDate,
   guests = 2,
   bookingDate,
   cancellationDate,
@@ -35,10 +39,26 @@ export default function BookingActionSuccess({
   const isRefund = type === "refund";
   const isChangeDate = type === "change-date";
 
-  const originalCheckInStr = checkInDate ? formatDate(checkInDate) : "Thu, 19 Oct 2022";
-  const originalCheckOutStr = checkOutDate ? formatDate(checkOutDate) : "Fri, 20 Oct 2022";
-  const newCheckInStr = originalCheckInStr;
-  const newCheckOutStr = originalCheckOutStr;
+  const originalCheckInStr = originalCheckInDate
+    ? formatDate(originalCheckInDate)
+    : checkInDate
+      ? formatDate(checkInDate)
+      : "Thu, 19 Oct 2022";
+  const originalCheckOutStr = originalCheckOutDate
+    ? formatDate(originalCheckOutDate)
+    : checkOutDate
+      ? formatDate(checkOutDate)
+      : "Fri, 20 Oct 2022";
+  const newCheckInStr = newCheckInDate
+    ? formatDate(newCheckInDate)
+    : checkInDate
+      ? formatDate(checkInDate)
+      : "Thu, 19 Oct 2022";
+  const newCheckOutStr = newCheckOutDate
+    ? formatDate(newCheckOutDate)
+    : checkOutDate
+      ? formatDate(checkOutDate)
+      : "Fri, 20 Oct 2022";
 
   const title =
     isRefund

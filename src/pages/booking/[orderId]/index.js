@@ -161,10 +161,7 @@ export default function BookingOrderPage() {
   };
 
   const handleCheckBookingDetail = () => {
-    setPaymentFailed(false);
-    setPaymentSuccess(false);
-    setCurrentStep(1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    router.push("/booking-history");
   };
 
   const handleBackToPaymentDetail = () => {

@@ -252,15 +252,16 @@ export default function PromotionPage() {
 
   return (
     <>
-      <div className="flex">
-        <SideBarAdmin />
-        <div className="flex flex-col flex-1 bg-gray-100 min-h-screen">
-        {/* Header bar same style as Room Management */}
-        <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300 bg-white">
-          <span className="headline-5 text-gray-900">Promotions</span>
-          <div className="flex gap-4">
-            <div className="h-[48px] w-[320px]">
-              <div className="relative h-full">
+      <div className="w-full max-w-[1440px] mx-auto">
+        <div className="flex w-full">
+          <SideBarAdmin />
+          <div className="flex flex-col flex-1 bg-gray-100 min-h-screen min-w-0">
+            {/* Header bar same style as Room Management */}
+            <div className="w-full max-w-[1200px] h-[80px] flex items-center justify-between px-6 lg:px-[60px] border-b border-gray-300 bg-white">
+              <span className="headline-5 text-gray-900">Promotions</span>
+              <div className="flex gap-4">
+                <div className="h-[48px] w-[320px]">
+                  <div className="relative h-full">
                 <svg
                   className="w-6 h-6 absolute translate-y-1/2 text-gray-700 left-4"
                   fill="none"
@@ -285,20 +286,20 @@ export default function PromotionPage() {
                   className="pl-12 py-2 w-full h-full body-1 text-gray-800 border border-gray-400 focus:border-transparent rounded focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder:text-gray-500"
                   placeholder="Search code, name..."
                 />
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={openCreate}
+                  buttonStyle="primary"
+                  buttonText="+ Create Promotion"
+                  className="w-[240px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px]"
+                />
               </div>
             </div>
-            <Button
-              type="button"
-              onClick={openCreate}
-              buttonStyle="primary"
-              buttonText="+ Create Promotion"
-              className="w-[240px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px]"
-            />
-          </div>
-        </div>
 
-        <div className="flex-1 px-[60px] pt-[48px] pb-[40px] bg-gray-100">
-          <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="w-full max-w-[1200px] flex-1 px-6 lg:px-[30px] pt-[48px] pb-[40px] bg-gray-100">
+              <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="text-sm text-gray-700">Total Promotions</p>
               <p className="text-xl font-semibold text-gray-900">{list.length}</p>
@@ -315,33 +316,33 @@ export default function PromotionPage() {
                 {Object.values(usageStats).reduce((a, b) => a + b, 0)}
               </p>
             </div>
-          </div>
+              </div>
 
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
-          {loading ? (
-            <div className="py-12 text-center text-gray-500">Loading...</div>
-          ) : (
-            <>
-              <div className="overflow-x-auto rounded-[4px] border border-gray-300 bg-white">
-                <table className="min-w-full text-left">
-                  <thead className="bg-gray-300">
-                    <tr className="body-2 text-gray-800 h-[41px]">
-                      <th className="px-6 py-3 font-medium">Code</th>
-                      <th className="px-6 py-3 font-medium">Name</th>
-                      <th className="px-6 py-3 font-medium">Discount</th>
-                      <th className="px-6 py-3 font-medium">Max Discount</th>
-                      <th className="px-6 py-3 font-medium">Min Spend</th>
-                      <th className="px-6 py-3 font-medium">Start</th>
-                      <th className="px-6 py-3 font-medium">End</th>
-                      <th className="px-6 py-3 font-medium">Used</th>
-                      <th className="px-6 py-3 font-medium">Per User Limit</th>
-                      <th className="px-6 py-3 font-medium">Global Limit</th>
-                      <th className="px-6 py-3 font-medium">Status</th>
-                      <th className="px-6 py-3 font-medium"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              {loading ? (
+                <div className="py-12 text-center text-gray-500">Loading...</div>
+              ) : (
+                <>
+                  <div className="rounded-[4px] border border-gray-300 bg-white">
+                    <table className="w-full table-fixed text-left">
+                      <thead className="bg-gray-300">
+                        <tr className="text-xs text-gray-800 h-[41px]">
+                      <th className="px-3 py-2 font-medium w-[120px] whitespace-normal leading-tight">Code</th>
+                      <th className="px-3 py-2 font-medium w-[150px] whitespace-normal leading-tight">Name</th>
+                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">Discount</th>
+                      <th className="px-3 py-2 font-medium w-[105px] whitespace-normal leading-tight">Max Discount</th>
+                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">Min Spend</th>
+                      <th className="px-3 py-2 font-medium w-[85px] whitespace-normal leading-tight">Start</th>
+                      <th className="px-3 py-2 font-medium w-[85px] whitespace-normal leading-tight">End</th>
+                      <th className="px-3 py-2 font-medium w-[60px] whitespace-normal leading-tight">Used</th>
+                      <th className="px-3 py-2 font-medium w-[95px] whitespace-normal leading-tight">Per User Limit</th>
+                      <th className="px-3 py-2 font-medium w-[95px] whitespace-normal leading-tight">Global Limit</th>
+                      <th className="px-3 py-2 font-medium w-[80px] whitespace-normal leading-tight">Status</th>
+                      <th className="px-3 py-2 font-medium w-[70px]"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-xs">
                       {rows.length === 0 ? (
                         <tr>
                           <td colSpan={12} className="p-8 text-center text-gray-500">
@@ -358,7 +359,7 @@ export default function PromotionPage() {
                             key={p.id}
                             className={`border-b border-gray-100 ${unusable ? "bg-gray-100" : "hover:bg-gray-50"}`}
                           >
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : ""}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : ""}`}>
                               <span className={`font-mono font-medium ${unusable ? "text-gray-400" : "text-gray-900"}`}>
                                 {p.code ?? "—"}
                               </span>
@@ -368,46 +369,46 @@ export default function PromotionPage() {
                                 </span>
                               )}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top whitespace-normal break-words ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.name ?? "—"}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDiscount(p)}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.max_discount != null && Number(p.max_discount) > 0
                                 ? `${Number(p.max_discount).toLocaleString()} THB`
                                 : "0"}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.min_spend ? `${Number(p.min_spend).toLocaleString()} THB` : "0"}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDate(p.start_date)}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDate(p.end_date)}
                             </td>
-                            <td className={`px-4 py-3 font-medium ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top font-medium ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {usageStats[p.id] ?? 0}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.usage_limit_per_user != null ? String(p.usage_limit_per_user) : "—"}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.global_usage_limit != null ? String(p.global_usage_limit) : "—"}
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : "text-gray-700"}`}>
-                              <span className={`inline-block px-2.5 py-1 rounded-full text-sm font-medium ${displayDisabled ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${displayDisabled ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
                                 {displayDisabled ? "Disabled" : "Enabled"}
                               </span>
                             </td>
-                            <td className={`px-4 py-3 ${unusable ? "text-gray-400" : ""}`}>
-                              <div className="flex gap-2">
+                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : ""}`}>
+                              <div className="flex justify-end gap-1">
                                 <button
                                   type="button"
                                   onClick={() => openEdit(p)}
-                                  className={`p-2 rounded hover:cursor-pointer ${unusable ? "text-gray-400 hover:text-gray-500 hover:bg-gray-200" : "text-orange-600 hover:text-orange-700 hover:bg-orange-50"}`}
+                                  className={`p-1 rounded hover:cursor-pointer ${unusable ? "text-gray-400 hover:text-gray-500 hover:bg-gray-200" : "text-orange-600 hover:text-orange-700 hover:bg-orange-50"}`}
                                   title="Edit"
                                   aria-label="Edit promotion"
                                 >
@@ -420,7 +421,7 @@ export default function PromotionPage() {
                                       setCloseConfirm(p);
                                       setEnableDisableAction("disable");
                                     }}
-                                    className="p-2 rounded text-orange-600 hover:text-orange-700 hover:bg-orange-50 hover:cursor-pointer"
+                                    className="p-1 rounded text-orange-600 hover:text-orange-700 hover:bg-orange-50 hover:cursor-pointer"
                                     title="Disable"
                                     aria-label="Disable promotion"
                                   >
@@ -433,7 +434,7 @@ export default function PromotionPage() {
                                       setCloseConfirm(p);
                                       setEnableDisableAction("enable");
                                     }}
-                                    className="p-2 rounded text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    className="p-1 rounded text-green-600 hover:text-green-700 hover:bg-green-50"
                                     title="Enable"
                                     aria-label="Enable promotion"
                                   >
@@ -446,46 +447,47 @@ export default function PromotionPage() {
                           );
                         })
                       )}
-                    </tbody>
-                  </table>
-                </div>
+                      </tbody>
+                    </table>
+                  </div>
 
-                <div className="flex items-center justify-center gap-1 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="Previous page"
-                  >
-                    &lt;
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <div className="flex items-center justify-center gap-1 mt-6">
                     <button
-                      key={p}
                       type="button"
-                      onClick={() => setPage(p)}
-                      className={`min-w-[36px] py-2 px-2 rounded border text-sm font-medium ${
-                        p === currentPage
-                          ? "bg-green-100 border-green-300 text-green-800"
-                          : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                      }`}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="Previous page"
                     >
-                      {p}
+                      &lt;
                     </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                    aria-label="Next page"
-                  >
-                    &gt;
-                  </button>
-                </div>
-              </>
-            )}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPage(p)}
+                        className={`min-w-[36px] py-2 px-2 rounded border text-sm font-medium ${
+                          p === currentPage
+                            ? "bg-green-100 border-green-300 text-green-800"
+                            : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                      aria-label="Next page"
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

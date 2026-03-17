@@ -13,11 +13,7 @@ export default function BookingSuccessPage() {
   };
 
   const handleCheckBookingDetail = () => {
-    if (typeof orderId === "string") {
-      router.push(`/booking/${orderId}`);
-    } else {
-      router.push("/booking");
-    }
+    router.push("/booking-history");
   };
 
   return (
