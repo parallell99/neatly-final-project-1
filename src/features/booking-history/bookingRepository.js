@@ -4,6 +4,7 @@ async function findByUserId(userId) {
   const query = `
 SELECT
   o.id,
+  o.status,
   o.check_in_date,
   o.check_out_date,
   o.total_price,
@@ -53,6 +54,7 @@ WHERE o.user_id = $1
 
 GROUP BY
   o.id,
+  o.status,
   o.check_in_date,
   o.check_out_date,
   o.total_price,
