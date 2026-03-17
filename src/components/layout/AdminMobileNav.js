@@ -27,7 +27,7 @@ export default function AdminMobileNav() {
         <button
           type="button"
           onClick={toggleMenu}
-          className="flex flex-col gap-1.5 p-2 relative z-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded"
+          className="flex flex-col gap-1.5 p-2 relative z-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded hover:cursor-pointer"
           aria-label="Toggle menu"
           aria-expanded={isMenuOpen}
         >
@@ -48,7 +48,7 @@ export default function AdminMobileNav() {
 
       {isMenuOpen && (
         <div
-          className="fixed left-0 right-0 top-12 w-full h-[calc(100vh-3rem)] bg-white shadow-lg z-40 lg:hidden overflow-y-auto"
+          className="fixed left-0 right-0 top-16 w-full h-[calc(100vh-3rem)] bg-white shadow-lg z-40 lg:hidden overflow-y-auto"
           role="dialog"
           aria-label="Menu"
         >
@@ -74,7 +74,7 @@ export default function AdminMobileNav() {
                 logout();
                 toggleMenu();
               }}
-              className="text-left text-gray-600 font-sans text-base hover:text-green-700 transition-colors"
+              className="text-left text-gray-600 font-sans text-base hover:text-green-700 transition-colors hover:cursor-pointer"
             >
               Logout
             </button>
