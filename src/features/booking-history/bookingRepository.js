@@ -13,15 +13,16 @@ SELECT
   o.additional_request,
   o.card_brand,
   o.card_last4,
+  o.cancel_date AS "cancelDate",
 
   rt.name AS room_name,
   rt.image_main AS room_image,
   rt.promotion_price_per_night,
 
   p.code AS promotion_code,
-    p.discount_type,
-    p.discount_value,
-    p.max_discount,
+  p.discount_type,
+  p.discount_value,
+  p.max_discount,
 
   COALESCE(
     json_agg(
@@ -51,6 +52,7 @@ LEFT JOIN extras_requests er
 ON er.id = oer.extra_request_id
 
 WHERE o.user_id = $1
+AND o.status IN ('paid', 'cancelled', 'refunded')
 
 GROUP BY
   o.id,
@@ -63,6 +65,7 @@ GROUP BY
   o.additional_request,
   o.card_brand,
   o.card_last4,
+  o.cancel_date,
   rt.name,
   rt.image_main,
   rt.promotion_price_per_night,

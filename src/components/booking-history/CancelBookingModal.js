@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import Button from "../ui/buttons/buttons";
 
 export default function CancelBookingModal({
   open,
@@ -23,8 +24,11 @@ export default function CancelBookingModal({
             Cancel Booking
           </p>
 
-          <button onClick={onClose}>
-            <X size={20} className="text-gray-400" />
+          <button
+            type="button"
+            className="hover:cursor-pointer"
+            onClick={onClose}>
+            <X size={20} className="text-gray-400 focus:outline-none" />
           </button>
         </div>
 
@@ -54,24 +58,27 @@ export default function CancelBookingModal({
         {/* BUTTONS */}
         <div className="p-5 flex flex-col gap-3">
 
-          <button
+          <Button
+            type="button"
+            buttonStyle="primary"
+            buttonText="No, Don't Cancel"
+            className="w-full whitespace-nowrap px-5 py-3"
             onClick={onClose}
-            className="bg-orange-600 text-white py-3 rounded-md body-1"
-          >
-            No, Don't Cancel
-          </button>
+          />
 
           <button
             onClick={onConfirm}
-            className="border border-orange-500 text-orange-500 py-3 rounded-md body-1 text-center"
+            className="border border-orange-500 text-orange-500 py-3 rounded-md body-1 text-center hover:cursor-pointer"
           >
-            {isRefund?     
-            <>
-              Yes, I want to cancel and{" "}
-              <br className="block lg:hidden" />
-              request refund
-            </>
-              : "Yes, I want to cancel"}
+            {isRefund ? (
+              <>
+                Yes, I want to cancel and{" "}
+                <br className="block lg:hidden" />
+                request refund
+              </>
+            ) : (
+              "Yes, I want to cancel"
+            )}
           </button>
 
         </div>

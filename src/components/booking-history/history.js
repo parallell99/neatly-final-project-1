@@ -154,18 +154,40 @@ export default function BookingHistory() {
                                     {/* CONTENT */}
                                     <div className="mt-4 lg:mt-0 flex-1">
                                         <div className="flex-1">
-                                            <div className="px-4 py-2 lg:flex lg:justify-between lg:items-center">
-                                                <p className="headline-4 pb-1">{booking.room}</p>
-                                                <p className="flex items-center body-1 text-gray-600">
-                                                    Booking date:{" "}
-                                                    {new Date(booking.bookingDate).toLocaleDateString("en-GB", {
-                                                        weekday: "short",
-                                                        day: "2-digit",
-                                                        month: "short",
-                                                        year: "numeric"
-                                                    })}
-                                                </p>
+                                            <div className="px-4 py-2 lg:flex lg:justify-between lg:items-start">
+
+                                                {/* LEFT */}
+                                                <div>
+                                                    <p className="headline-4 pb-1">{booking.room}</p>
+                                                </div>
+
+                                                {/* RIGHT */}
+                                                <div className="lg:text-right">
+                                                    <p className="body-1 text-gray-600">
+                                                        Booking date:{" "}
+                                                        {new Date(booking.bookingDate).toLocaleDateString("en-GB", {
+                                                            weekday: "short",
+                                                            day: "2-digit",
+                                                            month: "short",
+                                                            year: "numeric"
+                                                        })}
+                                                    </p>
+
+                                                    {["cancelled", "refunded"].includes(booking.status?.toLowerCase()) && booking.cancelDate && (
+                                                        <p className="body-1 text-gray-600">
+                                                            Cancellation date:{" "}
+                                                            {new Date(booking.cancelDate).toLocaleDateString("en-GB", {
+                                                                weekday: "short",
+                                                                day: "2-digit",
+                                                                month: "short",
+                                                                year: "numeric"
+                                                            })}
+                                                        </p>
+                                                    )}
+                                                </div>
+
                                             </div>
+                                            
 
                                             {/* CHECK IN OUT */}
                                             <div className="p-4 space-y-3 body-1 text-gray-800 lg:flex lg:gap-10 lg:space-y-0">
@@ -268,46 +290,46 @@ export default function BookingHistory() {
 
                                             {/* ACTION BUTTONS */}
                                             {!hideAllCTA && (
-                                            <div className="p-4 border-t flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                                                <div className="flex items-center justify-center h-[48px] w-full gap-8 lg:w-auto lg:order-2 lg:gap-4">
-                                                    <Button
-                                                        type="button"
-                                                        buttonStyle="ghost"
-                                                        buttonText="Room Detail"
-                                                        onClick={() => {
-                                                            router.push(`/rooms/${createSlug(booking.room)}`);
-                                                        }}
-                                                    />
-
-                                                    {canChangeDate && (
-                                                        <Button
-                                                            type="button"
-                                                            buttonStyle="primary"
-                                                            buttonText="Change Date"
-                                                            className="w-[150px] lg:w-[150px] whitespace-nowrap px-5 py-3"
-                                                            onClick={() =>
-                                                                router.push(`/booking-action/${booking.id}/change-date`)
-                                                            }
-                                                        />
-
-                                                    )}
-                                                </div>
-
-                                                <div className="flex justify-end pr-10 lg:pr-10 lg:order-1">
-                                                    {canCancel && (
+                                                <div className="p-4 border-t flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                                                    <div className="flex items-center justify-center h-[48px] w-full gap-8 lg:w-auto lg:order-2 lg:gap-4">
                                                         <Button
                                                             type="button"
                                                             buttonStyle="ghost"
-                                                            buttonText="Cancel Booking"
+                                                            buttonText="Room Detail"
                                                             onClick={() => {
-                                                                setSelectedBookingId(booking.id);
-                                                                setCancelType(canRefund ? "refund" : "cancel");
-                                                                setShowCancelModal(true);
+                                                                router.push(`/rooms/${createSlug(booking.room)}`);
                                                             }}
                                                         />
-                                                    )}
+
+                                                        {canChangeDate && (
+                                                            <Button
+                                                                type="button"
+                                                                buttonStyle="primary"
+                                                                buttonText="Change Date"
+                                                                className="w-[150px] lg:w-[150px] whitespace-nowrap px-5 py-3"
+                                                                onClick={() =>
+                                                                    router.push(`/booking-action/${booking.id}/change-date`)
+                                                                }
+                                                            />
+
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex justify-end pr-10 lg:pr-10 lg:order-1">
+                                                        {canCancel && (
+                                                            <Button
+                                                                type="button"
+                                                                buttonStyle="ghost"
+                                                                buttonText="Cancel Booking"
+                                                                onClick={() => {
+                                                                    setSelectedBookingId(booking.id);
+                                                                    setCancelType(canRefund ? "refund" : "cancel");
+                                                                    setShowCancelModal(true);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
                                             )}
                                         </div>
                                     </div>
