@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
+import Button from "@/components/ui/buttons/buttons";
 
 function getStatusColor(status) {
   switch (status) {
@@ -150,8 +151,8 @@ export default function RoomManagementPage() {
       <div className="flex">
         <SideBarAdmin />
         <div className="flex flex-col flex-1">
-          <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300">
-            <span className="headline-5 ">Room Management</span>
+          <div className="h-[85.4px] flex items-center justify-between px-[60px] border-b border-gray-300">
+            <span className="headline-5 text-gray-900">Room Management</span>
             <div className="flex gap-4">
               <div className="h-[48px] w-[320px]">
                 <div className="relative h-full">
@@ -167,13 +168,13 @@ export default function RoomManagementPage() {
                   />
                 </div>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={() => router.push("/admin/create-room")}
-                className="w-[178px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px] bg-orange-600 text-white font-medium hover:bg-orange-700"
-              >
-                + Create Room
-              </button>
+                buttonStyle="primary"
+                buttonText="+ Create Room"
+                className="w-[178px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px] !p-2"
+              />
             </div>
           </div>
           <div className="px-[60px] pt-[48px] bg-gray-100 h-full">

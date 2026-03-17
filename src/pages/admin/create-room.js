@@ -9,6 +9,7 @@ import { useAmenitiesModal } from "@/hooks/useAmenitiesModal";
 import { useMainImage } from "@/hooks/useMainImage";
 import { useGalleryNewFiles } from "@/hooks/useGalleryNewFiles";
 import AmenitiesModal from "@/components/admin/AmenitiesModal";
+import Button from "@/components/ui/buttons/buttons";
 
 const BED_OPTIONS = [
   { value: "", label: "Select bed type" },
@@ -228,32 +229,32 @@ export default function CreateRoom() {
       <div className="flex flex-col flex-1 bg-gray-100 min-h-screen">
         <div className="flex-1 pt-px pb-px pl-0 pr-0 py-6 px-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 w-full px-0">
-            <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+            <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300">
               <h2 className="text-xl font-semibold text-gray-900">Create New Room</h2>
               <div className="flex items-center gap-2">
                 <Link
                   href="/admin/room-property"
-                  className="px-4 py-2 rounded border border-orange-500 text-orange-600 font-medium hover:bg-orange-50"
+                  className="w-[120px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px] p-2! btn btn-secondary"
                 >
                   Cancel
                 </Link>
-                <button
+                <Button
                   type="button"
                   onClick={handleCreate}
-                  className="px-4 py-2 rounded bg-orange-600 text-white font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={saving}
-                >
-                  {saving ? "Saving..." : "Create"}
-                </button>
+                  buttonStyle="primary"
+                  buttonText={saving ? "Saving..." : "Create"}
+                  className="w-[120px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px] p-2!"
+                />
               </div>
             </div>
-            <form className="p-6 space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="p-6 space-y-6 px-15" onSubmit={(e) => e.preventDefault()}>
               {saveError && (
                 <p className="mb-4 text-sm text-red-600">{saveError}</p>
               )}
               {/* Basic Information */}
-              <section>
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Basic Information</h3>
+              <section >
+                <h3 className="headline-5 text-gray-600 mb-10">Basic Information</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Room Type *</label>
