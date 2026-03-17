@@ -44,36 +44,39 @@ export default function SideBarAdmin() {
 
   return (
     <>
-      <div className="bg-green-800 h-dvh w-[240px] flex flex-col gap-[40px]">
-        <div className="h-[153px] flex flex-col justify-center items-center gap-4">
-          <Link href="/" className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded">
-            <img src={logoSrc} className="w-[120px] h-auto object-contain" alt="Neatly logo" />
-          </Link>
-          <span className="body-1 text-green-400">Admin Panel Control</span>
+      {/* Reserve layout space, keep sidebar always visible */}
+      <div className="w-[240px] shrink-0">
+        <div className="fixed top-0 left-0 z-40 h-dvh w-[240px] bg-green-800 flex flex-col gap-[40px] overflow-y-auto">
+          <div className="h-[153px] flex flex-col justify-center items-center gap-4">
+            <Link href="/" className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded">
+              <img src={logoSrc} className="w-[120px] h-auto object-contain" alt="Neatly logo" />
+            </Link>
+            <span className="body-1 text-green-400">Admin Panel Control</span>
+          </div>
+          <div className="flex flex-col">
+            {menuItems.map(({ id, label, icon, href }) => {
+              const isActive = pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "-")
+              return (
+                <Link
+                  key={id}
+                  href={href}
+                  className={`flex items-center gap-4 body-1 p-6 cursor-pointer w-full text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 ${isActive ? "bg-green-600 text-green-100" : ""}`}
+                >
+                  {React.createElement(icon, { className: "w-6 h-6 shrink-0 text-green-500", "aria-hidden": true })}
+                  <span className="text-inherit">{label}</span>
+                </Link>
+              )
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex gap-4 border-t border-green-700 p-6 mt-auto w-full text-left bg-transparent text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 cursor-pointer"
+          >
+            <LogoutLogo className="w-6 h-6 shrink-0 text-green-500" aria-hidden />
+            <span>Log Out</span>
+          </button>
         </div>
-        <div className="flex flex-col">
-          {menuItems.map(({ id, label, icon, href }) => {
-            const isActive = pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "-")
-            return (
-              <Link
-                key={id}
-                href={href}
-                className={`flex items-center gap-4 body-1 p-6 cursor-pointer w-full text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 ${isActive ? "bg-green-600 text-green-100" : ""}`}
-              >
-                {React.createElement(icon, { className: "w-6 h-6 shrink-0 text-green-500", "aria-hidden": true })}
-                <span className="text-inherit">{label}</span>
-              </Link>
-            )
-          })}
-        </div>
-        <button
-          type="button"
-          onClick={logout}
-          className="flex gap-4 border-t border-green-700 p-6 mt-auto mb-[210px] w-full text-left bg-transparent text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 cursor-pointer"
-        >
-          <LogoutLogo className="w-6 h-6 shrink-0 text-green-500" aria-hidden />
-          <span>Log Out</span>
-        </button>
       </div>
     </>
   )
