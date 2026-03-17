@@ -17,7 +17,8 @@ export default function RoomCard({ room, searchParams, onClick }) {
         return title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     }
 
-    const slug = room?.slug || createSlug(room?.title) || (room?.id ? String(room.id) : "");
+    const slug = createSlug(room?.room_type_name);
+    console.log(room);
 
     // --- คำนวณ availability ---
     const availableRooms = Number(room.available_rooms ?? 0);
@@ -81,8 +82,7 @@ export default function RoomCard({ room, searchParams, onClick }) {
         <article className="flex flex-col gap-4 lg:flex-row lg:gap-12 border-b border-gray-200 lg:py-10">
 
             {/* Image */}
-            <div
-                className="relative w-full h-[300px] object-cover overflow-hidden cursor-pointer lg:w-[453px] lg:h-[320px] rounded-sm"
+            <div className="relative w-full h-[300px] object-cover overflow-hidden cursor-pointer lg:w-[453px] lg:h-[320px] rounded-sm"
                 onClick={onClick}
             >
                 <img
@@ -179,8 +179,8 @@ export default function RoomCard({ room, searchParams, onClick }) {
                         buttonStyle="ghost"
                         buttonText="Room Detail"
                         onClick={() => {
-                            if (slug) router.push(`/rooms/${slug}`);
-                        }}
+                            router.push(`/rooms/${slug}`);
+                        }}                        
                     />
 
                     <Button
