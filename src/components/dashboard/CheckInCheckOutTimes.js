@@ -15,8 +15,6 @@ function CheckInCheckOutTimesCard({ data, loading }) {
   const checkIn = data?.checkIn;
   const checkOut = data?.checkOut;
 
-  console.log(checkIn)
-  console.log(checkOut)
 
   return (
     <article
