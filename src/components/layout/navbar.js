@@ -410,8 +410,8 @@ export default function Navbar() {
                             <img src={getImageSrc(paymentIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                             Payment Method
                           </Link>
-                          <Link
-                            href="/booking"
+                          <Link 
+                            href="/booking-history" 
                             className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                           >
                             <img src={getImageSrc(bookingIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
@@ -729,7 +729,7 @@ export default function Navbar() {
                       Payment Method
                     </Link>
                     <Link
-                      href="/booking"
+                      href="/booking-history"
                       className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                       onClick={toggleMenu}
                     >
