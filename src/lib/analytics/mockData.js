@@ -138,29 +138,37 @@ export function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
             return {
               date: format(day, "yyyy-MM-dd"),
               occupancyPercent:
-                TOTAL_ROOMS > 0 ? Math.min(100, Math.round((occupied / TOTAL_ROOMS) * 100)) : 0,
+                TOTAL_ROOMS > 0 ? Math.min(100, (occupied / TOTAL_ROOMS) * 100) : 0,
+              occupiedRooms: occupied,
             };
           });
         })()
       : months.map((monthStart) => {
           const monthEnd = endOfMonth(monthStart);
-          const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+          const rangeStart = monthStart < dateFrom ? dateFrom : monthStart;
+          const rangeEnd = monthEnd > dateTo ? dateTo : monthEnd;
+          const allDays = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
           let totalPercent = 0;
+          let totalOccupiedRooms = 0;
           for (const day of allDays) {
             const raw = parsed.filter((o) => isOrderActiveOnDay(o, day)).length;
             const occupied = Math.min(raw, TOTAL_ROOMS);
+            totalOccupiedRooms += occupied;
             totalPercent += TOTAL_ROOMS > 0 ? (occupied / TOTAL_ROOMS) * 100 : 0;
           }
           return {
             date: format(monthStart, "yyyy-MM-01"),
             occupancyPercent:
-              allDays.length > 0 ? Math.min(100, Math.round(totalPercent / allDays.length)) : 0,
+              allDays.length > 0 ? Math.min(100, totalPercent / allDays.length) : 0,
+            occupiedRooms: allDays.length > 0 ? totalOccupiedRooms / allDays.length : 0,
           };
         });
 
   const occupancyByRoomTypeMonthly = months.map((monthStart) => {
     const monthEnd = endOfMonth(monthStart);
-    const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    const rangeStart = monthStart < dateFrom ? dateFrom : monthStart;
+    const rangeEnd = monthEnd > dateTo ? dateTo : monthEnd;
+    const allDays = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
     const occupancyPercentByRoomType = {};
     for (const rt of roomTypesMeta) {
       const rtParsed = parsed.filter((o) => o.room_type_id === rt.id);
@@ -171,7 +179,7 @@ export function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
         totalPercent += rt.totalRooms > 0 ? (occupied / rt.totalRooms) * 100 : 0;
       }
       occupancyPercentByRoomType[rt.id] =
-        allDays.length > 0 ? Math.min(100, Math.round(totalPercent / allDays.length)) : 0;
+        allDays.length > 0 ? Math.min(100, totalPercent / allDays.length) : 0;
     }
     return { month: format(monthStart, "yyyy-MM-01"), occupancyPercentByRoomType };
   });

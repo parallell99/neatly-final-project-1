@@ -16,7 +16,6 @@ import Booking from "@/assets/icons/booking.svg";
 import Site from "@/assets/icons/site.svg";
 import Wallet from "@/assets/icons/wallet.svg";
 
-import { addMonths } from "date-fns";
 import { useRoomAvailability } from "@/hooks/analytics/useRoomAvailability";
 import { useBookingTrends } from "@/hooks/analytics/useBookingTrends";
 import { useRevenueTrend } from "@/hooks/analytics/useRevenueTrend";
@@ -114,7 +113,7 @@ function AnalyticDashboard() {
     const [occViewBy, setOccViewBy] = useState("overall");
     const [occGranularity, setOccGranularity] = useState("month");
     const [occUseLive, setOccUseLive] = useState(false);
-    const { data: occData, loading: occLoading } = useOccupancyGuest(
+    const { data: occData, loading: occLoading, meta: occMeta } = useOccupancyGuest(
         occFrom,
         occTo,
         occViewBy,
@@ -203,14 +202,10 @@ function AnalyticDashboard() {
                             dateFrom={occFrom}
                             dateTo={occTo}
                             onDateFromChange={(date) => {
-                                if (!date) { setOccFrom(date); return; }
-                                const maxFrom = occTo ? addMonths(occTo, -6) : null;
-                                setOccFrom(maxFrom && date < maxFrom ? maxFrom : date);
+                                setOccFrom(date);
                             }}
                             onDateToChange={(date) => {
-                                if (!date) { setOccTo(date); return; }
-                                const maxTo = occFrom ? addMonths(occFrom, 6) : null;
-                                setOccTo(maxTo && date > maxTo ? maxTo : date);
+                                setOccTo(date);
                             }}
                             viewBy={occViewBy}
                             onViewByChange={setOccViewBy}
@@ -218,6 +213,8 @@ function AnalyticDashboard() {
                             onGranularityChange={(v) => setOccGranularity(v)}
                             data={occData}
                             loading={occLoading}
+                            resolvedGranularity={occMeta?.resolvedGranularity}
+                            autoGroupMeta={occMeta}
                             useLive={occUseLive}
                             onToggleLive={() => setOccUseLive((prev) => !prev)}
                         />

@@ -36,10 +36,16 @@ function BookingTrendsByDayCard({
   onToggleLive,
 }) {
   const chartData = data;
+  const hasChartData =
+    Array.isArray(chartData) &&
+    chartData.some((row) => {
+      const percent = Number(row?.percent) || 0;
+      return percent > 0;
+    });
 
   return (
     <article className="flex flex-col gap-[24px]" aria-labelledby="booking-trends-title">
-      <header className="flex justify-between items-start xl:pb-[32px]">
+      <header className="flex justify-between items-start lg:pb-[32px]">
         <div className="flex items-center gap-[8px]">
           <h2 id="booking-trends-title" className="headline-5 text-gray-600">
             Booking Trends by Day
@@ -48,7 +54,7 @@ function BookingTrendsByDayCard({
             <button
               type="button"
               onClick={onToggleLive}
-              className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors ${
+              className={`hidden lg:block text-xs px-[8px] py-[4px] rounded-full border transition-colors hover:cursor-pointer ${
                 useLive
                   ? "bg-green-50 border-green-400 text-green-700"
                   : "bg-gray-100 border-gray-300 text-gray-500"
@@ -60,12 +66,12 @@ function BookingTrendsByDayCard({
         </div>
         {/*period selection */}
         <Select value={periodId} onValueChange={onPeriodChange}>
-          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300" aria-label="Select period">
+          <SelectTrigger className="!w-[136px] min-w-[136px] !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300 hover:cursor-pointer hover:border-orange-500" aria-label="Select period">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent position="popper">
             {BOOKING_TRENDS_PERIODS.map((p) => (
-              <SelectItem key={p.id} value={p.id} className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900">
+              <SelectItem key={p.id} value={p.id} className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900 data-[highlighted]:bg-gray-100 data-[state=checked]:bg-gray-100 hover:cursor-pointer">
                 {p.label}
               </SelectItem>
             ))}
@@ -76,6 +82,10 @@ function BookingTrendsByDayCard({
       <div className="w-full min-h-[200px] [&_*[tabindex]:focus]:outline-none">
         {loading ? (
           <BookingTrendsByDaySkeleton />
+        ) : !hasChartData ? (
+          <div className="flex items-center justify-center h-[235px] body-2 text-gray-400">
+            No data for selected range
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height={235}>
             <BarChart

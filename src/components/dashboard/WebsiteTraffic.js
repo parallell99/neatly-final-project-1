@@ -152,10 +152,10 @@ function WebsiteTrafficCard({
           Website traffic
         </h2>
 
-        <div className="flex flex-col items-stretch gap-2 xl:flex-row xl:items-center xl:gap-3">
+        <div className="flex flex-col items-stretch gap-2 lg:flex-row lg:items-center lg:gap-3">
           <div className="min-w-[140px]">
             <Select value={pageId} onValueChange={onPageChange}>
-              <SelectTrigger className="w-[136px]! min-w-[136px] h-[40px]! border border-gray-300 rounded-[8px] px-3 **:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900">
+              <SelectTrigger className="w-[136px]! min-w-[136px] h-[40px]! border border-gray-300 rounded-[8px] px-3 **:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900 hover:border-orange-500 hover:cursor-pointer">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -163,7 +163,7 @@ function WebsiteTrafficCard({
                   <SelectItem
                     key={page.id}
                     value={page.id}
-                    className="**:data-[slot=select-value]:body-2 **:data-[slot=select-value]:text-gray-900"
+                    className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900 data-[highlighted]:bg-gray-100 data-[state=checked]:bg-gray-100 hover:cursor-pointer"
                   >
                     {page.label}
                   </SelectItem>
@@ -172,13 +172,13 @@ function WebsiteTrafficCard({
             </Select>
           </div>
 
-          {/* Period filter inline with select on xl, hidden on smaller screens */}
-          <div className="hidden xl:flex flex-row gap-[8px] overflow-x-auto whitespace-nowrap scrollbar-hide">
+          {/* Period filter inline with select on lg, hidden on smaller screens */}
+          <div className="hidden lg:flex flex-row gap-[8px] overflow-x-auto whitespace-nowrap scrollbar-hide">
             {PERIODS.map((period) => (
               <button
                 key={period.id}
                 type="button"
-                className={`px-[12px] py-[4px] w-fit font-normal text-[16px] rounded-[4px] border ${periodId === period.id
+                className={` w-fit h-[40px]! px-[12px] py-[4px] font-normal text-[16px] rounded-[8px] border hover:border-orange-500 hover:cursor-pointer ${periodId === period.id
                   ? "text-orange-500 bg-orange-100 border-orange-500"
                   : " text-gray-900"
                   }`}
@@ -192,7 +192,7 @@ function WebsiteTrafficCard({
       </header>
 
       {/* Period filter below header on mobile/tablet */}
-      <div className="flex flex-row gap-[8px] overflow-x-auto whitespace-nowrap scrollbar-hide xl:hidden">
+      <div className="flex flex-row gap-[8px] overflow-x-auto whitespace-nowrap scrollbar-hide lg:hidden">
         {PERIODS.map((period) => (
           <button
             key={period.id}

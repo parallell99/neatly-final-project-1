@@ -136,6 +136,29 @@ function RevenueTrendCard({
     ? formattedData.map((d) => ({ ...d, label: d.displayLabel }))
     : formattedData;
 
+  const yTicks = React.useMemo(() => {
+    const values = (chartData || []).map((d) => Number(d?.revenue) || 0);
+    const maxVal = Math.max(0, ...values);
+    if (maxVal <= 0) return [0];
+
+    // 8 segments => 9 tick labels (including 0 and max)
+    const segments = 8;
+    const rawStep = maxVal / segments;
+
+    // Nice step rounding: 1 / 2 / 5 * 10^n
+    const pow = Math.pow(10, Math.floor(Math.log10(rawStep)));
+    const n = rawStep / pow;
+    const niceN = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+    const step = niceN * pow;
+
+    const top = Math.ceil(maxVal / step) * step;
+    const ticks = [];
+    for (let v = 0; v <= top + step / 2; v += step) {
+      ticks.push(v);
+    }
+    return ticks;
+  }, [chartData]);
+
   const xTicks = React.useMemo(() => {
     if (chartData.length <= MAX_X_TICKS) {
       return chartData.map((d) => d.label);
@@ -188,7 +211,7 @@ function RevenueTrendCard({
             <button
               type="button"
               onClick={onToggleLive}
-              className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors ${
+              className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors hover:cursor-pointer ${
                 useLive
                   ? "bg-green-50 border-green-400 text-green-700"
                   : "bg-gray-100 border-gray-300 text-gray-500"
@@ -202,19 +225,24 @@ function RevenueTrendCard({
       </header>
 
       
-        <div className="grid grid-row-2 grid-cols-2 gap-x-[16px] gap-y-[8px] gap- pb-[24px]">
+        <div className="grid grid-cols-2 gap-x-[16px] gap-y-[8px] pb-[24px] lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:pt-3 lg:pb-12 xl:flex-nowrap">
 
-          {/*Select date from */}
-          <div className="flex flex-col gap-1">
-            <label htmlFor="revenue-from" className="body-2 text-gray-600">
+          {/* Date range: From + To */}
+          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-[3] lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
+          <div className="flex flex-col gap-1 lg:flex-1 lg:flex-row lg:items-center lg:gap-2">
+            <label
+              htmlFor="revenue-from"
+              className="body-2 text-gray-600 lg:w-[30px] lg:shrink-0 lg:mb-0 lg:text-right lg:whitespace-nowrap"
+            >
               From
             </label>
+            <div className="lg:flex-1">
             <Popover>
               <PopoverTrigger asChild>
                 <ButtonCalendar
                   id="revenue-from"
                   type="button"
-                  className="w-full min-w-[140px] h-[40px] justify-between text-left text-[14px] font-normal shadow-none text-gray-900 rounded-[8px] border border-gray-300 bg-white hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500 data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0"
+                  className="w-full min-w-[140px] h-[40px] justify-between text-left text-[14px] font-normal shadow-none text-gray-900 rounded-[8px] border border-gray-300 bg-white hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500 data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0 hover:border-orange-500"
                 >
                   <span className={dateFrom ? "" : "text-gray-600"}>
                     {dateFrom ? format(dateFrom, "d MMM yyyy") : "Select start date"}
@@ -240,19 +268,23 @@ function RevenueTrendCard({
                 />
               </PopoverContent>
             </Popover>
+            </div>
           </div>
 
-          {/*Select date to */}
-          <div className="flex flex-col gap-1">
-            <label htmlFor="revenue-to" className="body-2 text-gray-600">
+          <div className="flex flex-col gap-1 lg:flex-1 lg:flex-row lg:items-center lg:gap-2 lg:-ml-[14px]">
+            <label
+              htmlFor="revenue-to"
+              className="body-2 text-gray-600 lg:w-[30px] lg:shrink-0 lg:mb-0 lg:text-right lg:whitespace-nowrap"
+            >
               to
             </label>
+            <div className="lg:flex-1">
             <Popover>
               <PopoverTrigger asChild>
                 <ButtonCalendar
                   id="revenue-to"
                   type="button"
-                  className="w-full min-w-[140px] h-[40px] justify-between text-left text-[14px] font-normal shadow-none text-gray-900 rounded-[8px] border border-gray-300 bg-white hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500 data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0"
+                  className="w-full min-w-[140px] h-[40px] justify-between text-left text-[14px] font-normal shadow-none text-gray-900 rounded-[8px] border border-gray-300 bg-white hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500 data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0 hover:orange-500 hover:border-orange-500"
                 >
                   <span className={dateTo ? "" : "text-gray-600"}>
                     {dateTo ? format(dateTo, "d MMM yyyy") : "Select end date"}
@@ -281,43 +313,50 @@ function RevenueTrendCard({
                 />
               </PopoverContent>
             </Popover>
+            </div>
+          </div>
           </div>
 
-          {/* View by: Booking Date / Stay Date */}
-          <div className="flex flex-col gap-1 w-[144px]">
-            <label className="body-2 text-gray-600">View by</label>
-            <Select value={mode} onValueChange={onModeChange}>
-              <SelectTrigger className="w-full !h-[40px]  border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper" >
-                {REVENUE_MODES.map((m) => (
-                  <SelectItem key={m.id} value={m.id} className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900">
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filters: View by + Granularity (keep close on desktop) */}
+          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-[2] lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
+            <div className="flex flex-col gap-1 w-full lg:flex-1 lg:flex-row lg:items-center lg:gap-2">
+              <label className="body-2 text-gray-600 lg:w-[64px] lg:shrink-0 lg:mb-0 lg:text-right lg:whitespace-nowrap">
+                View by
+              </label>
+              <Select value={mode} onValueChange={onModeChange}>
+                <SelectTrigger className="w-full !h-[40px]  border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300 hover:cursor-pointer hover:border-orange-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper" >
+                  {REVENUE_MODES.map((m) => (
+                    <SelectItem key={m.id} value={m.id} className="[&_[data-slot=select-value]]:body-2  [&_[data-slot=select-value]]:text-gray-900 data-[highlighted]:bg-gray-100 data-[state=checked]:bg-gray-100 hover:cursor-pointer">
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Granularity: Day / Month */}
-          <div className="flex flex-col gap-1 w-[144px]">
-            <label className="body-2 text-gray-600">Granularity</label>
-            <Select
-              value={granularity}
-              onValueChange={(v) => typeof onGranularityChange === "function" && onGranularityChange(v)}
-            >
-              <SelectTrigger className="w-full !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                {GRANULARITY_OPTIONS.map((o) => (
-                  <SelectItem key={o.id} value={o.id} className="[&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900">
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-col gap-1 w-full lg:flex-1 lg:flex-row lg:items-center lg:gap-2">
+              <label className="body-2 text-gray-600 lg:w-[84px] lg:shrink-0 lg:mb-0 lg:text-right lg:whitespace-nowrap">
+                Granularity
+              </label>
+              <Select
+                value={granularity}
+                onValueChange={(v) => typeof onGranularityChange === "function" && onGranularityChange(v)}
+              >
+                <SelectTrigger className="w-full !h-[40px] border border-gray-300 rounded-[8px] px-3 [&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 focus-visible:ring-0 focus-visible:border-gray-300 hover:cursor-pointer hover:border-orange-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  {GRANULARITY_OPTIONS.map((o) => (
+                    <SelectItem key={o.id} value={o.id} className="[&_[data-slot=select-value]]:body-2 [&_[data-slot=select-value]]:text-gray-900 data-[highlighted]:bg-gray-100 data-[state=checked]:bg-gray-100 hover:cursor-pointer">
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
         </div>
@@ -373,6 +412,7 @@ function RevenueTrendCard({
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: "var(--gray-700)", fontSize: 12, textAnchor: "start", dx: -45,}}
+                ticks={yTicks}
                 tickFormatter={(v) =>
                   v >= 1000 ? `${v / 1000},000` : String(v)
                 }
