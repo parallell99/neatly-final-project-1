@@ -38,10 +38,10 @@ function CheckInCheckOutTimesCard({ data, loading }) {
           <CheckCardSkeleton />
         </div>
       ) : (
-        <div className="grid gap-[16px] xl:grid-cols-2">
+        <div className="grid gap-[16px] lg:grid-cols-2">
           {/* Check-in card */}
           <section
-            className="flex items-center  justify-between rounded-[16px] px-[12px] xl:px-[24px] py-[16px] bg-green-100"
+            className="flex items-center  justify-between rounded-[16px] px-[12px] lg:px-[24px] py-[16px] bg-green-100"
           >
             <div className="flex items-center w-full gap-3">
 
@@ -81,7 +81,7 @@ function CheckInCheckOutTimesCard({ data, loading }) {
 
           {/* Check-out card */}
           <section
-            className="flex items-center  justify-between rounded-[16px] px-[12px] xl:px-[24px]  py-[16px] bg-orange-100"
+            className="flex items-center  justify-between rounded-[16px] px-[12px] lg:px-[24px]  py-[16px] bg-orange-100"
           >
             <div className="flex items-center w-full gap-3">
 

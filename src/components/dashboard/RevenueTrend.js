@@ -211,7 +211,7 @@ function RevenueTrendCard({
             <button
               type="button"
               onClick={onToggleLive}
-              className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors hover:cursor-pointer ${
+              className={`hidden lg:block text-xs px-[8px] py-[4px] rounded-full border transition-colors hover:cursor-pointer ${
                 useLive
                   ? "bg-green-50 border-green-400 text-green-700"
                   : "bg-gray-100 border-gray-300 text-gray-500"
@@ -225,10 +225,10 @@ function RevenueTrendCard({
       </header>
 
       
-        <div className="grid grid-cols-2 gap-x-[16px] gap-y-[8px] pb-[24px] lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:pt-3 lg:pb-12 xl:flex-nowrap">
+        <div className="grid grid-cols-2 gap-x-[16px] gap-y-[8px] pb-[24px] lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:pt-3 lg:pb-12 ">
 
           {/* Date range: From + To */}
-          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-[3] lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
+          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-3 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
           <div className="flex flex-col gap-1 lg:flex-1 lg:flex-row lg:items-center lg:gap-2">
             <label
               htmlFor="revenue-from"
@@ -318,7 +318,7 @@ function RevenueTrendCard({
           </div>
 
           {/* Filters: View by + Granularity (keep close on desktop) */}
-          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-[2] lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
+          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
             <div className="flex flex-col gap-1 w-full lg:flex-1 lg:flex-row lg:items-center lg:gap-2">
               <label className="body-2 text-gray-600 lg:w-[64px] lg:shrink-0 lg:mb-0 lg:text-right lg:whitespace-nowrap">
                 View by

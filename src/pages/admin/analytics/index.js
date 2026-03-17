@@ -132,23 +132,23 @@ function AnalyticDashboard() {
     } = useTrafficData(trafficPeriod, trafficPage);
 
     return (
-        <div className="flex flex-col xl:flex-row">
-            <div className="hidden xl:block">
+        <div className="flex flex-col lg:flex-row">
+            <div className="hidden lg:block">
                 <SideBarAdmin />
             </div>
 
             <AdminMobileNav />
 
-            <div className="xl:flex xl:flex-col xl:w-full">
-                <header className="flex h-[80px] bg-white border border-b border-gray-300 p-[16px] xl:px-[60px] xl:py-[16px] xl:items-center">
+            <div className="lg:flex lg:flex-col lg:w-full">
+                <header className="flex h-[80px] bg-white border border-b border-gray-300 p-[16px] lg:px-[60px] lg:py-[16px] lg:items-center">
                     <h5 className="headline-5 text-gray-900">
                         Analytics Dashboard
                     </h5>
                 </header>
 
-                <main className="flex flex-col bg-gray-100 gap-[24px] xl:px-[60px] xl:py-[40px] pb-[119px]">
+                <main className="flex flex-col bg-gray-100 gap-[24px] lg:px-[60px] lg:py-[40px] pb-[119px]">
                     {/*upper card */}
-                    <section className="grid grid-cols-1 xl:grid-cols-4 p-[16px] xl:p-0 gap-[16px] xl:gap-[8px] ">
+                    <section className="grid grid-cols-1 lg:grid-cols-4 p-[16px] lg:p-0 gap-[16px] lg:gap-[8px] ">
                         {dashboardStats.map((stat) => {
                             const Icon = iconMap[stat.key];
                             return (<DashboardTopCard key={stat.key} {...stat} icon={Icon} />)
@@ -157,8 +157,8 @@ function AnalyticDashboard() {
                     </section>
 
                     {/*room availability and booking trend*/}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-[24px] xl:gap-[8px]">
-                        <section className="rounded-[8px] border border-gray-300 p-[16px] xl:pt-[24px] xl:pr-[40px] xl:pl-[40px] xl:pb-[24px] bg-white flex flex-col gap-[8px] relative">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-[24px] lg:gap-[8px]">
+                        <section className="rounded-[8px] border border-gray-300 p-[16px] lg:pt-[24px] lg:pr-[40px] lg:pl-[40px] lg:pb-[24px] bg-white flex flex-col gap-[8px] relative">
                             <RoomAvailabilityCard
                                 periodId={roomPeriod}
                                 onPeriodChange={setRoomPeriod}
@@ -167,7 +167,7 @@ function AnalyticDashboard() {
                             />
                         </section>
                         {/*booking trend */}
-                        <section className="rounded-[8px] border border-gray-300 p-[16px] xl:pt-[24px] xl:pr-[40px] xl:pl-[40px] xl:pb-[24px] bg-white flex flex-col gap-[8px] relative">
+                        <section className="rounded-[8px] border border-gray-300 p-[16px] lg:pt-[24px] lg:pr-[40px] lg:pl-[40px] lg:pb-[24px] bg-white flex flex-col gap-[8px] relative">
                             <BookingTrendsByDayCard
                                 periodId={bookingPeriod}
                                 onPeriodChange={setBookingPeriod}

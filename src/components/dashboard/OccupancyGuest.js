@@ -321,7 +321,7 @@ function OccupancyGuestCard({
                 type="button"
                 onClick={onToggleLive}
                 aria-label={useLive ? "Using live database data" : "Using mock data"}
-                className={`hidden xl:block text-xs px-[8px] py-[4px] rounded-full border transition-colors hover:cursor-pointer ${useLive
+                className={`hidden lg:block text-xs px-[8px] py-[4px] rounded-full border transition-colors hover:cursor-pointer ${useLive
                   ? "bg-green-50 border-green-400 text-green-700"
                   : "bg-gray-100 border-gray-300 text-gray-500"
                   }`}
@@ -340,9 +340,9 @@ function OccupancyGuestCard({
         </div>
 
         {/* Filters – align layout with RevenueTrend */}
-        <div className="grid grid-cols-2 gap-x-[16px] gap-y-[8px] pb-[24px] lg:flex lg:flex-row lg:flex-wrap lg:items-center lg:pt-3 lg:pb-12 xl:flex-nowrap">
+        <div className="grid grid-cols-2 gap-x-[16px] gap-y-[8px] pb-[24px] lg:flex lg:flex-row lg:items-center lg:pt-3 lg:pb-12 lg:flex-nowrap">
           {/* Date range: From + To */}
-          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-[3] lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
+          <div className="col-span-2 grid grid-cols-2 gap-x-[16px] gap-y-0 lg:flex lg:flex-3 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-2">
             <div className="flex flex-col gap-1 lg:flex-1 lg:flex-row lg:items-center lg:gap-2">
               <label
                 htmlFor="occ-from"
@@ -623,8 +623,8 @@ function OccupancyGuestCard({
           </section>
 
           {/* Guest Visit */}
-          <div className="xl:grid xl:grid-cols-2 xl:gap-[48px]">
-            <section aria-label="Guest visit summary" className="flex flex-col gap-[16px] xl:gap-[24px]">
+          <div className="lg:grid lg:grid-cols-2 lg:gap-[48px]">
+            <section aria-label="Guest visit summary" className="flex flex-col gap-[16px] lg:gap-[24px]">
               <h3 className="font-semibold text-[16px] text-gray-700">Guest Visit</h3>
               <div className="flex flex-col gap-[16px]">
                 {data.guestVisit.segments.map((segment) => (
@@ -657,7 +657,7 @@ function OccupancyGuestCard({
             </section>
 
             {/* Payment Method */}
-            <section aria-label="Payment method summary" className="flex flex-col gap-[16px] xl:gap-[24px]">
+            <section aria-label="Payment method summary" className="flex flex-col gap-[16px] lg:gap-[24px]">
               <h3 className="font-semibold text-[16px] text-gray-700">Payment Method</h3>
               <div className="flex flex-col gap-[16px]">
                 {data.paymentMethods.map((method) => {
@@ -888,7 +888,7 @@ function OccupancyTooltip({ active, payload }) {
   const { label, percent, rangeText, occupiedRooms, totalRooms } = payload[0].payload;
   const header = rangeText ?? label;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white/95 px-4 py-3 shadow-lg shadow-gray-200/50 backdrop-blur-sm">
+    <div className="rounded-lg border border-gray-100 bg-white/95 px-4 py-3 shadow-lg shadow-gray-200/50 backdrop-blur-sm">
       <p className="text-sm font-medium text-gray-800">{header}</p>
       <div className="mt-1.5 flex flex-col gap-0.5">
         <span className="text-sm text-gray-600">
@@ -916,7 +916,7 @@ function OccupancyByRoomTypeTooltip({ active, payload, roomTypes = [], colors = 
   if (!active || !payload?.length) return null;
   const { monthLabel, rangeText } = payload[0].payload;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white/95 px-4 py-3 shadow-lg shadow-gray-200/50 backdrop-blur-sm">
+    <div className="rounded-lg border border-gray-100 bg-white/95 px-4 py-3 shadow-lg shadow-gray-200/50 backdrop-blur-sm">
       <p className="text-sm font-medium text-gray-800">{monthLabel}</p>
       {rangeText && (
         <p className="mt-0.5 text-xs text-gray-500">{rangeText}</p>
