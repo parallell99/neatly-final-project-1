@@ -39,29 +39,19 @@ function getBookingPolicy(booking) {
         };
     }
 
-    // 1. WITHIN 24 HOURS OF BOOKING
-    if (within24Booking) {
-        return {
-            canChangeDate: true,
-            canCancel: true,
-            canRefund: true,
-        };
-    }
+    // Change date:
+    // - only within 24h after booking
+    // - but NOT allowed in the last 24h before check-in (14:00)
+    const canChangeDate = within24Booking && !within24Checkin;
 
-    // 3. WITHIN 24 HOURS BEFORE CHECK-IN (หลัง 17:00 14:00 เป็นต้นไป)
-    if (within24Checkin) {
-        return {
-            canChangeDate: false,
-            canCancel: true,
-            canRefund: false,
-        };
-    }
+    // Refund:
+    // - not allowed in the last 24h before check-in (14:00)
+    const canRefund = !within24Checkin;
 
-    // 2. NORMAL CASE
     return {
-        canChangeDate: false,
+        canChangeDate,
         canCancel: true,
-        canRefund: false,
+        canRefund,
     };
 }
 
@@ -146,8 +136,10 @@ export default function BookingHistory() {
                         const open = openId === booking.id;
 
                         const { canChangeDate, canCancel, canRefund } = getBookingPolicy(booking);
+                        const status = typeof booking?.status === "string" ? booking.status.toLowerCase() : "";
+                        const isClosed = status === "refunded" || status === "cancelled";
 
-                        const hideAllCTA = !canCancel && !canChangeDate;
+                        const hideAllCTA = isClosed || (!canCancel && !canChangeDate);
 
                         return (
                             <div key={booking.id} className="border-b pb-10">
@@ -292,11 +284,7 @@ export default function BookingHistory() {
                                                             type="button"
                                                             buttonStyle="primary"
                                                             buttonText="Change Date"
-                                                            style={{
-                                                                whiteSpace: "nowrap",
-                                                                padding: "12px 20px"
-                                                            }}
-                                                            className="w-[150px] lg:w-[150px]"
+                                                            className="w-[150px] lg:w-[150px] whitespace-nowrap px-5 py-3"
                                                             onClick={() =>
                                                                 router.push(`/booking-action/${booking.id}/change-date`)
                                                             }
