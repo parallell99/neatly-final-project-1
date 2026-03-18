@@ -151,7 +151,7 @@ export default function RoomManagementPage() {
       <div className="flex">
         <SideBarAdmin />
         <div className="flex flex-col flex-1">
-          <div className="h-[85.4px] flex items-center justify-between px-[60px] border-b border-gray-300">
+          <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300">
             <span className="headline-5 text-gray-900">Room Management</span>
             <div className="flex gap-4">
               <div className="h-[48px] w-[320px]">
@@ -177,7 +177,7 @@ export default function RoomManagementPage() {
               />
             </div>
           </div>
-          <div className="px-[60px] pt-[48px] bg-gray-100 h-full">
+          <div className="px-[60px] pt-[48px] bg-gray-100 h-dvh">
             <div className="overflow-x-auto rounded-[4px] border border-gray-300 bg-white">
               <table className="min-w-full text-left">
                 <thead className="bg-gray-300">

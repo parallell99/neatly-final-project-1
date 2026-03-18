@@ -65,7 +65,7 @@ export default function RoomProperty() {
         <div className="flex-1 pt-px pb-px pl-0 pr-0">
           {/* Header: title + search + Create Room - same as Customer Booking */}
           <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300">
-            <h1 className="headline-5">Room & Property</h1>
+            <h1 className="headline-5 text-gray-900">Room & Property</h1>
             <div className="flex gap-4">
               <div className="h-[48px] w-[320px]">
                 <div className="relative h-full">
