@@ -10,10 +10,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    const nowIso = new Date().toISOString();
+
     const { data, error } = await supabaseAdmin
       .from("promotions")
       .select("id, name, code, description, discount_type, discount_value, min_spend, start_date, end_date, global_usage_limit, usage_limit_per_user")
       .eq("is_active", true)
+      // แสดงเฉพาะโปรโมชันที่ยังไม่หมดอายุ:
+      // - end_date เป็น null (ไม่มีวันหมดอายุ)
+      // - หรือ end_date >= วันนี้
+      .or(`end_date.is.null,end_date.gte.${nowIso}`)
       .order("created_at", { ascending: false });
 
     if (error) {
