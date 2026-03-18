@@ -55,6 +55,7 @@ export default function PaymentMethodForm({
   const [isLg, setIsLg] = useState(false);
 
   const hasCreatedPI = useRef(false);
+  const lastTotalRef = useRef(null);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia("(min-width: 1024px)");
@@ -315,6 +316,14 @@ export default function PaymentMethodForm({
     try {
       let stripeCustomerId = user?.stripe_customer_id ?? null;
 
+      // อัปเดต total_price ใน orders ให้เป็น “ยอดสุทธิจริง” ก่อนสร้าง PaymentIntent
+      // (รวม extras และหัก promotion แล้ว)
+      try {
+        await handleUpdateOrderMeta();
+      } catch (metaErr) {
+        console.error("Update order meta before PI error:", metaErr);
+      }
+
       const res = await fetch("/api/stripe/create-payment-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -345,11 +354,33 @@ export default function PaymentMethodForm({
     }
   };
   useEffect(() => {
-    if (method === "credit-card" && orderId && !hasCreatedPI.current) {
+    if (method !== "credit-card") return;
+    if (!orderId) return;
+    // If we don't have a clientSecret yet (or it was reset after promo/extras changes),
+    // create a new PaymentIntent exactly once.
+    if (!clientSecret && !hasCreatedPI.current) {
       hasCreatedPI.current = true;
       handleCreatePaymentIntent();
     }
-  }, [method, orderId]);
+  }, [method, orderId, clientSecret]);
+
+  // ถ้ายอดสุทธิเปลี่ยน (เช่น apply/remove promo หรือเปลี่ยน extras) ให้สร้าง PaymentIntent ใหม่
+  useEffect(() => {
+    if (method !== "credit-card") return;
+    if (!orderId) return;
+    if (!Number.isFinite(totalBaht)) return;
+
+    const next = Math.round(Number(totalBaht) * 100) / 100;
+    if (lastTotalRef.current == null) {
+      lastTotalRef.current = next;
+      return;
+    }
+    if (lastTotalRef.current !== next) {
+      lastTotalRef.current = next;
+      setClientSecret("");
+      hasCreatedPI.current = false;
+    }
+  }, [method, orderId, totalBaht]);
 
   useEffect(() => {
     if (method !== "credit-card") {

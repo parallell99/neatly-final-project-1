@@ -68,8 +68,12 @@ export default async function handler(req, res) {
     }
 
     // 3️⃣ สร้าง PaymentIntent
+    const totalBaht = Number(order.total_price ?? 0) || 0;
+    const amountSatang = Math.max(0, Math.round(totalBaht * 100));
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: order.total_price,
+      // Stripe expects the smallest currency unit (satang for THB)
+      amount: amountSatang,
       currency: "thb",
       customer: customerId,
       payment_method_types: ["card"],
