@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import SideBarAdmin from "@/components/layout/SideBarAdmin";
-import Chatbot from "@/components/layout/chatbot/ChatbotButton"
 import CardResponseMenu from "@/components/layout/chatbot/CardSuggestionMenu"
 import BewareIcon from "@/assets/icons/beware.svg?url"
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay } from "@dnd-kit/core"
@@ -253,7 +252,6 @@ export default function ChatbotAdmin() {
       <Toaster position="top-right" />
       <div className="flex">
         <SideBarAdmin />
-        <Chatbot />
         <div className="flex flex-col flex-1">
           <span className="headline-5 h-[80px] flex items-center pl-[60px] border-b border-gray-300">Chatbot Setup</span>
           <div className="bg-gray-100 flex-1 p-[60px]">

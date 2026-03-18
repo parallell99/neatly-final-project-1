@@ -114,6 +114,9 @@ function AuthProvider({ children }) {
   const logout = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
+      window.location.href = "/";
+    } else {
+      router.push("/");
     }
     setState((prev) => ({
       ...prev,
@@ -121,7 +124,6 @@ function AuthProvider({ children }) {
       loading: false,
       error: null,
     }));
-    router.push("/");
   };
 
   const value = {

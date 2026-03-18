@@ -26,11 +26,15 @@ function TypingDots() {
   )
 }
 
-export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelect, onRoomViewDetails }) {
+export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelect, onRoomViewDetails, greetingMessage = "" }) {
   return (
     <div className="flex flex-col gap-3 pb-4">
       {messages.length === 0 && !isTyping && (
-        <p className="text-gray-500">Welcome to Neatly Hotel! 🌟 I'm your virtual assistant. Choose a topic you'd like to know more about. I'm here to help! 😊</p>
+        <p className="text-gray-500 relative whitespace-pre-line">
+          {greetingMessage?.trim()
+            ? greetingMessage
+            : "Welcome to Neatly Hotel! 🌟 I'm your virtual assistant. Choose a topic you'd like to know more about. I'm here to help! 😊"}
+        </p>
       )}
       {messages.map((msg, i) => {
         if (msg.role === "bot" && msg.type === "loading") {
@@ -44,7 +48,7 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
               <div className="flex justify-start">
                 <div className="max-w-[85%] min-w-0 rounded-[8px] px-4 py-3 bg-white text-gray-700 shadow-sm">
                   {msg.text && (
-                    <p className="body-1 break-words whitespace-pre-line">{msg.text}</p>
+                    <p className="body-1 wrap-break-word whitespace-pre-line">{msg.text}</p>
                   )}
                 </div>
               </div>
@@ -66,7 +70,7 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
             <div key={i} className="flex justify-start z-50">
               <div className="max-w-[70%] min-w-0 rounded-[8px] px-4 py-3 bg-white text-gray-700 shadow-sm flex flex-col gap-2">
                 {msg.reply_title && (
-                  <p className="body-1 break-words whitespace-pre-line">{msg.reply_title}</p>
+                  <p className="body-1 wrap-break-word whitespace-pre-line">{msg.reply_title}</p>
                 )}
                 <div className="flex flex-col gap-2">
                   {(msg.options ?? []).map((opt, j) => (
@@ -87,7 +91,7 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
               <div className="flex justify-start">
                 <div className="max-w-[85%] min-w-0 rounded-[8px] px-4 py-3 bg-white text-gray-700 shadow-sm">
                   {msg.reply_title && (
-                    <p className="body-1 break-words whitespace-pre-line">{msg.reply_title}</p>
+                    <p className="body-1 wrap-break-word whitespace-pre-line">{msg.reply_title}</p>
                   )}
                 </div>
               </div>
@@ -110,7 +114,7 @@ export function ChatbotResponse({ messages = [], isTyping = false, onOptionSelec
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} z-50`}
           >
             <div
-              className={`max-w-[62%] min-w-0 body-1 rounded-[8px] px-4 py-2 z-50 break-words whitespace-pre-line ${
+              className={`max-w-[62%] min-w-0 body-1 rounded-[8px] px-4 py-2 z-50 wrap-break-word whitespace-pre-line ${
                 msg.role === "user"
                   ? "bg-orange-600 text-white"
                   : "bg-white text-gray-700"
