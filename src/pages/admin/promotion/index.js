@@ -252,12 +252,12 @@ export default function PromotionPage() {
 
   return (
     <>
-      <div className="w-full max-w-[1440px] mx-auto">
-        <div className="flex w-full">
-          <SideBarAdmin />
-          <div className="flex flex-col flex-1 bg-gray-100 min-h-screen min-w-0">
-            {/* Header bar same style as Room Management */}
-            <div className="w-full max-w-[1200px] h-[80px] flex items-center justify-between px-6 lg:px-[60px] border-b border-gray-300 bg-white">
+      <div className="flex">
+        <SideBarAdmin />
+        <div className="flex flex-col flex-1 min-h-screen">
+          <div className="flex-1 pt-px pb-px pl-0 pr-0">
+            {/* Header bar same style as other admin pages */}
+            <div className="h-[80px] flex items-center justify-between px-[60px] border-b border-gray-300 bg-white">
               <span className="headline-5 text-gray-900">Promotions</span>
               <div className="flex gap-4">
                 <div className="h-[48px] w-[320px]">
@@ -298,7 +298,7 @@ export default function PromotionPage() {
               </div>
             </div>
 
-            <div className="w-full max-w-[1200px] flex-1 px-6 lg:px-[30px] pt-[48px] pb-[40px] bg-gray-100">
+            <div className="bg-gray-100 rounded h-dvh py-2.5 px-[60px] pt-[48px]">
               <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="text-sm text-gray-700">Total Promotions</p>
@@ -318,7 +318,7 @@ export default function PromotionPage() {
             </div>
               </div>
 
-          {error && <p className="text-red-600 mb-4">{error}</p>}
+              {error && <p className="text-red-600 mb-4">{error}</p>}
 
               {loading ? (
                 <div className="py-12 text-center text-gray-500">Loading...</div>
