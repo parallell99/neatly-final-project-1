@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Button from "@/components/ui/buttons/buttons";
 import CreditCardIcon from "@/assets/icons/credit.svg?url";
 import CheckoutConfirm from "@/components/booking/CheckoutConfirm";
@@ -9,9 +9,9 @@ import { useStripe, Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "axios";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, {
+  developerTools: { assistant: { enabled: false } },
+});
 
 export default function CreditCardCheckout({
   orderId,
@@ -37,9 +37,23 @@ export default function CreditCardCheckout({
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isLg, setIsLg] = useState(false);
   const [showReauth, setShowReauth] = useState(false);
   const [password, setPassword] = useState("");
   const [reauthError, setReauthError] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsLg(!!media.matches);
+    update();
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", update);
+      return () => media.removeEventListener("change", update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
 
   const handleConfirmSavedCard = () => {
     setShowReauth(true);
@@ -249,8 +263,18 @@ export default function CreditCardCheckout({
       <div className="flex flex-col gap-10 mt-4">
       {(useNewCard || savedCards.length === 0) && clientSecret ? (
         <Elements
+          key={isLg ? "lg" : "mobile"}
           stripe={stripePromise}
-          options={{ clientSecret, locale: "en" }}
+          options={{
+            clientSecret,
+            locale: "en",
+            appearance: {
+              variables: {
+                fontSizeBase: isLg ? "4px" : "4px",
+                fontSizeSm: isLg ? "4px" : "4px",
+              },
+            },
+          }}
         >
           <div className="border rounded-lg p-4 mt-4">
             <p className="font-semibold mb-3">Enter new card details</p>

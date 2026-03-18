@@ -528,6 +528,26 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Hide Stripe DevTools widget overlay (does not affect Elements iframes) */
+iframe[src*="devtools"],
+iframe[src*="stripe.com/devtools"],
+div[data-stripe-devtools],
+div[id*="stripe-devtools"],
+div[class*="stripe-devtools"] {
+  display: none !important;
+}
+
+/* Stripe PaymentElement: prevent country field clipping on narrow screens */
+.stripe-payment-element .__PrivateStripeElement iframe {
+  min-height: 580px;
+}
+
+@media (min-width: 1024px) {
+  .stripe-payment-element .__PrivateStripeElement iframe {
+    min-height: 550px;
+  }
+}
+
 /* Custom DatePicker Styles */
 .react-datepicker-wrapper {
   width: 100%;

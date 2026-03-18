@@ -19,7 +19,9 @@ const tabBase =
 const tabActive = "border-[#E76B39] text-orange-500 bg-white";
 const tabInactive = "border-[#E4E6ED] text-gray-600 bg-white hover:border-gray-400";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, {
+  developerTools: { assistant: { enabled: false } },
+});
 
 export default function PaymentMethodForm({
   onBack,
@@ -50,8 +52,21 @@ export default function PaymentMethodForm({
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [useNewCard, setUseNewCard] = useState(false);
+  const [isLg, setIsLg] = useState(false);
 
   const hasCreatedPI = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsLg(!!media.matches);
+    update();
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", update);
+      return () => media.removeEventListener("change", update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
 
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
@@ -666,32 +681,44 @@ export default function PaymentMethodForm({
       </div>
 
       {method === "credit-card" && clientSecret && (
-        <Elements
-          stripe={stripePromise}
-          options={{ clientSecret }}
-        >
-          <CreditCardCheckout
-            orderId={orderId}
-            savedCards={savedCards}
-            setSavedCards={setSavedCards}
-            selectedCardId={selectedCardId}
-            useNewCard={useNewCard}
-            setUseNewCard={setUseNewCard}
-            setSelectedCardId={setSelectedCardId}
-            clientSecret={clientSecret}
-            onBack={onBack}
-            onConfirm={onConfirm}
-            onCreateGuest={handleCreateGuestAndUpdateOrder}
-            onSaveAdditionalRequest={handleSaveAdditionalRequest}
-            onSaveRequests={handleSaveRequests}
-            onUpdateOrderMeta={handleUpdateOrderMeta}
-            extras={extras}
-            standards={standards}
-            promotionCode={promotionCode}
-            promotionDiscount={promotionDiscount}
-            promotionIds={promotionIds}
-          />
-        </Elements>
+        <div className="w-full max-w-[820px] mx-auto">
+          <Elements
+            key={isLg ? "lg" : "mobile"}
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              locale: "en",
+              appearance: {
+                variables: {
+                  fontSizeBase: isLg ? "18px" : "16px",
+                  fontSizeSm: isLg ? "16px" : "14px",
+                },
+              },
+            }}
+          >
+            <CreditCardCheckout
+              orderId={orderId}
+              savedCards={savedCards}
+              setSavedCards={setSavedCards}
+              selectedCardId={selectedCardId}
+              useNewCard={useNewCard}
+              setUseNewCard={setUseNewCard}
+              setSelectedCardId={setSelectedCardId}
+              clientSecret={clientSecret}
+              onBack={onBack}
+              onConfirm={onConfirm}
+              onCreateGuest={handleCreateGuestAndUpdateOrder}
+              onSaveAdditionalRequest={handleSaveAdditionalRequest}
+              onSaveRequests={handleSaveRequests}
+              onUpdateOrderMeta={handleUpdateOrderMeta}
+              extras={extras}
+              standards={standards}
+              promotionCode={promotionCode}
+              promotionDiscount={promotionDiscount}
+              promotionIds={promotionIds}
+            />
+          </Elements>
+        </div>
       )}
       {method === "cash" && (
         <div>

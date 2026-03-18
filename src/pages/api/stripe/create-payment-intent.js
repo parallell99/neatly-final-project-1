@@ -72,7 +72,7 @@ export default async function handler(req, res) {
       amount: order.total_price,
       currency: "thb",
       customer: customerId,
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ["card"],
       setup_future_usage: "off_session",
       metadata: {
         order_id: orderId,
