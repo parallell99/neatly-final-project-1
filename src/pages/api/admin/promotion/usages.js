@@ -4,8 +4,9 @@ function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) return null;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!anonKey) return null;
-  return createClient(url, anonKey);
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!anonKey && !serviceKey) return null;
+  return createClient(url, serviceKey || anonKey);
 }
 
 export default async function handler(req, res) {
