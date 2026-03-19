@@ -54,16 +54,29 @@ export default function PromotionPage() {
 
   const loadPromotions = useCallback(() => {
     fetch("/api/admin/promotion/promotions")
-      .then((res) => res.json())
-      .then((json) => setList(Array.isArray(json?.data) ? json.data : []))
-      .catch(() => setList([]));
+      .then(async (res) => {
+        // 304 has no body; don't wipe existing UI state
+        if (!res.ok) return null;
+        return await res.json();
+      })
+      .then((json) => {
+        if (!json) return;
+        setList(Array.isArray(json?.data) ? json.data : []);
+      })
+      .catch(() => { });
   }, []);
 
   const loadUsageStats = useCallback(() => {
     fetch("/api/admin/promotion/usages")
-      .then((res) => res.json())
-      .then((json) => setUsageStats(json?.data ?? {}))
-      .catch(() => setUsageStats({}));
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return await res.json();
+      })
+      .then((json) => {
+        if (!json) return;
+        setUsageStats(json?.data ?? {});
+      })
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -71,13 +84,13 @@ export default function PromotionPage() {
     setLoading(true);
     setError(null);
     Promise.all([
-      fetch("/api/admin/promotion/promotions").then((r) => r.json()),
-      fetch("/api/admin/promotion/usages").then((r) => r.json()),
+      fetch("/api/admin/promotion/promotions").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/admin/promotion/usages").then((r) => (r.ok ? r.json() : null)),
     ])
       .then(([promoRes, usageRes]) => {
         if (cancelled) return;
-        setList(Array.isArray(promoRes?.data) ? promoRes.data : []);
-        setUsageStats(usageRes?.data ?? {});
+        if (promoRes) setList(Array.isArray(promoRes?.data) ? promoRes.data : []);
+        if (usageRes) setUsageStats(usageRes?.data ?? {});
       })
       .catch((err) => {
         if (!cancelled) setError(err.message || "Failed to load");

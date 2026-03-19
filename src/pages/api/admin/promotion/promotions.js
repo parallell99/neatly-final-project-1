@@ -5,6 +5,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
+  // Prevent 304 responses (no body) causing client JSON parse issues
+  res.setHeader("Cache-Control", "no-store, max-age=0");
+
   try {
     if (req.method === "GET") {
       const { data, error } = await supabaseAdmin

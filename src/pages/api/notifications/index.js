@@ -13,6 +13,7 @@ function toLocalDateString(d) {
 
 async function ensureCheckinReminderNotifications(userId) {
   // Create reminders for orders checking in tomorrow (idempotent).
+  // This function must NEVER throw: notifications fetch should still succeed.
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -27,7 +28,10 @@ async function ensureCheckinReminderNotifications(userId) {
     .eq("check_in_date", tomorrowStr)
     .limit(50);
 
-  if (ordersError || !orders?.length) return;
+  if (ordersError || !orders?.length) {
+    if (ordersError) console.error("[notifications] checkin-reminder orders error:", ordersError);
+    return;
+  }
 
   const orderIds = orders.map((o) => o.id);
   const { data: existing, error: existingError } = await supabaseAdmin
@@ -37,7 +41,10 @@ async function ensureCheckinReminderNotifications(userId) {
     .eq("type", "checkin_reminder")
     .in("order_id", orderIds);
 
-  if (existingError) return;
+  if (existingError) {
+    console.error("[notifications] checkin-reminder existing error:", existingError);
+    return;
+  }
 
   const existingOrderIds = new Set((existing || []).map((n) => n.order_id));
   const toInsert = orders
@@ -53,7 +60,10 @@ async function ensureCheckinReminderNotifications(userId) {
     }));
 
   if (toInsert.length === 0) return;
-  await supabaseAdmin.from("notifications").insert(toInsert);
+  const { error: insertError } = await supabaseAdmin.from("notifications").insert(toInsert);
+  if (insertError) {
+    console.error("[notifications] checkin-reminder insert error:", insertError);
+  }
 }
 
 async function handler(req, res) {
@@ -63,7 +73,15 @@ async function handler(req, res) {
   }
 
   if (req.method === "GET") {
-    await ensureCheckinReminderNotifications(userId);
+    // Avoid 304 (no body) and reduce cache weirdness on Vercel
+    res.setHeader("Cache-Control", "no-store, max-age=0");
+
+    try {
+      await ensureCheckinReminderNotifications(userId);
+    } catch (err) {
+      // Never fail the endpoint because of reminder generation (cold start / transient issues)
+      console.error("[notifications] ensureCheckinReminderNotifications failed:", err);
+    }
 
     const { data, error } = await supabaseAdmin
       .from("notifications")
@@ -73,7 +91,9 @@ async function handler(req, res) {
       .limit(50);
 
     if (error) {
-      return res.status(500).json({ error: error.message || "Failed to fetch notifications" });
+      console.error("[notifications] fetch error:", error);
+      // Avoid breaking UI on transient Supabase/Vercel issues
+      return res.status(200).json({ notifications: [] });
     }
 
     return res.status(200).json({ notifications: data || [] });
