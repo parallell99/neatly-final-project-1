@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/booking/popover";
 import PhoneInput from "@/components/ui/PhoneInput/PhoneInput";
-import { format } from "date-fns";
+import { format, subYears, startOfDay } from "date-fns";
 import { useAuth } from "@/contexts/authentication";
 import { useRouter } from "next/router";
 
@@ -29,7 +29,7 @@ export default function BasicInformationForm({
 }) {
   const router = useRouter();
   const { user: authUser, fetchUser } = useAuth();
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(undefined);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -176,8 +176,14 @@ export default function BasicInformationForm({
             <PopoverContent className="w-auto p-0 bg-white shadow-md border">
               <Calendar
                 mode="single"
+                defaultMonth={date ?? subYears(new Date(), 12)}
                 selected={date}
                 onSelect={setDate}
+                disabled={(day) => {
+                  const today = startOfDay(new Date());
+                  const maxBirth = subYears(today, 12);
+                  return day > today || day > maxBirth;
+                }}
                 initialFocus
               />
             </PopoverContent>

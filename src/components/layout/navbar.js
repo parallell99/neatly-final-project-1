@@ -151,10 +151,12 @@ export default function Navbar() {
     };
   }, [isMenuOpen]);
 
+  //neatly
+
   return (
     <>
       {/* Main Navbar */}
-      <nav ref={navRef} className="top-0 w-full pt-3 lg:h-[100px] bg-white flex items-center justify-between px-4 pb-3 border-b border-gray-200 lg:px-[160px] max-w-[1440px] mx-auto z-50">
+      <nav ref={navRef} className=" top-0 w-full pt-3 lg:h-[100px] bg-white flex items-center justify-between px-4 pb-3 border-b border-gray-300 lg:px-[160px] max-w-[1440px] mx-auto z-50">
         {/* Logo: จาก hotel_information.hotel_logo_url หรือ fallback เป็น SVG */}
         <Link href="/" className="flex items-center" aria-label="Neatly">
           {navLogoUrl ? (
@@ -410,8 +412,8 @@ export default function Navbar() {
                             <img src={getImageSrc(paymentIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
                             Payment Method
                           </Link>
-                          <Link 
-                            href="/booking-history" 
+                          <Link
+                            href="/booking-history"
                             className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base  hover:text-gray-800 transition-colors rounded"
                           >
                             <img src={getImageSrc(bookingIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
@@ -420,13 +422,30 @@ export default function Navbar() {
                         </>
                       )}
                       {isAgent && (
-                        <Link
-                          href="/admin/customer-booking"
-                          className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
-                        >
-                          <img src={getImageSrc(adminIcon)} alt="" className="w-5 h-5 brightness-0 opacity-60" />
-                          Admin Panel
-                        </Link>
+                        <>
+                          <Link
+                            href="/admin/customer-booking"
+                            className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
+                          >
+                            <img
+                              src={getImageSrc(adminIcon)}
+                              alt="Admin panel"
+                              className="w-5 h-5 brightness-0 opacity-60"
+                            />
+                            Admin Panel
+                          </Link>
+                          <Link
+                            href="/admin/promotion"
+                            className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
+                          >
+                            <img
+                              src={getImageSrc(adminIcon)}
+                              alt="Promotions"
+                              className="w-5 h-5 brightness-0 opacity-60"
+                            />
+                            Promotions
+                          </Link>
+                        </>
                       )}
                       <div className="border-t border-gray-200 my-1"></div>
                       <button
@@ -694,7 +713,7 @@ export default function Navbar() {
             ) : (
               <>
                 {/* User Menu Items */}
-                <div className="flex items-center gap-3 px-1 py-2">
+                <div className="flex items-center gap-3 px-1 py-2 pb-3 mb-2 border-b border-gray-300">
                   {user?.profile_image_url || user?.profile_image ? (
                     <img
                       src={user.profile_image_url || user.profile_image}
@@ -702,43 +721,47 @@ export default function Navbar() {
                       className="w-9 h-9 rounded-full object-cover border border-gray-200"
                     />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg font-semibold">
+                    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-semibold">
                       {(user?.username || user?.first_name || "U").charAt(0).toUpperCase()}
                     </div>
                   )}
                   <span className="text-gray-600 font-semibold text-base font-sans truncate max-w-[120px]">
-                    {user?.username ?? user?.first_name ?? "User"}
+                    {(() => {
+                      const displayName = user?.username ?? user?.first_name ?? "User";
+                      const name = String(displayName);
+                      return name ? `${name.charAt(0).toUpperCase()}${name.slice(1)}` : "User";
+                    })()}
                   </span>
                 </div>
                 <Link
                   href="/userProfile"
-                  className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                  className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                   onClick={toggleMenu}
                 >
-                  <img src={profileIcon?.src || profileIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                  <img src={profileIcon?.src || profileIcon || ''} alt="Profile" className="w-5 h-5 brightness-0 opacity-60" />
                   Profile
                 </Link>
                 {!isAgent && (
                   <>
                     <Link
                       href="/payment-method"
-                      className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                       onClick={toggleMenu}
                     >
-                      <img src={paymentIcon?.src || paymentIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                      <img src={paymentIcon?.src || paymentIcon || ''} alt="Payment method" className="w-5 h-5 brightness-0 opacity-60" />
                       Payment Method
                     </Link>
                     <Link
                       href="/booking-history"
-                      className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                       onClick={toggleMenu}
                     >
-                      <img src={bookingIcon?.src || bookingIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                      <img src={bookingIcon?.src || bookingIcon || ''} alt="Booking history" className="w-5 h-5 brightness-0 opacity-60" />
                       Booking History
                     </Link>
                     <Link
                       href="/special-offers"
-                      className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                     >
                       <img src={getImageSrc(promotionIcon)} alt="Special offers" className="w-5 h-5 brightness-0 opacity-60" />
                       Special Offers
@@ -746,14 +769,25 @@ export default function Navbar() {
                   </>
                 )}
                 {isAgent && (
-                  <Link
-                    href="/admin/customer-booking"
-                    className="flex items-center gap-3 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
-                    onClick={toggleMenu}
-                  >
-                    <img src={adminIcon?.src || adminIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
-                    Admin Panel
-                  </Link>
+                  <>
+                    <Link
+                      href="/admin/customer-booking"
+                      className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      <img src={adminIcon?.src || adminIcon || ''} alt="Admin panel" className="w-5 h-5 brightness-0 opacity-60" />
+                      Admin Panel
+                    </Link>
+
+                    <Link
+                      href="/admin/promotion"
+                      className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      onClick={toggleMenu}
+                    >
+                      <img src={adminIcon?.src || adminIcon || ''} alt="Promotions" className="w-5 h-5 brightness-0 opacity-60" />
+                      Promotions
+                    </Link>
+                  </>
                 )}
 
                 {/* Separator */}
@@ -765,9 +799,9 @@ export default function Navbar() {
                     logout();
                     toggleMenu();
                   }}
-                  className="flex items-center gap-3 text-left text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                  className="flex items-center pl-3 gap-5 text-left text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                 >
-                  <img src={logoutIcon?.src || logoutIcon || ''} alt="" className="w-5 h-5 brightness-0 opacity-60" />
+                  <img src={logoutIcon?.src || logoutIcon || ''} alt="Logout" className="w-5 h-5 brightness-0 opacity-60" />
                   Logout
                 </button>
               </>

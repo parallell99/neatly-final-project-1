@@ -11,6 +11,33 @@ const optionalStringToNull = () =>
     return trimmed === "" ? null : trimmed;
   }, z.string().nullable());
 
+function parseDateOfBirth(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // Prefer YYYY-MM-DD (from <input type="date">) to avoid timezone shifts.
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (m) {
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    const birth = new Date(y, mo - 1, d);
+    if (Number.isNaN(birth.getTime())) return null;
+    return birth;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+function isAtLeastAge(birthDate, ageYears) {
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear() - ageYears, now.getMonth(), now.getDate());
+  return birthDate <= cutoff;
+}
+
 export const registerSchema = z.object({
   email: requiredString(z.email()),
   password: requiredString(z.string().min(6)),
@@ -18,7 +45,14 @@ export const registerSchema = z.object({
   lastName: requiredString(z.string().min(1)),
   username: requiredString(z.string().min(3)),
   phoneNumber: z.string().nullish(),
-  dateOfBirth: optionalStringToNull(),
+  dateOfBirth: requiredString(z.string().min(1, "Date of birth is required.")).refine(
+    (val) => {
+      const birth = parseDateOfBirth(val);
+      if (!birth) return false;
+      return isAtLeastAge(birth, 12);
+    },
+    "You must be at least 12 years old."
+  ),
   country: optionalStringToNull(),
   profilePictureUrl: z.string().nullish(),
 }).strict();

@@ -36,7 +36,7 @@ export default function RoomCard({ room, searchParams, onClick }) {
         : 0;
 
     const hasSearchParams = !!(searchParams?.checkIn && searchParams?.checkOut);
-
+//per night
     // --- handle Book Now ---
     const handleBook = async () => {
         if (!isAuthenticated) {
@@ -164,7 +164,7 @@ export default function RoomCard({ room, searchParams, onClick }) {
                         <p className="headline-5 text-gray-900 mb-3">
                             THB {room.promotion_price_per_night || "THB 2500.00"}
                         </p>
-                        <p className="body-1 text-gray-700 leading-tight">
+                        <p className="body-1 text-gray-700 leading-tight text-right">
                             Per Night
                             <br />
                             (Including Taxes & Fees)

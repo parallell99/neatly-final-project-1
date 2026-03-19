@@ -17,11 +17,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/booking/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Info } from "lucide-react";
 import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
 import { Calendar } from "@/components/ui/booking/calendar";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, subYears, startOfDay } from "date-fns";
 
 export default function Register() {
   const { fetchUser } = useAuth();
@@ -276,13 +276,21 @@ export default function Register() {
 
                 {/* Date of Birth - Popover + Calendar */}
                 <div className="flex flex-col w-full gap-[4px]">
-                  <label
-                    htmlFor="dateOfBirth"
-                    className="font-normal text-[16px] text-gray-900"
-                  >
-                    Date of Birth
-                  </label>
-
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <label
+                      htmlFor="dateOfBirth"
+                      className="font-normal text-[16px] text-gray-900"
+                    >
+                      Date of Birth
+                    </label>
+                    <span
+                      className="inline-flex items-center gap-1.5 text-sm text-gray-500"
+                      role="note"
+                    >
+                      <Info className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                      Minimum age 12 years.
+                    </span>
+                  </div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <ButtonCalendar
@@ -302,6 +310,7 @@ export default function Register() {
                     <PopoverContent className="w-auto p-0 bg-white shadow-md border ">
                       <Calendar
                         mode="single"
+                        defaultMonth={date ?? subYears(new Date(), 12)}
                         selected={date}
                         onSelect={(selectedDate) => {
                           setDate(selectedDate);
@@ -311,12 +320,17 @@ export default function Register() {
                             { shouldValidate: true }
                           );
                         }}
-                        disabled={(day) => day > new Date()}
+                        disabled={(day) => {
+                          const today = startOfDay(new Date());
+                          const maxBirth = subYears(today, 12);
+                          return day > today || day > maxBirth;
+                        }}
                         initialFocus
                         classNames={{ day: "focus:outline-none focus:ring-0" }}
                       />
                     </PopoverContent>
                   </Popover>
+
                   {errors.dateOfBirth && (
                     <p className="mt-1 text-sm text-red">{errors.dateOfBirth.message}</p>
                   )}

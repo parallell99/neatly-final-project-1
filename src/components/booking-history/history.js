@@ -131,8 +131,6 @@ export default function BookingHistory() {
                 ) : (
                     currentBookings.map((booking) => {
 
-                        console.log(booking);
-
                         const open = openId === booking.id;
 
                         const { canChangeDate, canCancel, canRefund } = getBookingPolicy(booking);
@@ -140,6 +138,8 @@ export default function BookingHistory() {
                         const isClosed = status === "refunded" || status === "cancelled";
 
                         const hideAllCTA = isClosed || (!canCancel && !canChangeDate);
+
+                        console.log(hideAllCTA)
 
                         return (
                             <div key={booking.id} className="border-b pb-10">
@@ -216,28 +216,37 @@ export default function BookingHistory() {
                                             </div>
 
                                             {/* BOOKING DETAIL BUTTON */}
-                                            <button
-                                                onClick={() => toggle(booking.id)}
-                                                className="w-full h-[56px] flex items-center justify-between px-10 py-10 body-1 text-gray-900"
-                                            >
-                                                <span className="font-semibold">Booking Detail</span>
-                                                {open ? (
-                                                    <ChevronUp size={24} className="text-orange-500" />
-                                                ) : (
-                                                    <ChevronDown size={24} className="text-orange-500" />
-                                                )}
-                                            </button>
-
+                                            <div className="flex flex-col px-[16px] lg:px-0">
+                                                <button
+                                                    onClick={() => toggle(booking.id)}
+                                                    className={`w-full h-[56px] flex items-center justify-between pl-[28px] pr-6 py-[16px] body-1 text-gray-900 bg-gray-200 hover:cursor-pointer hover:rounded-[4px] ${open ? "bg-gray-200 rounded-t-[4px]" : ""}`}
+                                                >
+                                                    <span className="font-semibold">Booking Detail</span>
+                                                    {open ? (
+                                                        <ChevronDown size={24} className="text-gray-900" />
+                                                    ) : (
+                                                        <ChevronUp size={24} className="text-orange-500" />
+                                                    )}
+                                                </button>
+                                            
                                             {/* DROPDOWN DETAIL */}
                                             {open && (
-                                                <div className="bg-gray-100 rounded p-6">
-                                                    <div className="flex justify-between pb-6 body-1 text-gray-700">
+                                                <div className="bg-gray-200 rounded-b-[4px] p-6">
+                                                    <div className="flex justify-between pb-2 body-1 text-gray-700">
                                                         <p>
-                                                            {booking.guests} Guests ({booking.nights} Night)
+                                                            <span className="block lg:inline">
+                                                                {booking.guests} Guests
+                                                            </span>
+                                                            <span className="block lg:inline lg:ml-1">
+                                                                ({booking.nights} Night)
+                                                            </span>
                                                         </p>
                                                         <p className="font-semibold">
                                                             {booking.payment ? (
-                                                                <>Payment success via {booking.payment}</>
+                                                                <>
+                                                                    <span className="block lg:inline">Payment success via</span>
+                                                                    <span className="block lg:inline lg:ml-1">{booking.payment}</span>
+                                                                </>
                                                             ) : (
                                                                 <span className="text-gray-700">Pay at property (Cash)</span>
                                                             )}
@@ -272,7 +281,7 @@ export default function BookingHistory() {
                                                         </div>
                                                     )}
 
-                                                    <div className="flex justify-between border-t-gray-400 pt-7">
+                                                    <div className="flex justify-between mt-[16px] border-t border-gray-400 pt-[16px]">
                                                         <p className="text-gray-700">Total</p>
                                                         <p className="headline-5 font-semibold text-gray-900">
                                                             THB {booking.total.toLocaleString()}
@@ -280,60 +289,62 @@ export default function BookingHistory() {
                                                     </div>
 
                                                     {booking.request && (
-                                                        <div className="body-1 text-gray-700 rounded pt-5">
+                                                        <div className="body-1 text-gray-700 rounded-b-[4px] mt-[12px] -mx-[24px] -mb-[24px] pb-[24px] px-[24px] pt-5 bg-gray-300">
                                                             <p className="font-semibold">Additional Request</p>
                                                             <p>{booking.request}</p>
                                                         </div>
                                                     )}
                                                 </div>
                                             )}
+</div>
 
-                                            {/* ACTION BUTTONS */}
-                                            {!hideAllCTA && (
-                                                <div className="p-4 border-t flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                                                    <div className="flex items-center justify-center h-[48px] w-full gap-8 lg:w-auto lg:order-2 lg:gap-4">
-                                                        <Button
-                                                            type="button"
-                                                            buttonStyle="ghost"
-                                                            buttonText="Room Detail"
-                                                            onClick={() => {
-                                                                router.push(`/rooms/${createSlug(booking.room)}`);
-                                                            }}
-                                                        />
-
-                                                        {canChangeDate && (
-                                                            <Button
-                                                                type="button"
-                                                                buttonStyle="primary"
-                                                                buttonText="Change Date"
-                                                                className="w-[150px] lg:w-[150px] whitespace-nowrap px-5 py-3"
-                                                                onClick={() =>
-                                                                    router.push(`/booking-action/${booking.id}/change-date`)
-                                                                }
-                                                            />
-
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex justify-end pr-10 lg:pr-10 lg:order-1">
-                                                        {canCancel && (
-                                                            <Button
-                                                                type="button"
-                                                                buttonStyle="ghost"
-                                                                buttonText="Cancel Booking"
-                                                                onClick={() => {
-                                                                    setSelectedBookingId(booking.id);
-                                                                    setCancelType(canRefund ? "refund" : "cancel");
-                                                                    setShowCancelModal(true);
-                                                                }}
-                                                            />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
+                                {/* ACTION BUTTONS */}
+                                {!hideAllCTA && (
+                                    <div className="flex flex-col pt-[24px] gap-6 lg:flex-row lg:items-center lg:justify-between">
+                                        <div className="flex items-center justify-between h-[48px] w-full gap-8 lg:w-auto lg:order-2 lg:gap-4 px-[16px] lg:px-0">
+                                            <Button
+                                                type="button"
+                                                buttonStyle="ghost"
+                                                buttonText="Room Detail"
+                                                 className="w-[150px] lg:w-[150px] whitespace-nowrap px-5 py-3"
+                                                onClick={() => {
+                                                    router.push(`/rooms/${createSlug(booking.room)}`);
+                                                }}
+                                            />
+
+                                            {canChangeDate && (
+                                                <Button
+                                                    type="button"
+                                                    buttonStyle="primary"
+                                                    buttonText="Change Date"
+                                                    className="w-[150px] lg:w-[150px] whitespace-nowrap px-5 py-3"
+                                                    onClick={() =>
+                                                        router.push(`/booking-action/${booking.id}/change-date`)
+                                                    }
+                                                />
+
+                                            )}
+                                        </div>
+
+                                        <div className="flex justify-end pr-[28px] lg:pr-10 lg:order-1">
+                                            {canCancel && (
+                                                <Button
+                                                    type="button"
+                                                    buttonStyle="ghost"
+                                                    buttonText="Cancel Booking"
+                                                    onClick={() => {
+                                                        setSelectedBookingId(booking.id);
+                                                        setCancelType(canRefund ? "refund" : "cancel");
+                                                        setShowCancelModal(true);
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         );
                     })
