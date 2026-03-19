@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { subYears, startOfDay } from "date-fns";
 
 const registerSchema = z
   .object({
@@ -13,7 +14,20 @@ const registerSchema = z
     email: z.string().trim().email("Please enter a valid email address."),
     password: z.string().trim().min(6, "Password must be at least 6 characters long."),/*.regex(/[A-Z]/, "Must include uppercase").regex(/[0-9]/, "Must include number")*/
     confirmPassword: z.string().trim(),
-    dateOfBirth: z.string().trim().optional(),
+    dateOfBirth: z
+      .string()
+      .trim()
+      .min(1, "Date of birth is required.")
+      .refine(
+        (val) => {
+          const [y, m, d] = val.split("-").map(Number);
+          const birth = new Date(y, m - 1, d);
+          if (isNaN(birth.getTime())) return false;
+          const maxBirth = subYears(startOfDay(new Date()), 12);
+          return birth <= maxBirth;
+        },
+        "You must be at least 12 years old."
+      ),
     country: z.string().trim().optional(),
     profilePicture: z
       .any()

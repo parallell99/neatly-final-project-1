@@ -7,7 +7,7 @@ import { Calendar, Upload, X } from "lucide-react";
 import Button from "@/components/ui/buttons/buttons";
 import Input from "@/components/ui/AuthInput/AuthInput";
 import { useAuth } from "@/contexts/authentication";
-import { format } from "date-fns";
+import { format, subYears, startOfDay } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import CountrySelector from "@/components/ui/CountrySelector/CountrySelector";
 import {
@@ -65,6 +65,13 @@ export default function UserProfile() {
     if (!token) {
       setUpdateError("Please log in to update profile.");
       return;
+    }
+    if (dateOfBirth) {
+      const maxBirth = subYears(startOfDay(new Date()), 12);
+      if (dateOfBirth > maxBirth) {
+        setUpdateError("You must be at least 12 years old.");
+        return;
+      }
     }
     setUpdateLoading(true);
     setUpdateError(null);
@@ -272,8 +279,14 @@ export default function UserProfile() {
                 <PopoverContent className="w-auto p-0 bg-white shadow-md border">
                   <CalendarComponent
                     mode="single"
+                    defaultMonth={dateOfBirth ?? subYears(new Date(), 12)}
                     selected={dateOfBirth ?? undefined}
                     onSelect={(d) => setDateOfBirth(d ?? null)}
+                    disabled={(day) => {
+                      const today = startOfDay(new Date());
+                      const maxBirth = subYears(today, 12);
+                      return day > today || day > maxBirth;
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
