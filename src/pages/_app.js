@@ -36,7 +36,13 @@ export default function App({ Component, pageProps }) {
   return (
     <AuthProvider>
       <AdminRouteGuard>
-        <Component {...pageProps} />
+        {router.pathname.startsWith("/admin") ? (
+          <Component {...pageProps} />
+        ) : (
+          <div className="pt-[65px] lg:pt-[100px]">
+            <Component {...pageProps} />
+          </div>
+        )}
       </AdminRouteGuard>
     </AuthProvider>
   );
