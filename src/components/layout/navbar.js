@@ -85,15 +85,19 @@ export default function Navbar() {
   return (
     <>
       {/* Main Navbar */}
-      <nav ref={navRef} className=" top-0 w-full pt-3 lg:h-[100px] bg-white flex items-center justify-between px-4 pb-3 border-b border-gray-300 lg:px-[160px] max-w-[1440px] mx-auto z-50">
-        {/* Logo: จาก hotel_information.hotel_logo_url หรือ fallback เป็น SVG */}
-        <Link href="/" className="flex items-center" aria-label="Neatly">
-          {navLogoUrl ? (
-            <img src={navLogoUrl} alt="Neatly logo" className="w-30 lg:w-40 h-auto object-contain" />
-          ) : (
-            <LogoNav className="w-30 lg:w-40" aria-hidden />
-          )}
-        </Link>
+      <nav
+        ref={navRef}
+        className="fixed top-0 left-0 right-0 w-full bg-white border-b border-gray-300 z-50"
+      >
+        <div className="w-full max-w-[1440px] mx-auto pt-3 lg:h-[100px] flex items-center justify-between px-4 pb-3 lg:px-[160px]">
+          {/* Logo: จาก hotel_information.hotel_logo_url หรือ fallback เป็น SVG */}
+          <Link href="/" className="flex items-center" aria-label="Neatly">
+            {navLogoUrl ? (
+              <img src={navLogoUrl} alt="Neatly logo" className="w-30 lg:w-40 h-auto object-contain" />
+            ) : (
+              <LogoNav className="w-30 lg:w-40" aria-hidden />
+            )}
+          </Link>
 
         {/* Desktop Navigation - แสดงเฉพาะบน desktop */}
         <div className="hidden lg:flex items-center gap-10 flex-1 justify-between ml-10">
@@ -273,39 +277,37 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Right Side - Notification & Hamburger */}
-        <div className="lg:hidden flex items-center gap-3">
-          {isAuthenticated && user && (
-            isAgent ? (
-              <AgentNotificationBell />
-            ) : (
-              <NotificationBell user={user ?? null} />
+          {/* Mobile Right Side - Notification & Hamburger */}
+          <div className="lg:hidden flex items-center gap-3">
+            {isAuthenticated && user && (
+              isAgent ? (
+                <AgentNotificationBell />
+              ) : (
+                <NotificationBell user={user ?? null} />
+              )
             )
-          )}
+            }
 
-          {/* Hamburger Menu Button */}
-          <button
-            onClick={() => {
-              toggleMenu();
-            }}
-            className="flex flex-col gap-1.5 p-2 relative z-50"
-            aria-label="Toggle menu"
-          >
-            <span className={`w-6 h-0.5 bg-[#666666] transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
-            <span className={`w-6 h-0.5 bg-[#666666] transition-all ${isMenuOpen ? 'opacity-0' : ''}`}></span>
-            <span className={`w-6 h-0.5 bg-[#666666] transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
-          </button>
+            {/* Hamburger Menu Button */}
+            <button
+              onClick={() => {
+                toggleMenu();
+              }}
+              className="flex flex-col gap-1.5 p-2 relative z-50"
+              aria-label="Toggle menu"
+            >
+              <span className={`w-6 h-0.5 bg-[#666666] transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+              <span className={`w-6 h-0.5 bg-[#666666] transition-all ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+              <span className={`w-6 h-0.5 bg-[#666666] transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Dropdown Menu - แสดงเมื่อเปิด menu บน mobile */}
       {isMenuOpen && (
         <div
-          className="fixed left-0 right-0 w-full bg-white shadow-lg z-40 lg:hidden overflow-y-auto"
-          style={{
-            top: `${navbarHeight}px`,
-            height: `calc(100vh - ${navbarHeight}px)`
-          }}
+          className="fixed top-[65px] h-full left-0 right-0 w-full bg-white shadow-lg z-60 lg:hidden overflow-y-auto"
         >
           {/* Navigation Links */}
           <div className="flex flex-col px-8 gap-6 py-4">
