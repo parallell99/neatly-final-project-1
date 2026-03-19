@@ -87,7 +87,7 @@ export default function Navbar() {
       {/* Main Navbar */}
       <nav
         ref={navRef}
-        className="fixed top-0 left-0 right-0 w-full bg-white border-b border-gray-300 z-50"
+        className="fixed top-0 left-0 right-0 w-full bg-white h-[65px] lg:h-[100px] border-b border-gray-300 z-50"
       >
         <div className="w-full max-w-[1440px] mx-auto pt-3 lg:h-[100px] flex items-center justify-between px-4 pb-3 lg:px-[160px]">
           {/* Logo: จาก hotel_information.hotel_logo_url หรือ fallback เป็น SVG */}
