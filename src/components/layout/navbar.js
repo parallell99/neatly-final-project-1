@@ -21,6 +21,7 @@ const getImageSrc = (img) => {
   if (typeof img === 'string') return img;
   return img?.src ?? String(img);
 };
+//special
 
 export default function Navbar() {
   const router = useRouter();
@@ -239,30 +240,17 @@ export default function Navbar() {
                         </>
                       )}
                       {isAgent && (
-                        <>
-                          <Link
-                            href="/admin/customer-booking"
-                            className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
-                          >
-                            <img
-                              src={getImageSrc(adminIcon)}
-                              alt="Admin panel"
-                              className="w-5 h-5 brightness-0 opacity-60"
-                            />
-                            Admin Panel
-                          </Link>
-                          <Link
-                            href="/admin/promotion"
-                            className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
-                          >
-                            <img
-                              src={getImageSrc(adminIcon)}
-                              alt="Promotions"
-                              className="w-5 h-5 brightness-0 opacity-60"
-                            />
-                            Promotions
-                          </Link>
-                        </>
+                        <Link
+                          href="/admin/customer-booking"
+                          className="flex items-center gap-3 px-4 py-2 text-gray-700 font-sans text-base hover:text-gray-800 transition-colors rounded"
+                        >
+                          <img
+                            src={getImageSrc(adminIcon)}
+                            alt="Admin panel"
+                            className="w-5 h-5 brightness-0 opacity-60"
+                          />
+                          Admin Panel
+                        </Link>
                       )}
                       <div className="border-t border-gray-200 my-1"></div>
                       <button
@@ -455,6 +443,7 @@ export default function Navbar() {
                     <Link
                       href="/special-offers"
                       className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
+                      onClick={toggleMenu}
                     >
                       <img src={getImageSrc(promotionIcon)} alt="Special offers" className="w-5 h-5 brightness-0 opacity-60" />
                       Special Offers
@@ -473,12 +462,12 @@ export default function Navbar() {
                     </Link>
 
                     <Link
-                      href="/admin/promotion"
+                      href="/special-offers"
                       className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
                       onClick={toggleMenu}
                     >
-                      <img src={adminIcon?.src || adminIcon || ''} alt="Promotions" className="w-5 h-5 brightness-0 opacity-60" />
-                      Promotions
+                      <img src={getImageSrc(promotionIcon)} alt="Special offers" className="w-5 h-5 brightness-0 opacity-60" />
+                      Special Offers
                     </Link>
                   </>
                 )}
