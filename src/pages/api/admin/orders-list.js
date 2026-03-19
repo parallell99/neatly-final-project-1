@@ -108,6 +108,7 @@ export default async function handler(req, res) {
         checkIn: o.check_in_date || "—",
         checkOut: o.check_out_date || "—",
         totalPrice: o.total_price,
+        createdAt: o.created_at || null,
       };
     });
 
