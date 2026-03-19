@@ -15,9 +15,9 @@ import PaymentSuccess from "@/components/booking/PaymentSuccess";
 import BookingDetailCard from "@/components/booking/BookingDetailCard";
 import BookingExpiredModal from "@/components/booking/BookingExpiredModal";
 
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, {
+  developerTools: { assistant: { enabled: false } },
+});
 
 export default function BookingOrderPage() {
   const router = useRouter();

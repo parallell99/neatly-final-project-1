@@ -298,7 +298,7 @@ export default function PromotionPage() {
               </div>
             </div>
 
-            <div className="bg-gray-100 rounded h-dvh py-2.5 px-[60px] pt-[48px]">
+            <div className="bg-gray-100 rounded h-dvh py-2.5 px-[10px] pt-[48px]">
               <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
               <p className="text-sm text-gray-700">Total Promotions</p>
@@ -327,25 +327,24 @@ export default function PromotionPage() {
                   <div className="rounded-[4px] border border-gray-300 bg-white">
                     <table className="w-full table-fixed text-left">
                       <thead className="bg-gray-300">
-                        <tr className="text-xs text-gray-800 h-[41px]">
-                      <th className="px-3 py-2 font-medium w-[120px] whitespace-normal leading-tight">Code</th>
-                      <th className="px-3 py-2 font-medium w-[150px] whitespace-normal leading-tight">Name</th>
-                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">Discount</th>
-                      <th className="px-3 py-2 font-medium w-[105px] whitespace-normal leading-tight">Max Discount</th>
-                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">Min Spend</th>
-                      <th className="px-3 py-2 font-medium w-[85px] whitespace-normal leading-tight">Start</th>
-                      <th className="px-3 py-2 font-medium w-[85px] whitespace-normal leading-tight">End</th>
+                        <tr className="text-[15px] text-gray-800 h-[41px]">
+                      <th className="px-3 py-2 font-medium w-[150px] whitespace-normal leading-tight">Code</th>
+                      <th className="px-3 py-2 font-medium w-[140px] whitespace-normal leading-tight">Name</th>
+                      <th className="px-3 py-2 font-medium w-[80px] whitespace-normal leading-tight">Discount</th>
+                      <th className="px-3 py-2 font-medium w-[100px] whitespace-normal leading-tight">Min Spend</th>
+                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">Start</th>
+                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">End</th>
                       <th className="px-3 py-2 font-medium w-[60px] whitespace-normal leading-tight">Used</th>
-                      <th className="px-3 py-2 font-medium w-[95px] whitespace-normal leading-tight">Per User Limit</th>
-                      <th className="px-3 py-2 font-medium w-[95px] whitespace-normal leading-tight">Global Limit</th>
-                      <th className="px-3 py-2 font-medium w-[80px] whitespace-normal leading-tight">Status</th>
+                      <th className="px-3 py-2 font-medium w-[80px] whitespace-normal leading-tight">Per User Limit</th>
+                      <th className="px-3 py-2 font-medium w-[70px] whitespace-normal leading-tight">Global Limit</th>
+                      <th className="px-5 py-2 font-medium w-[80px] whitespace-normal leading-tight">Status</th>
                       <th className="px-3 py-2 font-medium w-[70px]"></th>
                         </tr>
                       </thead>
                       <tbody className="text-xs">
                       {rows.length === 0 ? (
                         <tr>
-                          <td colSpan={12} className="p-8 text-center text-gray-500">
+                          <td colSpan={11} className="p-8 text-center text-gray-500">
                             No promotions found.
                           </td>
                         </tr>
@@ -357,9 +356,9 @@ export default function PromotionPage() {
                           return (
                           <tr
                             key={p.id}
-                            className={`border-b border-gray-100 ${unusable ? "bg-gray-100" : "hover:bg-gray-50"}`}
+                            className={`h-[60px] text-[15px] border-b border-gray-100 ${unusable ? "bg-gray-100" : "hover:bg-gray-50"}`}
                           >
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : ""}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : ""}`}>
                               <span className={`font-mono font-medium ${unusable ? "text-gray-400" : "text-gray-900"}`}>
                                 {p.code ?? "—"}
                               </span>
@@ -369,41 +368,36 @@ export default function PromotionPage() {
                                 </span>
                               )}
                             </td>
-                            <td className={`px-3 py-2 align-top whitespace-normal break-words ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center whitespace-normal break-words ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.name ?? "—"}
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDiscount(p)}
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
-                              {p.max_discount != null && Number(p.max_discount) > 0
-                                ? `${Number(p.max_discount).toLocaleString()} THB`
-                                : "0"}
-                            </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.min_spend ? `${Number(p.min_spend).toLocaleString()} THB` : "0"}
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDate(p.start_date)}
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDate(p.end_date)}
                             </td>
-                            <td className={`px-3 py-2 align-top font-medium ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center font-medium ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {usageStats[p.id] ?? 0}
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.usage_limit_per_user != null ? String(p.usage_limit_per_user) : "—"}
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.global_usage_limit != null ? String(p.global_usage_limit) : "—"}
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : "text-gray-700"}`}>
-                              <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${displayDisabled ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                              <span className={`inline-block py-1 rounded-full text-md font-medium px-2 ${displayDisabled ? "bg-gray-100 text-gray-600" : "bg-green-100 text-green-700"}`}>
                                 {displayDisabled ? "Disabled" : "Enabled"}
                               </span>
                             </td>
-                            <td className={`px-3 py-2 align-top ${unusable ? "text-gray-400" : ""}`}>
+                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : ""}`}>
                               <div className="flex justify-end gap-1">
                                 <button
                                   type="button"

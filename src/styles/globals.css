@@ -528,6 +528,44 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Hide Stripe DevTools widget overlay (does not affect Elements iframes) */
+iframe[src*="devtools"],
+iframe[src*="stripe.com/devtools"],
+div[data-stripe-devtools],
+div[id*="stripe-devtools"],
+div[class*="stripe-devtools"] {
+  display: none !important;
+}
+
+/* Stripe PaymentElement: prevent country field clipping on narrow screens */
+.stripe-payment-element--payment-method .__PrivateStripeElement iframe {
+  /* Payment-method page: allow a bit more height */
+  min-height: clamp(100px, 55vh, 100px);
+  height: clamp(80px, 55vh, 350px) !important;
+  max-height: clamp(80px, 55vh, 520px) !important;
+}
+
+.stripe-payment-element--checkout .__PrivateStripeElement iframe {
+  /* Booking checkout: keep actions visible */
+  min-height: clamp(550px, 45vh, 350px);
+  height: clamp(260px, 45vh, 350px) !important;
+  max-height: clamp(260px, 45vh, 350px) !important;
+}
+
+@media (min-width: 1024px) {
+  .stripe-payment-element--payment-method .__PrivateStripeElement iframe {
+    min-height: clamp(100px, 45vh, 250px);
+    height: clamp(100px, 45vh, 350px) !important;
+    max-height: clamp(100px, 45vh, 480px) !important;
+  }
+
+  .stripe-payment-element--checkout .__PrivateStripeElement iframe {
+    min-height: clamp(450px, 35vh, 200px);
+    height: clamp(100px, 35vh, 1200px) !important;
+    max-height: clamp(100px, 35vh, 1200px) !important;
+  }
+}
+
 /* Custom DatePicker Styles */
 .react-datepicker-wrapper {
   width: 100%;

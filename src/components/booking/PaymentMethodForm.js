@@ -19,7 +19,9 @@ const tabBase =
 const tabActive = "border-[#E76B39] text-orange-500 bg-white";
 const tabInactive = "border-[#E4E6ED] text-gray-600 bg-white hover:border-gray-400";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, {
+  developerTools: { assistant: { enabled: false } },
+});
 
 export default function PaymentMethodForm({
   onBack,
@@ -47,11 +49,26 @@ export default function PaymentMethodForm({
   );
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
+  const [stripeInitError, setStripeInitError] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [useNewCard, setUseNewCard] = useState(false);
+  const [isLg, setIsLg] = useState(false);
 
   const hasCreatedPI = useRef(false);
+  const lastTotalRef = useRef(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsLg(!!media.matches);
+    update();
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", update);
+      return () => media.removeEventListener("change", update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
 
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
@@ -299,6 +316,22 @@ export default function PaymentMethodForm({
 
     try {
       let stripeCustomerId = user?.stripe_customer_id ?? null;
+      setStripeInitError("");
+
+      // อย่าสร้าง PaymentIntent ถ้ายอดยังคำนวณไม่ได้ (เช่น room/order ยังโหลดไม่ทัน)
+      if (!Number.isFinite(totalBaht) || Number(totalBaht) <= 0) {
+        setStripeInitError("Calculating total price…");
+        hasCreatedPI.current = false;
+        return;
+      }
+
+      // อัปเดต total_price ใน orders ให้เป็น “ยอดสุทธิจริง” ก่อนสร้าง PaymentIntent
+      // (รวม extras และหัก promotion แล้ว)
+      try {
+        await handleUpdateOrderMeta();
+      } catch (metaErr) {
+        console.error("Update order meta before PI error:", metaErr);
+      }
 
       const res = await fetch("/api/stripe/create-payment-intent", {
         method: "POST",
@@ -306,6 +339,7 @@ export default function PaymentMethodForm({
         body: JSON.stringify({
           orderId,
           stripeCustomerId,
+          totalPrice: totalBaht,
         }),
       });
 
@@ -313,6 +347,9 @@ export default function PaymentMethodForm({
       console.log("raw response:", text);
 
       if (!res.ok) {
+        // Show full API response for easier debugging
+        setStripeInitError(text || "Failed to initialize payment");
+        hasCreatedPI.current = false;
         return;
       }
 
@@ -327,14 +364,39 @@ export default function PaymentMethodForm({
       setClientSecret(data.clientSecret);
     } catch (err) {
       console.error("Create PI error:", err);
+      setStripeInitError(err?.message || "Failed to initialize payment");
+      hasCreatedPI.current = false;
     }
   };
   useEffect(() => {
-    if (method === "credit-card" && orderId && !hasCreatedPI.current) {
+    if (method !== "credit-card") return;
+    if (!orderId) return;
+    if (!Number.isFinite(totalBaht) || Number(totalBaht) <= 0) return;
+    // If we don't have a clientSecret yet (or it was reset after promo/extras changes),
+    // create a new PaymentIntent exactly once.
+    if (!clientSecret && !hasCreatedPI.current) {
       hasCreatedPI.current = true;
       handleCreatePaymentIntent();
     }
-  }, [method, orderId]);
+  }, [method, orderId, clientSecret, totalBaht]);
+
+  // ถ้ายอดสุทธิเปลี่ยน (เช่น apply/remove promo หรือเปลี่ยน extras) ให้สร้าง PaymentIntent ใหม่
+  useEffect(() => {
+    if (method !== "credit-card") return;
+    if (!orderId) return;
+    if (!Number.isFinite(totalBaht)) return;
+
+    const next = Math.round(Number(totalBaht) * 100) / 100;
+    if (lastTotalRef.current == null) {
+      lastTotalRef.current = next;
+      return;
+    }
+    if (lastTotalRef.current !== next) {
+      lastTotalRef.current = next;
+      setClientSecret("");
+      hasCreatedPI.current = false;
+    }
+  }, [method, orderId, totalBaht]);
 
   useEffect(() => {
     if (method !== "credit-card") {
@@ -666,32 +728,49 @@ export default function PaymentMethodForm({
       </div>
 
       {method === "credit-card" && clientSecret && (
-        <Elements
-          stripe={stripePromise}
-          options={{ clientSecret }}
-        >
-          <CreditCardCheckout
-            orderId={orderId}
-            savedCards={savedCards}
-            setSavedCards={setSavedCards}
-            selectedCardId={selectedCardId}
-            useNewCard={useNewCard}
-            setUseNewCard={setUseNewCard}
-            setSelectedCardId={setSelectedCardId}
-            clientSecret={clientSecret}
-            onBack={onBack}
-            onConfirm={onConfirm}
-            onCreateGuest={handleCreateGuestAndUpdateOrder}
-            onSaveAdditionalRequest={handleSaveAdditionalRequest}
-            onSaveRequests={handleSaveRequests}
-            onUpdateOrderMeta={handleUpdateOrderMeta}
-            extras={extras}
-            standards={standards}
-            promotionCode={promotionCode}
-            promotionDiscount={promotionDiscount}
-            promotionIds={promotionIds}
-          />
-        </Elements>
+        <div className="w-full max-w-[820px] mx-auto">
+          <Elements
+            key={isLg ? "lg" : "mobile"}
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              locale: "en",
+              appearance: {
+                variables: {
+                  fontSizeBase: isLg ? "30px" : "16px",
+                  fontSizeSm: isLg ? "30px" : "14px",
+                },
+              },
+            }}
+          >
+            <CreditCardCheckout
+              orderId={orderId}
+              savedCards={savedCards}
+              setSavedCards={setSavedCards}
+              selectedCardId={selectedCardId}
+              useNewCard={useNewCard}
+              setUseNewCard={setUseNewCard}
+              setSelectedCardId={setSelectedCardId}
+              clientSecret={clientSecret}
+              onBack={onBack}
+              onConfirm={onConfirm}
+              onCreateGuest={handleCreateGuestAndUpdateOrder}
+              onSaveAdditionalRequest={handleSaveAdditionalRequest}
+              onSaveRequests={handleSaveRequests}
+              onUpdateOrderMeta={handleUpdateOrderMeta}
+              extras={extras}
+              standards={standards}
+              promotionCode={promotionCode}
+              promotionDiscount={promotionDiscount}
+              promotionIds={promotionIds}
+            />
+          </Elements>
+        </div>
+      )}
+      {method === "credit-card" && !clientSecret && stripeInitError && (
+        <p className="mt-3 text-sm text-red-500 font-sans">
+          {stripeInitError}
+        </p>
       )}
       {method === "cash" && (
         <div>

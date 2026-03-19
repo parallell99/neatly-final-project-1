@@ -2,13 +2,33 @@ import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import connectionPool from "@/utils/db";
 
+function parseBaht(value) {
+  if (value == null) return NaN;
+  if (typeof value === "number") return value;
+  if (typeof value === "string") {
+    const cleaned = value.replace(/,/g, "").trim();
+    return Number.parseFloat(cleaned);
+  }
+  if (typeof value === "object") {
+    // Handle possible Decimal-like objects
+    if (typeof value.toNumber === "function") {
+      const n = value.toNumber();
+      return typeof n === "number" ? n : Number(n);
+    }
+    if (typeof value.toString === "function") {
+      return parseBaht(value.toString());
+    }
+  }
+  return Number(value);
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { orderId, stripeCustomerId } = req.body;
+    const { orderId, stripeCustomerId, totalPrice } = req.body;
 
     if (!orderId) {
       return res.status(400).json({ error: "Order ID required" });
@@ -68,11 +88,38 @@ export default async function handler(req, res) {
     }
 
     // 3️⃣ สร้าง PaymentIntent
+    // Prefer price from caller (already includes extras & promotions),
+    // fall back to order.total_price in DB.
+    const rawTotal = totalPrice ?? order.total_price;
+    const totalBaht = parseBaht(rawTotal);
+    const amountSatang = Math.max(0, Math.round(totalBaht * 100));
+    const MIN_THB_SATANG = 2000; // 20 THB (Stripe minimum for THB in many accounts)
+
+    if (!Number.isFinite(totalBaht) || totalBaht <= 0) {
+      return res.status(400).json({
+        error: "Invalid order total_price (must be a positive number in THB)",
+        total_price: rawTotal,
+        total_price_type: typeof rawTotal,
+        parsed_total_baht: totalBaht,
+        amount_satang: amountSatang,
+      });
+    }
+
+    if (amountSatang < MIN_THB_SATANG) {
+      return res.status(400).json({
+        error: "Amount is below Stripe minimum charge for THB",
+        amountSatang,
+        minimumSatang: MIN_THB_SATANG,
+        parsed_total_baht: totalBaht,
+      });
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: order.total_price,
+      // Stripe expects the smallest currency unit (satang for THB)
+      amount: amountSatang,
       currency: "thb",
       customer: customerId,
-      automatic_payment_methods: { enabled: true },
+      payment_method_types: ["card"],
       setup_future_usage: "off_session",
       metadata: {
         order_id: orderId,
@@ -84,6 +131,7 @@ export default async function handler(req, res) {
       .from("orders")
       .update({
         payment_intent_id: paymentIntent.id,
+        total_price: totalBaht,
       })
       .eq("id", orderId);
 

@@ -8,7 +8,9 @@ import Button from "@/components/ui/buttons/buttons";
 import { useAuth } from "@/contexts/authentication";
 import axios from "axios";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY, {
+  developerTools: { assistant: { enabled: false } },
+});
 
 function SetupCardForm({ onSuccess }) {
   const stripe = useStripe();
@@ -41,18 +43,20 @@ function SetupCardForm({ onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="pb-2 stripe-payment-element--payment-method">
+        <PaymentElement options={{ wallets: { link: "never" } }} />
+      </div>
       {error && (
         <p className="text-red-500 text-sm font-sans">{error}</p>
       )}
-      <div className="flex justify-end mt-4">
+      <div className="flex justify-center lg:justify-end pt-1">
         <Button
           type="submit"
           buttonStyle="primary"
           buttonText={loading ? "Processing..." : "Update Payment Method"}
           disabled={loading || !stripe}
-          className="h-[48px] px-8 mt-6"
+          className="h-[48px] px-8"
         />
       </div>
     </form>
@@ -67,6 +71,20 @@ export default function PaymentMethodPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
+  const [isLg, setIsLg] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsLg(!!media.matches);
+    update();
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", update);
+      return () => media.removeEventListener("change", update);
+    }
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
 
   useEffect(() => {
     if (!user?.stripe_customer_id) return;
@@ -149,22 +167,23 @@ export default function PaymentMethodPage() {
     <div className="bg-[#F7F7FB] flex flex-col min-h-screen">
       <Navbar />
 
-      <main className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-[1440px] lg:px-[165px] pb-10">
+      <main className="flex-1 w-full py-10 lg:py-14">
+        <div className="w-full max-w-[1440px] mx-auto px-4 lg:px-[165px]">
           <section className="bg-transparent">
-            <div className="flex items-center justify-between mb-5 mx-4 lg:mx-0">
+            <header className="mb-8 lg:mb-10">
               <h1 className="headline-3-booking-title text-[44px] text-[#1F3B33] lg:text-[68px]">
                 Payment Method
               </h1>
-            </div>
+            </header>
 
-            <div className="mx-4 lg:mx-0 bg-[#F1F2F6] rounded-lg px-6 py-8 lg:px-10 lg:py-12 shadow-sm">
-              <h2 className="font-sans text-lg font-semibold text-[#7C8194] mb-6 lg:text-">
-                Credit Card
-              </h2>
+            <div className="bg-[#F1F2F6] rounded-lg px-6 py-8 lg:px-10 lg:py-12 shadow-sm">
+              <div className="w-full max-w-[980px] mx-auto">
+                <h2 className="font-sans text-lg font-semibold text-[#7C8194] mb-6 lg:pl-20">
+                  Credit Card
+                </h2>
 
               {user && (
-                <div className="space-y-3 mb-8">
+                <div className="w-full max-w-[820px] mx-auto space-y-3 mb-10">
                   {loadingCards && (
                     <p className="font-sans text-base text-gray-600">
                       Loading saved cards...
@@ -181,7 +200,7 @@ export default function PaymentMethodPage() {
                     savedCards.map((card) => (
                       <div
                         key={card.id}
-                        className="flex items-center justify-between w-full px-4 py-3 rounded-lg border-2 border-[#E4E6ED] bg-white hover:border-gray-400 hover:bg-gray-50/50 transition-all font-sans text-base text-[#2A2E3F]"
+                        className="flex items-center justify-between px-4 py-3 rounded-lg border-2 border-[#E4E6ED] bg-white hover:border-gray-400 hover:bg-gray-50/50 transition-all font-sans text-base text-[#2A2E3F]"
                       >
                         <div className="flex flex-col">
                           <span className="font-medium">
@@ -228,12 +247,24 @@ export default function PaymentMethodPage() {
               )}
 
               {user && !error && clientSecret && (
-                <Elements
-                  stripe={stripePromise}
-                  options={{ clientSecret, locale: "en" }}
-                >
-                  <SetupCardForm onSuccess={handleSuccess} />
-                </Elements>
+                <div className="w-full max-w-[820px] mx-auto">
+                  <Elements
+                    key={isLg ? "lg" : "mobile"}
+                    stripe={stripePromise}
+                    options={{
+                      clientSecret,
+                      locale: "en",
+                      appearance: {
+                        variables: {
+                          fontSizeBase: isLg ? "16px" : "12px",
+                          fontSizeSm: isLg ? "16px" : "12px",
+                        },
+                      },
+                    }}
+                  >
+                    <SetupCardForm onSuccess={handleSuccess} />
+                  </Elements>
+                </div>
               )}
 
               {user && !error && !clientSecret && !loading && (
@@ -241,6 +272,7 @@ export default function PaymentMethodPage() {
                   Preparing secure payment form...
                 </p>
               )}
+              </div>
             </div>
           </section>
         </div>
