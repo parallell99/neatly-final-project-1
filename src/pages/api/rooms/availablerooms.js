@@ -36,7 +36,7 @@ async function handleGet(req, res) {
               room_type_id,
               COALESCE(SUM(quantity::int), 0) AS booked_qty
           FROM public.orders
-          WHERE status != 'cancelled'
+          WHERE status NOT IN ('cancelled', 'expired', 'refunded')
           ${bookedWhereClause}
           GROUP BY room_type_id
       ),
