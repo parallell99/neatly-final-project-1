@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
 import axios from "axios";
-import { Calendar, Upload, X } from "lucide-react";
+import { CalendarIcon, Upload, X } from "lucide-react";
 import Button from "@/components/ui/buttons/buttons";
 import Input from "@/components/ui/AuthInput/AuthInput";
 import { useAuth } from "@/contexts/authentication";
@@ -18,29 +21,80 @@ import {
 import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
 import { Calendar as CalendarComponent } from "@/components/ui/booking/calendar";
 import { cn } from "@/lib/utils";
+import PhoneInput from "@/components/ui/PhoneInput/PhoneInput";
+
+const MINIMUM_AGE = 12;
+const MAX_PROFILE_IMAGE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_PROFILE_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+const getParsedPhone = (value) => parsePhoneNumberFromString(value);
+const isPhoneValid = (value) => getParsedPhone(value)?.isValid() ?? false;
+const toE164Phone = (value) => getParsedPhone(value)?.number ?? value;
+
+const isAtLeastMinimumAge = (dateString) => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const birthDate = new Date(year, month - 1, day);
+  if (isNaN(birthDate.getTime())) return false;
+
+  const maxBirthDate = subYears(startOfDay(new Date()), MINIMUM_AGE);
+  return birthDate <= maxBirthDate;
+};
+
+const profileSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required."),
+  lastName: z.string().trim().min(1, "Last name is required."),
+  email: z.string().trim().email("Please enter a valid email address."),
+  phone: z
+    .string()
+    .min(1, "Phone number is required.")
+    .refine((value) => isPhoneValid(value), "Invalid phone number.")
+    .transform((value) => toE164Phone(value)),
+  dateOfBirth: z
+    .string()
+    .trim()
+    .min(1, "Date of birth is required.")
+    .refine((value) => isAtLeastMinimumAge(value), `You must be at least ${MINIMUM_AGE} years old.`),
+  profilePicture: z
+    .any()
+    .optional()
+    .refine((file) => {
+      if (!file) return true;
+      return ALLOWED_PROFILE_IMAGE_TYPES.includes(file.type);
+    }, "Only JPEG, PNG, GIF or WebP allowed.")
+    .refine((file) => {
+      if (!file) return true;
+      return file.size <= MAX_PROFILE_IMAGE_SIZE;
+    }, "File must be less than 5MB."),
+  country: z.string().trim().optional(),
+});
 
 export default function UserProfile() {
   const { user, getUserLoading, fetchUser } = useAuth();
   const [dateOfBirth, setDateOfBirth] = useState(null);
   const [profileImageUrl, setProfileImageUrl] = useState("");
-  const [selectedFile, setSelectedFile] = useState(/** @type {File | null} */ (null));
+  const [selectedFile, setSelectedFile] = useState(/** @type {File | null} */(null));
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateError, setUpdateError] = useState(null);
-  const fileInputRef = useRef(/** @type {HTMLInputElement | null} */ (null));
+  const fileInputRef = useRef(/** @type {HTMLInputElement | null} */(null));
 
   const {
     register,
     setValue,
     watch,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm({
+    resolver: zodResolver(profileSchema),
+    mode: "onBlur",
     defaultValues: {
       firstName: "",
       lastName: "",
       email: "",
       phone: "",
-      country: "Thailand",
+      dateOfBirth: "",
+      profilePicture: undefined,
+      country: "",
     },
   });
 
@@ -48,13 +102,16 @@ export default function UserProfile() {
     if (!user) return;
     setValue("firstName", user.first_name ?? "");
     setValue("lastName", user.last_name ?? "");
-    setValue("email", user.username ?? "");
+    setValue("email", user.email ?? "");
     setValue("phone", user.phone ?? "");
-    setValue("country", user.country ?? "Thailand");
+    setValue("country", user.country ?? "");
     setProfileImageUrl(user.profile_image_url ?? "");
     if (user.date_of_birth) {
       const d = new Date(user.date_of_birth);
-      if (!isNaN(d.getTime())) setDateOfBirth(d);
+      if (!isNaN(d.getTime())) {
+        setDateOfBirth(d);
+        setValue("dateOfBirth", format(d, "yyyy-MM-dd"), { shouldValidate: true });
+      }
     }
   }, [user, setValue]);
 
@@ -65,13 +122,6 @@ export default function UserProfile() {
     if (!token) {
       setUpdateError("Please log in to update profile.");
       return;
-    }
-    if (dateOfBirth) {
-      const maxBirth = subYears(startOfDay(new Date()), 12);
-      if (dateOfBirth > maxBirth) {
-        setUpdateError("You must be at least 12 years old.");
-        return;
-      }
     }
     setUpdateLoading(true);
     setUpdateError(null);
@@ -137,17 +187,22 @@ export default function UserProfile() {
     setSelectedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
     // TODO: call PATCH /api/users/avatar with null or empty to clear
+    setValue("profilePicture", undefined, { shouldValidate: true });
   };
 
   const onFileChange = (e) => {
     const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file || !file.type.startsWith("image/")) {
+      setValue("profilePicture", undefined, { shouldValidate: true });
+      return;
+    }
     if (profileImageUrl?.startsWith("blob:")) {
       URL.revokeObjectURL(profileImageUrl);
     }
     const url = URL.createObjectURL(file);
     setProfileImageUrl(url);
     setSelectedFile(file);
+    setValue("profilePicture", file, { shouldValidate: true });
   };
 
   const onBoxClick = () => {
@@ -173,7 +228,7 @@ export default function UserProfile() {
     e.stopPropagation();
   };
 
-  const blobUrlRef = useRef(/** @type {string | null} */ (null));
+  const blobUrlRef = useRef(/** @type {string | null} */(null));
   useEffect(() => {
     blobUrlRef.current = profileImageUrl?.startsWith("blob:") ? profileImageUrl : null;
   }, [profileImageUrl]);
@@ -206,7 +261,7 @@ export default function UserProfile() {
         <h1 className="font-serif headline-3 text-center text-gray-800">
           Profile
         </h1>
-        
+
       </div>
 
       <form onSubmit={handleSubmit(onUpdateProfile)} className="space-y-10">
@@ -245,52 +300,61 @@ export default function UserProfile() {
               register={register}
               error={errors.email}
             />
+            <PhoneInput
+              label="Phone number"
+              name="phone"
+              control={control}
+              placeholder="Enter your phone number"
+              error={errors.phone}
+              disableSearchIcon={true}
+              searchStyle={{ width: "100%", boxSizing: "border-box" }}
+            />
             <div className="flex flex-col gap-1">
-              <label className="font-normal text-[16px] text-gray-900">
-                Phone number
-              </label>
-              <input
-                type="tel"
-                placeholder="Phone number"
-                {...register("phone")}
-                className="w-full pl-[12px] pr-[12px] py-[12px] border border-gray-300 rounded-[4px] focus:outline-none focus:ring-0 focus:border-gray-400 bg-white text-black placeholder:text-gray-600"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="font-normal text-[16px] text-gray-900">
+              <label className="font-normal text-[16px] text-gray-900" htmlFor="dateOfBirth">
                 Date of Birth
               </label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <button
-                    type="button"
+                  <ButtonCalendar
+                    id="dateOfBirth"
+                    variant="outline"
                     className={cn(
-                      "w-full h-[48px] px-3 flex items-center justify-between gap-2 rounded-[4px] border bg-white text-left font-normal text-gray-900 border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-0 focus:border-gray-400"
+                      "w-full h-[50px] justify-between text-left text-[16px] font-normal shadow-none text-gray-900 rounded-[4px] hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500",
+                      "data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0",
+                      !dateOfBirth && "text-muted-foreground"
                     )}
                   >
-                    <span>
-                      {dateOfBirth
-                        ? format(dateOfBirth, "EEE, d MMMM yyyy")
-                        : "Select date"}
-                    </span>
-                    <Calendar className="w-4 h-4 text-gray-500 shrink-0" />
-                  </button>
+                    {dateOfBirth ? (
+                      format(dateOfBirth, "PPP")
+                    ) : (
+                      <span className="text-gray-600">Select your date of birth</span>
+                    )}
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                  </ButtonCalendar>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 bg-white shadow-md border">
                   <CalendarComponent
                     mode="single"
                     defaultMonth={dateOfBirth ?? subYears(new Date(), 12)}
                     selected={dateOfBirth ?? undefined}
-                    onSelect={(d) => setDateOfBirth(d ?? null)}
+                    onSelect={(d) => {
+                      setDateOfBirth(d ?? null);
+                      setValue("dateOfBirth", d ? format(d, "yyyy-MM-dd") : "", {
+                        shouldValidate: true,
+                      });
+                    }}
                     disabled={(day) => {
                       const today = startOfDay(new Date());
-                      const maxBirth = subYears(today, 12);
+                      const maxBirth = subYears(today, MINIMUM_AGE);
                       return day > today || day > maxBirth;
                     }}
                     initialFocus
                   />
                 </PopoverContent>
               </Popover>
+              {errors.dateOfBirth && (
+                <p className="mt-1 text-sm text-red">{errors.dateOfBirth.message}</p>
+              )}
             </div>
             <CountrySelector
               label="Country"
@@ -352,6 +416,9 @@ export default function UserProfile() {
                 </div>
               )}
             </label>
+            {errors.profilePicture && (
+              <p className="mt-2 text-sm text-red">{errors.profilePicture.message}</p>
+            )}
           </div>
           <Button
             type="submit"

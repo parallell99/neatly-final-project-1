@@ -39,11 +39,11 @@ export default function Input({
           {...register(name)}
           className={`w-full pl-[12px] py-[12px] border rounded-[4px] focus:outline-none transition-all duration-200
             ${disabled
-              ? "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+              ? "bg-gray-100 border-gray-400 text-gray-500 cursor-not-allowed"
               : `focus:ring-1 focus:ring-orange-500 focus:border-transparent
                 ${error
                 ? "border-red bg-white"
-                : "border-gray-300 bg-white hover:border-gray-400"
+                : "border-gray-400 bg-white"
               }
                 placeholder:text-gray-600
                 text-black
