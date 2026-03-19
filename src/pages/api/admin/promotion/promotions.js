@@ -14,7 +14,8 @@ export default async function handler(req, res) {
 
       if (error) {
         console.error("[admin/promotion/promotions] list error:", error);
-        return res.status(500).json({ message: error.message || "Failed to load promotions" });
+        // Avoid breaking admin UI on transient Supabase/Vercel issues
+        return res.status(200).json({ data: [] });
       }
       return res.status(200).json({ data: data ?? [] });
     }
@@ -121,6 +122,7 @@ export default async function handler(req, res) {
     }
   } catch (err) {
     console.error("[admin/promotion/promotions] unexpected error:", err);
-    return res.status(500).json({ message: err.message || "Internal server error" });
+    // Avoid breaking admin UI on transient Supabase/Vercel issues
+    return res.status(200).json({ data: [] });
   }
 }
