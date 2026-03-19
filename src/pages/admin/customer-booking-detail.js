@@ -106,25 +106,27 @@ export default function CustomerBookingDetail() {
   return (
     <div className="flex">
       <SideBarAdmin />
-      <div className="flex flex-col flex-1 bg-[#e8eef2] min-h-screen">
-        <div className="flex-1 pt-px pb-px pl-0 pr-0 py-6 px-6 bg-white">
+      <div className="flex flex-col flex-1 min-h-screen">
+        <div className="flex-1 bg-white">
           {/* Back + Title */}
-          <div className="mb-6 border-b border-gray-300 px-[60px] py-6 h-[80px]">
+          <div className="flex  border-b border-gray-300 px-[60px] py-[16px] h-[80px] items-center">
             <Link
               href="/admin/customer-booking"
-              className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium"
+              className="inline-flex items-center gap-[16px]"
             >
-              <span className="text-xl" aria-hidden>←</span>
-              <span className="font-semibold">{detail.customerName}</span>
-              <span className="font-normal text-gray-600">{detail.roomTypeName}</span>
+              <span className="text-xl text-gray-600 " aria-hidden>←</span>
+              <span className="headline-5 text-gray-900">{detail.customerName}</span>
+              <span className="font-normal text-gray-900">{detail.roomTypeName}</span>
             </Link>
           </div>
 
-          {/* White card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 max-w-[1292px] mx-auto overflow-hidden">
-            <div className="p-8 md:p-10">
+          {/* gray background */}
+          <div className="bg-gray-100 px-[60px] py-[50px]">
+            {/* white card*/}
+            <div className=" bg-white pt-[40px] px-[80px] pb-[60px] rounded-[4px] border border-gray-300">
+
               {/* Booking Details (top, full width) */}
-              <div className="space-y-5">
+              <div className="flex flex-col gap-[40px]">
                 <DetailRow label="Customer name" value={detail.customerName} />
                 <DetailRow label="Guest(s)" value={detail.guests} />
                 <DetailRow label="Room type" value={detail.roomType} />
@@ -138,9 +140,9 @@ export default function CustomerBookingDetail() {
 
               {/* Payment success – separate card */}
               {detail.paymentMethod && detail.paymentMethod !== "—" && (
-                <div className="mt-8 pt-8">
-                  <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
-                    <p className="text-sm text-gray-600 text-right body-1">
+                <div className="mt-[40px] py-[16px] px-[24px] bg-gray-100 rounded-lg">
+                  <div className="pb-[16px] gap-[16px]">
+                    <p className="text-gray-600 text-right body-1">
                       <span>Payment success</span>
                       {detail.paymentMethod === "Credit Card" && detail.cardLast4 ? (
                         <>
@@ -155,41 +157,41 @@ export default function CustomerBookingDetail() {
                       )}
                     </p>
                   </div>
-                </div>
-              )}
 
-              {/* Payment Summary (below details, in its own box) */}
-              <div className={detail.paymentMethod && detail.paymentMethod !== "—" ? "mt-6" : "mt-8 pt-8"}>
-                <div className="bg-gray-100 rounded-lg border border-gray-200 p-5">
-                  <div className="space-y-3 text-gray-700">
-                    <div className="flex justify-between gap-4">
-                      <span className="body-1 text-gray-900">{detail.roomTypeName}</span>
-                      <span className="font-sans font-semibold text-gray-900">{roomSubtotalDisplay}</span>
+                  <div className="pb-[8px]">
+
+                    <div className="flex flex-col py-[12px] gap-[24px] text-gray-700">
+                      <div className="flex justify-between">
+                        <span className="body-1 text-gray-900">{detail.roomTypeName}</span>
+                        <span className="font-semibold text-gray-900">{roomSubtotalDisplay}</span>
+                      </div>
+                      {extras.map((extra, i) => (
+                        <div key={i} className="flex justify-between gap-4">
+                          <span className="body-1 text-gray-900">{extra.name}</span>
+                          <span className="font-sans font-semibold text-gray-900">{formatPrice(extra.price)}</span>
+                        </div>
+                      ))}
+                      {promotionDiscountAmount > 0 && (
+                        <div className="flex justify-between gap-4">
+                          <span className="body-1 text-gray-900">{promotionLabel}</span>
+                          <span className="font-sans font-semibold text-gray-900">-{formatPrice(promotionDiscountAmount)}</span>
+                        </div>
+                      )}
                     </div>
-                    {extras.map((extra, i) => (
-                      <div key={i} className="flex justify-between gap-4">
-                        <span className="body-1 text-gray-900">{extra.name}</span>
-                        <span className="font-sans font-semibold text-gray-900">{formatPrice(extra.price)}</span>
-                      </div>
-                    ))}
-                    {promotionDiscountAmount > 0 && (
-                      <div className="flex justify-between gap-4">
-                        <span className="body-1 text-gray-900">{promotionLabel}</span>
-                        <span className="font-sans font-semibold text-gray-900">-{formatPrice(promotionDiscountAmount)}</span>
-                      </div>
-                    )}
+
                   </div>
-                  <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-baseline">
+                  <div className="flex flex-row justify-between pt-[24px] border-t border-gray-300 ">
                     <span className="body-1 text-gray-900">Total</span>
                     <span className="headline-5 text-gray-900">THB {totalDisplay}</span>
                   </div>
                 </div>
-              </div>
+
+              )}
 
               {/* Additional Request */}
               <div className="mt-6">
                 <div className="bg-gray-300 rounded-lg border border-gray-200 p-5">
-                  <h3 className="font-semibold text-gray-900 font-sans mb-2">Additional Request</h3>
+                  <h3 className="font-semibold text-gray-700 font-sans mb-2">Additional Request</h3>
                   <p className="body-1 text-gray-700">
                     {detail.additionalRequest || "—"}
                   </p>
