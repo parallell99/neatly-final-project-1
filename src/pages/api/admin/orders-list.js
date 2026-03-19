@@ -42,20 +42,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ data: [] });
     }
 
+    /**
+     * Always load guests by guest_id as a fallback.
+     * On some environments (e.g. Vercel + PostgREST), the embed
+     * `orders(..., guests(...))` can succeed but return `guests: []` per row.
+     * The old logic treated that as "has embedded guests" and skipped this query,
+     * so customerName became "—" even when guest_id was set.
+     */
     let guestsMap = {};
-    const hasEmbeddedGuests = orders.some((o) => o.guests != null);
-    if (!hasEmbeddedGuests) {
-      const guestIds = [...new Set(orders.map((o) => o.guest_id).filter(Boolean))];
-      if (guestIds.length > 0) {
-        const guestsRes = await supabaseAdmin.from("guests").select("id, first_name, last_name").in("id", guestIds);
-        if (guestsRes.data && guestsRes.data.length > 0) {
-          (guestsRes.data || []).forEach((g) => {
-            if (g.id == null) return;
-            const k = String(g.id);
-            guestsMap[k] = g;
-            guestsMap[k.toLowerCase()] = g;
-          });
-        }
+    const guestIds = [...new Set(orders.map((o) => o.guest_id).filter(Boolean))];
+    if (guestIds.length > 0) {
+      const guestsRes = await supabaseAdmin.from("guests").select("id, first_name, last_name").in("id", guestIds);
+      if (guestsRes.error) {
+        console.warn("[admin/orders-list] guests batch error:", guestsRes.error.message);
+      }
+      if (guestsRes.data && guestsRes.data.length > 0) {
+        (guestsRes.data || []).forEach((g) => {
+          if (g.id == null) return;
+          const k = String(g.id);
+          guestsMap[k] = g;
+          guestsMap[k.toLowerCase()] = g;
+        });
       }
     }
 
@@ -88,15 +95,25 @@ export default async function handler(req, res) {
 
     const data = orders.map((o) => {
       let first = "";
+      let last = "";
       if (o.guests != null) {
         const g = Array.isArray(o.guests) ? o.guests[0] : o.guests;
-        if (g && typeof g === "object") first = g.first_name ?? g.firstName ?? "";
+        if (g && typeof g === "object") {
+          first = g.first_name ?? g.firstName ?? "";
+          last = g.last_name ?? g.lastName ?? "";
+        }
       }
-      if (!first && o.guest_id) {
-        const g = guestsMap[o.guest_id] ?? guestsMap[String(o.guest_id).toLowerCase()];
-        if (g) first = g.first_name ?? g.firstName ?? "";
+      if (!String(first).trim() && o.guest_id) {
+        const gid = String(o.guest_id);
+        const g = guestsMap[gid] ?? guestsMap[gid.toLowerCase()] ?? guestsMap[o.guest_id];
+        if (g) {
+          first = g.first_name ?? g.firstName ?? "";
+          last = g.last_name ?? g.lastName ?? "";
+        }
       }
-      const customerName = String(first).trim() || "—";
+      const fromGuest = `${String(first).trim()} ${String(last).trim()}`.trim();
+      const customerName =
+        fromGuest || (o.email && String(o.email).trim()) || "—";
       const rt = o.room_type_id ? roomTypesMap[o.room_type_id] : { name: "—", bedTypeName: "—" };
       return {
         id: o.id,

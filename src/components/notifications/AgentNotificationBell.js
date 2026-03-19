@@ -81,8 +81,16 @@ export default function AgentNotificationBell() {
     fetch("/api/admin/orders-list")
       .then((res) => res.json())
       .then((json) => {
-        const list = Array.isArray(json?.data) ? json.data : [];
-        setNewOrdersList(list);
+        const raw = Array.isArray(json?.data) ? json.data : [];
+        // Normalize for display: same API as Customer Booking list (guests + email fallback server-side)
+        setNewOrdersList(
+          raw.map((o) => ({
+            ...o,
+            customerName: o.customerName && String(o.customerName).trim() ? o.customerName.trim() : "—",
+            roomType: o.roomType && String(o.roomType).trim() ? o.roomType.trim() : "—",
+            checkIn: o.checkIn != null ? String(o.checkIn) : "",
+          }))
+        );
       })
       .catch(() => setNewOrdersList([]));
   };
@@ -193,11 +201,11 @@ export default function AgentNotificationBell() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-gray-800 text-sm font-semibold font-sans truncate">
-                      {order.customerName || "—"}
+                      {order.customerName ?? "—"}
                     </p>
                     <p className="text-gray-600 text-xs font-sans leading-snug mt-0.5">
-                      {order.roomType || "—"} · Check-in{" "}
-                      {String(order.checkIn).slice(0, 10)}
+                      {order.roomType ?? "—"} · Check-in{" "}
+                      {order.checkIn ? String(order.checkIn).slice(0, 10) : "—"}
                     </p>
                   </div>
                   {isUnreadOrder(order) ? (
