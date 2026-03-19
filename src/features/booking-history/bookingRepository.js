@@ -5,6 +5,7 @@ async function findByUserId(userId) {
 SELECT
   o.id,
   o.status,
+  o.payment_method,
   o.check_in_date,
   o.check_out_date,
   o.total_price,
@@ -57,6 +58,7 @@ AND o.status IN ('paid', 'cancelled', 'refunded')
 GROUP BY
   o.id,
   o.status,
+  o.payment_method,
   o.check_in_date,
   o.check_out_date,
   o.total_price,

@@ -187,7 +187,7 @@ export default function BookingHistory() {
                                                 </div>
 
                                             </div>
-                                            
+
 
                                             {/* CHECK IN OUT */}
                                             <div className="p-4 space-y-3 body-1 text-gray-800 lg:flex lg:gap-10 lg:space-y-0">
@@ -236,7 +236,7 @@ export default function BookingHistory() {
                                                             {booking.guests} Guests ({booking.nights} Night)
                                                         </p>
                                                         <p className="font-semibold">
-                                                            {booking.paymentMethod === "card" ? (
+                                                            {booking.payment ? (
                                                                 <>Payment success via {booking.payment}</>
                                                             ) : (
                                                                 <span className="text-gray-700">Pay at property (Cash)</span>
