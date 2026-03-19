@@ -368,7 +368,7 @@ export default function PromotionPage() {
                                 </span>
                               )}
                             </td>
-                            <td className={`px-3 py-2 align-center whitespace-normal break-words ${unusable ? "text-gray-400" : "text-gray-700"}`}>
+                            <td className={`px-3 py-2 align-center whitespace-normal wrap-break-word ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {p.name ?? "—"}
                             </td>
                             <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
