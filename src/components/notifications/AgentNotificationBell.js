@@ -74,7 +74,6 @@ export default function AgentNotificationBell() {
   const markAllAsRead = () => {
     setReadAtNow();
     setNewOrdersCount(0);
-    setNewOrdersList([]);
   };
 
   const openAndFetch = () => {
@@ -82,20 +81,8 @@ export default function AgentNotificationBell() {
     fetch("/api/admin/orders-list")
       .then((res) => res.json())
       .then((json) => {
-        const readAt = getReadAt();
-        const readAtMs = readAt ? new Date(readAt).getTime() : null;
         const list = Array.isArray(json?.data) ? json.data : [];
-        if (!readAtMs || Number.isNaN(readAtMs)) {
-          setNewOrdersList(list);
-          return;
-        }
-        setNewOrdersList(
-          list.filter((o) => {
-            const t = o?.createdAt ? new Date(o.createdAt).getTime() : null;
-            if (!t || Number.isNaN(t)) return false;
-            return t >= readAtMs;
-          })
-        );
+        setNewOrdersList(list);
       })
       .catch(() => setNewOrdersList([]));
   };
@@ -113,6 +100,20 @@ export default function AgentNotificationBell() {
     markAllAsRead();
     setOpen(false);
     router.push("/admin/customer-booking");
+  };
+
+  const readAtMs = (() => {
+    const readAt = getReadAt();
+    if (!readAt) return null;
+    const t = new Date(readAt).getTime();
+    return Number.isNaN(t) ? null : t;
+  })();
+
+  const isUnreadOrder = (order) => {
+    if (!readAtMs) return true;
+    const t = order?.createdAt ? new Date(order.createdAt).getTime() : null;
+    if (!t || Number.isNaN(t)) return false;
+    return t >= readAtMs;
   };
 
   return (
@@ -151,7 +152,7 @@ export default function AgentNotificationBell() {
       {open && (
         <div
           ref={panelRef}
-          className="absolute right-0 mt-2 w-[340px] max-h-[420px] bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col z-50 overflow-hidden"
+          className="absolute right-[-50px] mt-2 w-[calc(100vw-24px)] max-w-[340px] max-h-[70dvh] sm:max-h-[420px] bg-white rounded-lg shadow-lg border border-gray-200 flex flex-col z-50 overflow-hidden"
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -177,7 +178,7 @@ export default function AgentNotificationBell() {
           <div className="overflow-y-auto flex-1 divide-y divide-gray-100">
             {newOrdersList.length === 0 ? (
               <p className="p-6 text-center text-gray-400 text-sm font-sans">
-                No new orders.
+                No orders yet.
               </p>
             ) : (
               newOrdersList.slice(0, 10).map((order) => (
@@ -199,10 +200,12 @@ export default function AgentNotificationBell() {
                       {String(order.checkIn).slice(0, 10)}
                     </p>
                   </div>
-                  <span
-                    className="mt-1.5 shrink-0 w-2.5 h-2.5 rounded-full bg-blue-500"
-                    aria-label="Unread"
-                  />
+                  {isUnreadOrder(order) ? (
+                    <span
+                      className="mt-1.5 shrink-0 w-2.5 h-2.5 rounded-full bg-blue-500"
+                      aria-label="Unread"
+                    />
+                  ) : null}
                 </button>
               ))
             )}
