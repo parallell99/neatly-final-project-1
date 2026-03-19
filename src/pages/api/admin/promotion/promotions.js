@@ -1,4 +1,18 @@
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
+
+function getSupabaseClient(mode) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url) return null;
+  if (mode === "service") {
+    if (!serviceKey) return null;
+    return createClient(url, serviceKey);
+  }
+  // mode === "anon" (read-only)
+  if (!anonKey) return null;
+  return createClient(url, anonKey);
+}
 
 export default async function handler(req, res) {
   if (!["GET", "POST", "PATCH"].includes(req.method)) {
@@ -10,7 +24,10 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const { data, error } = await supabaseAdmin
+      const supabase = getSupabaseClient("anon") || getSupabaseClient("service");
+      if (!supabase) return res.status(200).json({ data: [] });
+
+      const { data, error } = await supabase
         .from("promotions")
         .select("id, name, code, description, discount_type, discount_value, max_discount, min_spend, start_date, end_date, is_stackable, global_usage_limit, usage_limit_per_user, is_active, created_at")
         .order("created_at", { ascending: false });
@@ -24,6 +41,10 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
+      const supabaseAdmin = getSupabaseClient("service");
+      if (!supabaseAdmin) {
+        return res.status(500).json({ message: "Missing SUPABASE_SERVICE_ROLE_KEY in this environment." });
+      }
       const {
         name,
         code,
@@ -85,6 +106,10 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "PATCH") {
+      const supabaseAdmin = getSupabaseClient("service");
+      if (!supabaseAdmin) {
+        return res.status(500).json({ message: "Missing SUPABASE_SERVICE_ROLE_KEY in this environment." });
+      }
       const { id, close, ...fields } = req.body ?? {};
       if (!id) return res.status(400).json({ message: "Promotion id is required" });
 

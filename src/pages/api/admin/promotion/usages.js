@@ -1,4 +1,13 @@
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
+
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url) return null;
+  // Prefer service role when available, fallback to anon for read-only GET
+  return createClient(url, serviceKey || anonKey || "");
+}
 
 export default async function handler(req, res) {
   if (req.method !== "GET") {
@@ -9,7 +18,10 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store, max-age=0");
 
   try {
-    const { data, error } = await supabaseAdmin
+    const supabase = getSupabaseClient();
+    if (!supabase) return res.status(200).json({ data: {} });
+
+    const { data, error } = await supabase
       .from("promotion_usages")
       .select("promotion_id");
 
