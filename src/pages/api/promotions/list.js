@@ -10,7 +10,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const nowIso = new Date().toISOString();
+    // promotions.end_date is a DATE column, so compare with YYYY-MM-DD (not full ISO timestamp)
+    const todayStr = new Date().toISOString().slice(0, 10);
 
     const { data, error } = await supabaseAdmin
       .from("promotions")
@@ -19,7 +20,7 @@ export default async function handler(req, res) {
       // แสดงเฉพาะโปรโมชันที่ยังไม่หมดอายุ:
       // - end_date เป็น null (ไม่มีวันหมดอายุ)
       // - หรือ end_date >= วันนี้
-      .or(`end_date.is.null,end_date.gte.${nowIso}`)
+      .or(`end_date.is.null,end_date.gte.${todayStr}`)
       .order("created_at", { ascending: false });
 
     if (error) {

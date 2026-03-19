@@ -12,7 +12,8 @@ export default async function handler(req, res) {
 
     if (error) {
       console.error("[admin/promotion/usages] error:", error);
-      return res.status(500).json({ message: error.message || "Failed to load usage stats" });
+      // Avoid breaking admin UI on transient Supabase/Vercel issues
+      return res.status(200).json({ data: {} });
     }
 
     const countByPromo = {};
@@ -26,6 +27,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ data: countByPromo });
   } catch (err) {
     console.error("[admin/promotion/usages] unexpected error:", err);
-    return res.status(500).json({ message: err.message || "Internal server error" });
+    // Avoid breaking admin UI on transient Supabase/Vercel issues
+    return res.status(200).json({ data: {} });
   }
 }
