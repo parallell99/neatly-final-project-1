@@ -6,13 +6,14 @@ import { useRouter } from "next/router";
 import { useAuth } from "@/contexts/authentication";
 import * as Popover from "@radix-ui/react-popover";
 import LogoNav from "@/assets/logo/logo-nav.svg";
-import notiIcon from "@/assets/icons/noti.svg?url";
 import profileIcon from "@/assets/icons/people.svg?url";
 import paymentIcon from "@/assets/icons/credit.svg?url";
 import bookingIcon from "@/assets/icons/cs_booking.svg?url";
 import logoutIcon from "@/assets/icons/logout.svg?url";
 import adminIcon from "@/assets/icons/manage.svg?url";
 import promotionIcon from "@/assets/icons/ticket-percent.svg?url";
+import NotificationBell from "@/components/notifications/NotificationBell";
+import AgentNotificationBell from "@/components/notifications/AgentNotificationBell";
 
 // Helper function to get image source (handles both string and object)
 const getImageSrc = (img) => {
@@ -27,16 +28,10 @@ export default function Navbar() {
   const { isAuthenticated, user, userRole, logout } = useAuth();
   const isAgent = userRole === "agent";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isUserNotiOpen, setIsUserNotiOpen] = useState(false);
-  const [isAgentNotiOpen, setIsAgentNotiOpen] = useState(false);
   const [navbarHeight, setNavbarHeight] = useState(0);
   const [navLogoUrl, setNavLogoUrl] = useState(null);
-  const [newOrdersCount, setNewOrdersCount] = useState(0);
-  const [newOrdersList, setNewOrdersList] = useState([]);
   const navRef = useRef(null);
 
-  // แจ้งเตือนสำหรับ user จาก API: จ่ายเงินสำเร็จ + เตือน check-in ล่วงหน้า 1 วัน
-  const [userNotifications, setUserNotifications] = useState([]);
 
   useEffect(() => {
     fetch("/api/hotel-information")
@@ -47,73 +42,6 @@ export default function Navbar() {
       })
       .catch(() => { });
   }, []);
-
-  const NOTIFICATION_READ_KEY = "neatly_admin_orders_read_at";
-  const USER_NOTIFICATIONS_VIEWED_COUNT_KEY = "neatly_user_notifications_viewed_count";
-
-  const getUserNotificationsViewedCount = () => {
-    if (typeof window === "undefined") return 0;
-    try {
-      return parseInt(window.localStorage.getItem(USER_NOTIFICATIONS_VIEWED_COUNT_KEY), 10) || 0;
-    } catch (_) {
-      return 0;
-    }
-  };
-
-  const markUserNotificationsViewed = () => {
-    if (typeof window !== "undefined" && userNotifications.length > 0) {
-      try {
-        window.localStorage.setItem(USER_NOTIFICATIONS_VIEWED_COUNT_KEY, String(userNotifications.length));
-      } catch (_) { }
-    }
-  };
-
-  const markNotificationsRead = () => {
-    const now = new Date().toISOString();
-    if (typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(NOTIFICATION_READ_KEY, now);
-      } catch (_) { }
-    }
-    setNewOrdersCount(0);
-  };
-
-  // Notification: จำนวน order ใหม่ (paid หลังเวลาที่อ่านล่าสุด หรือ 24 ชม.) — แสดงเฉพาะ agent
-  useEffect(() => {
-    if (!isAgent) return;
-    const fetchCount = () => {
-      let url = "/api/admin/orders-new-count";
-      if (typeof window !== "undefined") {
-        try {
-          const readAt = window.localStorage.getItem(NOTIFICATION_READ_KEY);
-          if (readAt) url += "?since=" + encodeURIComponent(readAt);
-        } catch (_) { }
-      }
-      fetch(url)
-        .then((res) => res.json())
-        .then((json) => setNewOrdersCount(json?.count ?? 0))
-        .catch(() => setNewOrdersCount(0));
-    };
-    fetchCount();
-    const interval = setInterval(fetchCount, 60 * 1000);
-    return () => clearInterval(interval);
-  }, [isAgent]);
-
-  // ดึงแจ้งเตือน user จริง: จ่ายเงินสำเร็จ (7 วันล่าสุด) + เตือน check-in พรุ่งนี้
-  useEffect(() => {
-    if (!isAuthenticated || !user || isAgent) {
-      setUserNotifications([]);
-      return;
-    }
-    const token = typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
-    if (!token) return;
-    fetch("/api/booking/notifications", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((json) => setUserNotifications(json?.notifications ?? []))
-      .catch(() => setUserNotifications([]));
-  }, [isAuthenticated, user, isAgent]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -235,120 +163,9 @@ export default function Navbar() {
             {/* Notification Bell - desktop (agent: แจ้งเตือนมี order ใหม่) */}
             {isAuthenticated && user && (
               isAgent ? (
-                <Popover.Root
-                  onOpenChange={(open) => {
-                    if (open) {
-                      markNotificationsRead();
-                      fetch("/api/admin/orders-list")
-                        .then((res) => res.json())
-                        .then((json) => setNewOrdersList(json?.data ?? []))
-                        .catch(() => setNewOrdersList([]));
-                    } else {
-                      setNewOrdersList([]);
-                    }
-                  }}
-                >
-                  <Popover.Trigger asChild>
-                    <button
-                      className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
-                      aria-label="Notifications"
-                    >
-                      <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
-                      {newOrdersCount > 0 && (
-                        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
-                          {newOrdersCount > 99 ? "99+" : newOrdersCount}
-                        </span>
-                      )}
-                    </button>
-                  </Popover.Trigger>
-                  <Popover.Portal>
-                    <Popover.Content
-                      className="bg-white rounded-lg shadow-lg border border-gray-200 p-0 min-w-[280px] max-w-[360px] max-h-[400px] overflow-hidden flex flex-col z-50"
-                      sideOffset={8}
-                      align="end"
-                    >
-                      {newOrdersList.length > 0 ? (
-                        <div className="overflow-y-auto flex-1 divide-y divide-gray-100 max-h-[280px]">
-                          {newOrdersList.slice(0, 10).map((order) => (
-                            <Link
-                              key={order.id}
-                              href={`/admin/customer-booking-detail?id=${order.id}`}
-                              className="block px-3 py-2 hover:bg-gray-50 text-left"
-                              onClick={markNotificationsRead}
-                            >
-                              <p className="text-gray-800 font-sans text-sm font-medium truncate">
-                                {order.customerName || "—"}
-                              </p>
-                              <p className="text-gray-500 font-sans text-xs truncate">
-                                {order.roomType || "—"} · Check-in {String(order.checkIn).slice(0, 10)}
-                              </p>
-                            </Link>
-                          ))}
-                        </div>
-                      ) : null}
-                      <div className="p-3 border-t border-gray-100">
-                        <Link
-                          href="/admin/customer-booking"
-                          className="inline-block text-orange-500 font-sans text-sm hover:underline font-medium"
-                          onClick={markNotificationsRead}
-                        >
-                          View Customer Booking →
-                        </Link>
-                      </div>
-                      <Popover.Arrow className="fill-white" />
-                    </Popover.Content>
-                  </Popover.Portal>
-                </Popover.Root>
+                <AgentNotificationBell />
               ) : (
-                <Popover.Root
-                  onOpenChange={(open) => {
-                    if (open) markUserNotificationsViewed();
-                  }}
-                >
-                  <Popover.Trigger asChild>
-                    <button
-                      className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
-                      aria-label="Notifications"
-                    >
-                      <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
-                      {userNotifications.length > 0 && userNotifications.length > getUserNotificationsViewedCount() && (
-                        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
-                          {userNotifications.length > 99 ? "99+" : userNotifications.length}
-                        </span>
-                      )}
-                    </button>
-                  </Popover.Trigger>
-                  <Popover.Portal>
-                    <Popover.Content
-                      className="bg-white rounded-lg shadow-lg border border-gray-200 p-0 min-w-[320px] max-w-[380px] max-h-[360px] overflow-y-auto z-50"
-                      sideOffset={8}
-                      align="end"
-                    >
-                      <div className="divide-y divide-gray-100">
-                        {userNotifications.length === 0 ? (
-                          <p className="p-4 text-gray-500 font-sans text-sm">No notifications yet.</p>
-                        ) : (
-                          userNotifications.map((noti) => (
-                            <div
-                              key={noti.id}
-                              className="flex gap-3 p-3 hover:bg-gray-50 transition-colors cursor-pointer"
-                            >
-                              <img
-                                src={noti.imageUrl}
-                                alt=""
-                                className="w-12 h-12 rounded-full object-cover shrink-0 border border-gray-200"
-                              />
-                              <p className="text-gray-700 font-sans text-sm leading-snug flex-1 min-w-0">
-                                {noti.message}
-                              </p>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <Popover.Arrow className="fill-white" />
-                    </Popover.Content>
-                  </Popover.Portal>
-                </Popover.Root>
+                <NotificationBell user={user ?? null} />
               )
             )}
             {isAuthenticated && user ? (
@@ -451,68 +268,17 @@ export default function Navbar() {
 
         {/* Mobile Right Side - Notification & Hamburger */}
         <div className="lg:hidden flex items-center gap-3">
-          {/* Notification Bell - mobile: agent ใช้แผงเต็มจอเหมือน user */}
           {isAuthenticated && user && (
             isAgent ? (
-              <>
-                <button
-                  type="button"
-                  className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
-                  aria-label="Notifications"
-                  aria-expanded={isAgentNotiOpen}
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    setIsAgentNotiOpen((prev) => {
-                      if (!prev) {
-                        markNotificationsRead();
-                        fetch("/api/admin/orders-list")
-                          .then((res) => res.json())
-                          .then((json) => setNewOrdersList(json?.data ?? []))
-                          .catch(() => setNewOrdersList([]));
-                      }
-                      return !prev;
-                    });
-                  }}
-                >
-                  <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
-                  {newOrdersCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
-                      {newOrdersCount > 99 ? "99+" : newOrdersCount}
-                    </span>
-                  )}
-                </button>
-              </>
+              <AgentNotificationBell />
             ) : (
-              <>
-                <button
-                  type="button"
-                  className="p-2 relative hover:opacity-80 transition-opacity cursor-pointer"
-                  aria-label="Notifications"
-                  aria-expanded={isUserNotiOpen}
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    setIsUserNotiOpen((prev) => {
-                      if (!prev) markUserNotificationsViewed();
-                      return !prev;
-                    });
-                  }}
-                >
-                  <img src={getImageSrc(notiIcon)} alt="Notifications" className="w-6 h-6" />
-                  {userNotifications.length > 0 && userNotifications.length > getUserNotificationsViewedCount() && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-red-500 text-white text-xs font-semibold rounded-full">
-                      {userNotifications.length > 99 ? "99+" : userNotifications.length}
-                    </span>
-                  )}
-                </button>
-              </>
+              <NotificationBell user={user ?? null} />
             )
           )}
 
           {/* Hamburger Menu Button */}
           <button
             onClick={() => {
-              setIsUserNotiOpen(false);
-              setIsAgentNotiOpen(false);
               toggleMenu();
             }}
             className="flex flex-col gap-1.5 p-2 relative z-50"
@@ -524,79 +290,6 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
-
-      {/* Agent Notifications - แผงเต็มจอบน mobile (เหมือน user) */}
-      {isAgentNotiOpen && isAgent && (
-        <div
-          className="fixed inset-0 w-full bg-white shadow-lg z-40 lg:hidden overflow-y-auto"
-          style={{ paddingTop: `${navbarHeight || 65}px` }}
-        >
-          <div className="divide-y divide-gray-100 min-h-full">
-            {newOrdersList.length === 0 ? (
-              <p className="p-6 text-gray-500 font-sans text-sm">No new orders.</p>
-            ) : (
-              newOrdersList.map((order) => (
-                <Link
-                  key={order.id}
-                  href={`/admin/customer-booking-detail?id=${order.id}`}
-                  className="flex gap-4 p-4 hover:bg-gray-50 transition-colors active:bg-gray-100"
-                  onClick={() => setIsAgentNotiOpen(false)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-800 font-sans text-sm font-medium">
-                      {order.customerName || "—"}
-                    </p>
-                    <p className="text-gray-500 font-sans text-sm mt-0.5">
-                      {order.roomType || "—"} · Check-in {String(order.checkIn).slice(0, 10)}
-                    </p>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
-          <div className="p-4 border-t border-gray-100">
-            <Link
-              href="/admin/customer-booking"
-              className="inline-block text-orange-500 font-sans text-sm font-medium hover:underline"
-              onClick={() => setIsAgentNotiOpen(false)}
-            >
-              View Customer Booking →
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* User Notifications - แผงเต็มจอบน mobile (เหมือน hamburger) */}
-      {isUserNotiOpen && !isAgent && (
-        <div
-          className="fixed inset-0 w-full bg-white shadow-lg z-40 lg:hidden overflow-y-auto"
-          style={{
-            paddingTop: `${navbarHeight || 65}px`,
-          }}
-        >
-          <div className="divide-y divide-gray-100 min-h-full">
-            {userNotifications.length === 0 ? (
-              <p className="p-6 text-gray-500 font-sans text-sm">No notifications yet.</p>
-            ) : (
-              userNotifications.map((noti) => (
-                <div
-                  key={noti.id}
-                  className="flex gap-4 p-4 hover:bg-gray-50 transition-colors active:bg-gray-100"
-                >
-                  <img
-                    src={noti.imageUrl}
-                    alt=""
-                    className="w-14 h-14 rounded-full object-cover shrink-0 border border-gray-200"
-                  />
-                  <p className="text-gray-700 font-sans text-sm leading-snug flex-1 min-w-0 pt-0.5">
-                    {noti.message}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Dropdown Menu - แสดงเมื่อเปิด menu บน mobile */}
       {isMenuOpen && (
