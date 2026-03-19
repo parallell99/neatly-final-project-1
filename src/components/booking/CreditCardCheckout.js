@@ -270,8 +270,8 @@ export default function CreditCardCheckout({
             locale: "en",
             appearance: {
               variables: {
-                fontSizeBase: isLg ? "4px" : "4px",
-                fontSizeSm: isLg ? "4px" : "4px",
+                fontSizeBase: isLg ? "16px" : "16px",
+                fontSizeSm: isLg ? "16px" : "14px",
               },
             },
           }}

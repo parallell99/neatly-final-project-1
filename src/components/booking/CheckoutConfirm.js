@@ -131,7 +131,7 @@ export default function CheckoutConfirm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="stripe-payment-element">
+      <div className="stripe-payment-element--checkout">
         <PaymentElement options={{ wallets: { link: "never" } }} />
       </div>
       {errorMessage && (

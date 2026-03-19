@@ -49,6 +49,7 @@ export default function PaymentMethodForm({
   );
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
   const [clientSecret, setClientSecret] = useState("");
+  const [stripeInitError, setStripeInitError] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [useNewCard, setUseNewCard] = useState(false);
@@ -315,6 +316,14 @@ export default function PaymentMethodForm({
 
     try {
       let stripeCustomerId = user?.stripe_customer_id ?? null;
+      setStripeInitError("");
+
+      // อย่าสร้าง PaymentIntent ถ้ายอดยังคำนวณไม่ได้ (เช่น room/order ยังโหลดไม่ทัน)
+      if (!Number.isFinite(totalBaht) || Number(totalBaht) <= 0) {
+        setStripeInitError("Calculating total price…");
+        hasCreatedPI.current = false;
+        return;
+      }
 
       // อัปเดต total_price ใน orders ให้เป็น “ยอดสุทธิจริง” ก่อนสร้าง PaymentIntent
       // (รวม extras และหัก promotion แล้ว)
@@ -330,6 +339,7 @@ export default function PaymentMethodForm({
         body: JSON.stringify({
           orderId,
           stripeCustomerId,
+          totalPrice: totalBaht,
         }),
       });
 
@@ -337,6 +347,9 @@ export default function PaymentMethodForm({
       console.log("raw response:", text);
 
       if (!res.ok) {
+        // Show full API response for easier debugging
+        setStripeInitError(text || "Failed to initialize payment");
+        hasCreatedPI.current = false;
         return;
       }
 
@@ -351,18 +364,21 @@ export default function PaymentMethodForm({
       setClientSecret(data.clientSecret);
     } catch (err) {
       console.error("Create PI error:", err);
+      setStripeInitError(err?.message || "Failed to initialize payment");
+      hasCreatedPI.current = false;
     }
   };
   useEffect(() => {
     if (method !== "credit-card") return;
     if (!orderId) return;
+    if (!Number.isFinite(totalBaht) || Number(totalBaht) <= 0) return;
     // If we don't have a clientSecret yet (or it was reset after promo/extras changes),
     // create a new PaymentIntent exactly once.
     if (!clientSecret && !hasCreatedPI.current) {
       hasCreatedPI.current = true;
       handleCreatePaymentIntent();
     }
-  }, [method, orderId, clientSecret]);
+  }, [method, orderId, clientSecret, totalBaht]);
 
   // ถ้ายอดสุทธิเปลี่ยน (เช่น apply/remove promo หรือเปลี่ยน extras) ให้สร้าง PaymentIntent ใหม่
   useEffect(() => {
@@ -721,8 +737,8 @@ export default function PaymentMethodForm({
               locale: "en",
               appearance: {
                 variables: {
-                  fontSizeBase: isLg ? "18px" : "16px",
-                  fontSizeSm: isLg ? "16px" : "14px",
+                  fontSizeBase: isLg ? "30px" : "16px",
+                  fontSizeSm: isLg ? "30px" : "14px",
                 },
               },
             }}
@@ -750,6 +766,11 @@ export default function PaymentMethodForm({
             />
           </Elements>
         </div>
+      )}
+      {method === "credit-card" && !clientSecret && stripeInitError && (
+        <p className="mt-3 text-sm text-red-500 font-sans">
+          {stripeInitError}
+        </p>
       )}
       {method === "cash" && (
         <div>

@@ -44,7 +44,7 @@ function SetupCardForm({ onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="pb-2 stripe-payment-element">
+      <div className="pb-2 stripe-payment-element--payment-method">
         <PaymentElement options={{ wallets: { link: "never" } }} />
       </div>
       {error && (
@@ -256,8 +256,8 @@ export default function PaymentMethodPage() {
                       locale: "en",
                       appearance: {
                         variables: {
-                          fontSizeBase: isLg ? "4px" : "4px",
-                          fontSizeSm: isLg ? "4px" : "4px",
+                          fontSizeBase: isLg ? "16px" : "12px",
+                          fontSizeSm: isLg ? "16px" : "12px",
                         },
                       },
                     }}
