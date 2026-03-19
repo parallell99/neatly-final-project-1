@@ -256,8 +256,8 @@ export default function PaymentMethodPage() {
                       locale: "en",
                       appearance: {
                         variables: {
-                          fontSizeBase: isLg ? "14px" : "12px",
-                          fontSizeSm: isLg ? "14px" : "12px",
+                          fontSizeBase: isLg ? "16px" : "14px",
+                          fontSizeSm: isLg ? "16px" : "14px",
                         },
                       },
                     }}
