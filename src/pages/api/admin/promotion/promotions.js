@@ -1,11 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-function getSupabaseClient(mode) {
+function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url) return null;
-  if (!anonKey) return null;
-  return createClient(url, anonKey);
+  if (!anonKey && !serviceKey) return null;
+  return createClient(url, serviceKey || anonKey);
 }
 
 export default async function handler(req, res) {
@@ -18,8 +19,8 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const supabaseAdmin = getSupabaseClient("anon");
-      if (!supabaseAdmin) return res.status(500).json({ message: "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY." });
+      const supabaseAdmin = getSupabaseClient();
+      if (!supabaseAdmin) return res.status(500).json({ message: "Missing Supabase env vars." });
 
       const { data, error } = await supabaseAdmin
         .from("promotions")
@@ -35,8 +36,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const supabaseAdmin = getSupabaseClient("anon");
-      if (!supabaseAdmin) return res.status(500).json({ message: "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY." });
+      const supabaseAdmin = getSupabaseClient();
+      if (!supabaseAdmin) return res.status(500).json({ message: "Missing Supabase env vars." });
       const {
         name,
         code,
@@ -98,8 +99,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === "PATCH") {
-      const supabaseAdmin = getSupabaseClient("anon");
-      if (!supabaseAdmin) return res.status(500).json({ message: "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY." });
+      const supabaseAdmin = getSupabaseClient();
+      if (!supabaseAdmin) return res.status(500).json({ message: "Missing Supabase env vars." });
       const { id, close, ...fields } = req.body ?? {};
       if (!id) return res.status(400).json({ message: "Promotion id is required" });
 

@@ -15,15 +15,16 @@ export default async function handler(req, res) {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !anonKey) {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || (!anonKey && !serviceKey)) {
       return res.status(500).json({
         message:
-          "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in the deployment environment.",
+          "Missing NEXT_PUBLIC_SUPABASE_URL and keys in the deployment environment.",
       });
     }
 
-    // Promotions are public in this app: use anon key to avoid dependency on service role key in Vercel envs.
-    const supabase = createClient(supabaseUrl, anonKey);
+    // Prefer service role when available, fallback to anon (requires RLS policy to allow anon select)
+    const supabase = createClient(supabaseUrl, serviceKey || anonKey);
 
     // promotions.end_date is a DATE column, so compare with YYYY-MM-DD (not full ISO timestamp)
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -45,9 +46,10 @@ export default async function handler(req, res) {
           .toLowerCase()
           .includes("permission denied")
       ) {
-        return res.status(500).json({
+        return res.status(200).json({
+          data: [],
           message:
-            "Permission denied for table promotions. If you want this endpoint to be public, add an RLS policy that allows SELECT for anon/authenticated on promotions (or disable RLS for this table).",
+            "Permission denied for table promotions (RLS). Add a SELECT policy for anon/authenticated on promotions or disable RLS. If SUPABASE_SERVICE_ROLE_KEY is set on this Vercel environment, it will be used automatically.",
         });
       }
       return res.status(500).json({ message: error.message || "Failed to load promotions" });
