@@ -94,6 +94,9 @@ function computeOccupancyDaily(ordersList, totalRooms, dateFrom, dateTo) {
       occupancyPercent:
         totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0,
       occupiedRooms: occupiedRooms,
+      daysInPeriod: 1,
+      occupiedRoomNights: occupiedRooms,
+      capacityRoomNights: totalRooms,
     };
   });
 }
@@ -123,6 +126,9 @@ function computeOccupancyMonthly(ordersList, totalRooms, months, dateFrom, dateT
       occupancyPercent:
         allDays.length > 0 ? totalPercent / allDays.length : 0,
       occupiedRooms: avgOccupiedRooms,
+      daysInPeriod: allDays.length,
+      occupiedRoomNights: totalOccupiedRooms,
+      capacityRoomNights: allDays.length * totalRooms,
     };
   });
 }

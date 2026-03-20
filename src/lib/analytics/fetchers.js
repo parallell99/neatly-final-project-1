@@ -56,51 +56,78 @@ export function fetchRevenueTrend(dateFrom, dateTo, mode = "booking_date") {
 
       const granularity = getGranularity();
 
-      // เลือก field ตาม mode
-      const dateField = mode === "stay_date" ? "check_in_date" : "created_at";
-
       // half-open [start, end): ใช้ date-fns ปัดเวลาให้ชัด
       const start = startOfDay(dateFrom);
       const end = addDays(startOfDay(dateTo), 1);
 
-      // กรอง orders ตาม date range
+      // stay_date: avg จำนวนวันของการเข้าพัก โดยกรองจากช่วงทับซ้อน check_in/check_out
+      if (mode === "stay_date") {
+        const groupMap = new Map(); // key -> { totalRevenue }
+
+        const filtered = MOCK_ORDERS.filter((o) => {
+          if (!o.check_in_date || !o.check_out_date) return false;
+          const ci = new Date(o.check_in_date);
+          const co = new Date(o.check_out_date);
+          return ci < end && co > start; // overlap
+        });
+
+        for (const order of filtered) {
+          if (!order.check_in_date || !order.check_out_date) continue;
+
+          const stayStart = startOfDay(new Date(order.check_in_date));
+          const stayEndBase = startOfDay(new Date(order.check_out_date));
+          const stayDaysRaw = differenceInDays(stayEndBase, stayStart);
+          const stayDays = stayDaysRaw > 0 ? stayDaysRaw : 1;
+          const perDayRevenue =
+            stayDays > 0 ? Number(order.total_price || 0) / stayDays : 0;
+
+          const segmentStart = stayStart > start ? stayStart : start;
+          const segmentEnd = stayEndBase < end ? stayEndBase : end;
+          if (segmentEnd <= segmentStart) continue;
+
+          let d = segmentStart;
+          while (d < segmentEnd) {
+            const key = format(d, "yyyy-MM-dd");
+            const prev = groupMap.get(key) || { totalRevenue: 0 };
+            groupMap.set(key, { totalRevenue: prev.totalRevenue + perDayRevenue });
+            d = addDays(d, 1);
+          }
+        }
+
+        const data = []; // รายวัน
+        for (let d = start; d <= dateTo; d = addDays(d, 1)) {
+          const key = format(d, "yyyy-MM-dd");
+          const bucket = groupMap.get(key);
+          const revenue = bucket?.totalRevenue ?? 0;
+          data.push({ label: key, revenue });
+        }
+
+        resolve({ data, granularity });
+        return;
+      }
+
+      // booking_date: รวม revenue ตาม created_at ตรงๆ
+      const dateField = "created_at";
       const filtered = MOCK_ORDERS.filter((o) => {
         const d = new Date(o[dateField]);
         return d >= start && d < end;
       });
 
-      // group ตาม granularity
-      // map: key -> { total, minDate, maxDate }
-      const groupMap = new Map();
-
+      const groupMap = new Map(); // key -> { total }
       filtered.forEach((o) => {
         const d = new Date(o[dateField]);
-        let key;
-
-        key = format(d, "yyyy-MM-dd");
-
+        const key = format(d, "yyyy-MM-dd");
         const prev = groupMap.get(key);
         const total = (prev?.total ?? 0) + Number(o.total_price);
-        const minDate = prev ? (d < prev.minDate ? d : prev.minDate) : d;
-        const maxDate = prev ? (d > prev.maxDate ? d : prev.maxDate) : d;
-
-        groupMap.set(key, { total, minDate, maxDate });
+        groupMap.set(key, { total });
       });
 
-      // แปลง map → array เรียงตาม date
       const data = Array.from(groupMap.entries())
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, bucket]) => {
-          let labelDate;
-
-          // ใช้วันที่เดียวกับ key (รายวัน)
-          labelDate = new Date(key);
-
-          return {
-            label: format(labelDate, "yyyy-MM-dd"),
-            revenue: bucket.total,
-          };
-        });
+        .map(([key, bucket]) => ({
+          label: key,
+          revenue: bucket.total,
+        }));
 
       resolve({ data, granularity });
     }, 50);

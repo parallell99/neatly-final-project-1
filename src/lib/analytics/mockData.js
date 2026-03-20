@@ -140,6 +140,10 @@ export function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
               occupancyPercent:
                 TOTAL_ROOMS > 0 ? Math.min(100, (occupied / TOTAL_ROOMS) * 100) : 0,
               occupiedRooms: occupied,
+              // ห้อง-คืน: 1 วัน = จำนวนห้องที่มีผู้เข้าพัก / ความจุ = จำนวนห้องทั้งหมด
+              daysInPeriod: 1,
+              occupiedRoomNights: occupied,
+              capacityRoomNights: TOTAL_ROOMS,
             };
           });
         })()
@@ -161,6 +165,10 @@ export function computeOccupancyFromMockOrders(dateFrom, dateTo, granularity) {
             occupancyPercent:
               allDays.length > 0 ? Math.min(100, totalPercent / allDays.length) : 0,
             occupiedRooms: allDays.length > 0 ? totalOccupiedRooms / allDays.length : 0,
+            // ห้อง-คืน: ผลรวมห้องที่มีผู้เข้าพักรายวัน / ความจุ = วันในช่วง × จำนวนห้องทั้งหมด
+            daysInPeriod: allDays.length,
+            occupiedRoomNights: totalOccupiedRooms,
+            capacityRoomNights: allDays.length * TOTAL_ROOMS,
           };
         });
 
