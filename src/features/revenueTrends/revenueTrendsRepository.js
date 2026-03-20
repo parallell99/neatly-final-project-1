@@ -21,3 +21,25 @@ export async function getPaidOrdersForRange(dateField, startIso, endIso) {
   return data || [];
 }
 
+/**
+ * ดึง orders ที่สถานะ paid และ “stay ทับซ้อน” ช่วง [startIso, endIso)
+ * - order.check_in_date < endIso
+ * - order.check_out_date > startIso
+ */
+export async function getPaidOrdersForStayDateRange(startIso, endIso) {
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .select("total_price, created_at, check_in_date, check_out_date")
+    .eq("status", "paid")
+    .lt("check_in_date", endIso)
+    .gt("check_out_date", startIso)
+    .not("check_in_date", "is", null)
+    .not("check_out_date", "is", null);
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}
+
