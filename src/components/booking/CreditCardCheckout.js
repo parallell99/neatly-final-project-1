@@ -37,7 +37,14 @@ export default function CreditCardCheckout({
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLg, setIsLg] = useState(false);
+  const [isLg, setIsLg] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.matchMedia("(min-width: 1024px)").matches;
+    } catch {
+      return false;
+    }
+  });
   const [showReauth, setShowReauth] = useState(false);
   const [password, setPassword] = useState("");
   const [reauthError, setReauthError] = useState(null);
@@ -46,7 +53,6 @@ export default function CreditCardCheckout({
     if (typeof window === "undefined") return;
     const media = window.matchMedia("(min-width: 1024px)");
     const update = () => setIsLg(!!media.matches);
-    update();
     if (typeof media.addEventListener === "function") {
       media.addEventListener("change", update);
       return () => media.removeEventListener("change", update);
