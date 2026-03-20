@@ -93,6 +93,15 @@ function formatRooms(value) {
   }).format(n);
 }
 
+function formatRoomNights(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0";
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(n));
+}
+
 const GRANULARITY_OPTIONS = [
   { id: "day", label: "Day" },
   { id: "month", label: "Month" },
@@ -544,7 +553,12 @@ function OccupancyGuestCard({
                         tickMargin={8}
                       />
                       <Tooltip
-                        content={<OccupancyTooltip />}
+                        content={(tooltipProps) => (
+                          <OccupancyTooltip
+                            {...tooltipProps}
+                            granularity={effectiveGranularity}
+                          />
+                        )}
                         cursor={{ stroke: "var(--gray-300)" }}
                       />
                       <Area
@@ -883,32 +897,142 @@ function OccupancyGuestSkeleton() {
   );
 }
 
-function OccupancyTooltip({ active, payload }) {
+const OCC_TOOLTIP_BOX =
+  "rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-md";
+const OCC_TOOLTIP_TITLE = "font-semibold text-gray-900";
+const OCC_TOOLTIP_MUTED = "text-gray-600";
+const OCC_TOOLTIP_VALUE = "font-semibold text-gray-900";
+
+/**
+ * @param {Object} props
+ * @param {boolean} [props.active]
+ * @param {Array} [props.payload]
+ * @param {"day" | "month" | "quarter"} [props.granularity]
+ */
+function OccupancyTooltip({ active, payload, granularity = "month" }) {
   if (!active || !payload?.length) return null;
-  const { label, percent, rangeText, occupiedRooms, totalRooms } = payload[0].payload;
+  const {
+    label,
+    percent,
+    rangeText,
+    occupiedRooms,
+    totalRooms,
+    daysInPeriod,
+    occupiedRoomNights,
+    capacityRoomNights,
+    rangeDays,
+    rangeOccupiedRoomNights,
+    rangeCapacityRoomNights,
+  } = payload[0].payload;
   const header = rangeText ?? label;
-  return (
-    <div className="rounded-lg border border-gray-100 bg-white/95 px-4 py-3 shadow-lg shadow-gray-200/50 backdrop-blur-sm">
-      <p className="text-sm font-medium text-gray-800">{header}</p>
-      <div className="mt-1.5 flex flex-col gap-0.5">
-        <span className="text-sm text-gray-600">
-          Occupancy:{" "}
-          <span className="font-semibold text-gray-900">
-            {formatPercent(percent)}%
-          </span>
-        </span>
-        {typeof occupiedRooms === "number" &&
-          typeof totalRooms === "number" &&
-          totalRooms > 0 && (
-            <span className="text-sm text-gray-600">
-              Avg occupied rooms:{" "}
-              <span className="font-semibold text-gray-900">
-                {formatRooms(occupiedRooms)} / {totalRooms}
-              </span>
-            </span>
+  const isDay = granularity === "day";
+  const isAggregatedPeriod = granularity === "month" || granularity === "quarter";
+
+  if (isDay) {
+    return (
+      <aside
+        role="tooltip"
+        aria-label="Occupancy tooltip"
+        className={OCC_TOOLTIP_BOX}
+      >
+        <p className={OCC_TOOLTIP_TITLE}>{header}</p>
+        <dl className="mt-2 flex flex-col gap-1">
+          <div className="flex justify-between gap-6">
+            <dt className={OCC_TOOLTIP_MUTED}>Occupancy</dt>
+            <dd className={OCC_TOOLTIP_VALUE}>{formatPercent(percent)}%</dd>
+          </div>
+          {typeof occupiedRooms === "number" &&
+            typeof totalRooms === "number" &&
+            totalRooms > 0 && (
+              <div className="flex justify-between gap-6">
+                <dt className={OCC_TOOLTIP_MUTED}>Rooms</dt>
+                <dd className={OCC_TOOLTIP_VALUE}>
+                  {formatRooms(occupiedRooms)} / {totalRooms}
+                </dd>
+              </div>
+            )}
+        </dl>
+      </aside>
+    );
+  }
+
+  if (isAggregatedPeriod) {
+    return (
+      <aside
+        role="tooltip"
+        aria-label="Occupancy tooltip"
+        className={OCC_TOOLTIP_BOX}
+      >
+        <p className={OCC_TOOLTIP_TITLE}>{header}</p>
+        <dl className="mt-2 flex flex-col gap-1">
+          <div className="flex justify-between gap-6">
+            <dt className={OCC_TOOLTIP_MUTED}>Occupancy</dt>
+            <dd className={OCC_TOOLTIP_VALUE}>{formatPercent(percent)}%</dd>
+          </div>
+          {typeof occupiedRooms === "number" &&
+            typeof totalRooms === "number" &&
+            totalRooms > 0 && (
+              <div className="flex justify-between gap-6">
+                <dt className={OCC_TOOLTIP_MUTED}>Avg. rooms</dt>
+                <dd className={OCC_TOOLTIP_VALUE}>
+                  {formatRooms(occupiedRooms)} / {totalRooms}
+                </dd>
+              </div>
+            )}
+          {typeof daysInPeriod === "number" && daysInPeriod > 0 && (
+            <div className="flex justify-between gap-6">
+              <dt className={OCC_TOOLTIP_MUTED}>Days</dt>
+              <dd className={OCC_TOOLTIP_VALUE}>{daysInPeriod}</dd>
+            </div>
           )}
-      </div>
-    </div>
+          {typeof capacityRoomNights === "number" && capacityRoomNights > 0 && (
+            <div className="flex justify-between gap-6">
+              <dt className={OCC_TOOLTIP_MUTED}>Room-nights</dt>
+              <dd className={OCC_TOOLTIP_VALUE}>
+                {formatRoomNights(occupiedRoomNights)}
+              </dd>
+            </div>
+          )}
+          {typeof capacityRoomNights === "number" && capacityRoomNights > 0 && (
+            <div className="flex justify-between gap-6">
+              <dt className={OCC_TOOLTIP_MUTED}>Capacity</dt>
+              <dd className={OCC_TOOLTIP_VALUE}>
+                {formatRoomNights(capacityRoomNights)}
+              </dd>
+            </div>
+          )}
+          {granularity === "month" &&
+            typeof rangeDays === "number" &&
+            rangeDays > 0 &&
+            typeof rangeCapacityRoomNights === "number" &&
+            rangeCapacityRoomNights > 0 && (
+              <div className="flex justify-between gap-6 border-t border-gray-100 pt-1.5 mt-0.5">
+                <dt className={OCC_TOOLTIP_MUTED}>Range ({rangeDays}d)</dt>
+                <dd className={OCC_TOOLTIP_VALUE}>
+                  {formatRoomNights(rangeOccupiedRoomNights)} /{" "}
+                  {formatRoomNights(rangeCapacityRoomNights)}
+                </dd>
+              </div>
+            )}
+        </dl>
+      </aside>
+    );
+  }
+
+  return (
+    <aside
+      role="tooltip"
+      aria-label="Occupancy tooltip"
+      className={OCC_TOOLTIP_BOX}
+    >
+      <p className={OCC_TOOLTIP_TITLE}>{header}</p>
+      <dl className="mt-2 flex flex-col gap-1">
+        <div className="flex justify-between gap-6">
+          <dt className={OCC_TOOLTIP_MUTED}>Occupancy</dt>
+          <dd className={OCC_TOOLTIP_VALUE}>{formatPercent(percent)}%</dd>
+        </div>
+      </dl>
+    </aside>
   );
 }
 
@@ -916,33 +1040,40 @@ function OccupancyByRoomTypeTooltip({ active, payload, roomTypes = [], colors = 
   if (!active || !payload?.length) return null;
   const { monthLabel, rangeText } = payload[0].payload;
   return (
-    <div className="rounded-lg border border-gray-100 bg-white/95 px-4 py-3 shadow-lg shadow-gray-200/50 backdrop-blur-sm">
-      <p className="text-sm font-medium text-gray-800">{monthLabel}</p>
+    <aside
+      role="tooltip"
+      aria-label="Occupancy by room type tooltip"
+      className={OCC_TOOLTIP_BOX}
+    >
+      <p className={OCC_TOOLTIP_TITLE}>{monthLabel}</p>
       {rangeText && (
-        <p className="mt-0.5 text-xs text-gray-500">{rangeText}</p>
+        <p className={`mt-1 ${OCC_TOOLTIP_MUTED}`}>{rangeText}</p>
       )}
-      <ul className="mt-2 flex flex-col gap-1.5" role="list">
+      <ul className="mt-2 flex flex-col gap-1" role="list">
         {payload.map((entry, i) => {
           const roomType = roomTypes.find((rt) => rt.id === entry.name)?.label ?? entry.name;
           const color = entry.color ?? colors[i % colors.length];
           return (
-            <li key={entry.name} className="flex items-center justify-between gap-4 text-sm">
-              <span className="flex items-center gap-2 text-gray-600">
+            <li
+              key={entry.name}
+              className="flex items-center justify-between gap-4"
+            >
+              <span className={`flex min-w-0 items-center gap-2 ${OCC_TOOLTIP_MUTED}`}>
                 <span
                   className="h-2 w-2 shrink-0 rounded-full"
                   style={{ backgroundColor: color }}
                   aria-hidden
                 />
-                {roomType}
+                <span className="truncate">{roomType}</span>
               </span>
-              <span className="font-semibold text-gray-900">
+              <span className={`shrink-0 tabular-nums ${OCC_TOOLTIP_VALUE}`}>
                 {formatPercent(entry.value)}%
               </span>
             </li>
           );
         })}
       </ul>
-    </div>
+    </aside>
   );
 }
 

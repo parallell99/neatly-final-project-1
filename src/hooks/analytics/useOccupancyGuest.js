@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { differenceInDays, format } from "date-fns";
+import { differenceInDays, format, startOfDay } from "date-fns";
 import {
   fetchOccupancyGuest,
   fetchOccupancyGuestLive,
@@ -71,14 +71,45 @@ export function useOccupancyGuest(from, to, viewBy, granularity, useLive) {
 
         if (cancelled || !res) return;
         setMeta({ resolvedGranularity, fetchGranularity, didAutoGroup, reason });
-        setData(
-          transformOccupancyGuest(res.data, {
-            resolvedGranularity,
-            viewBy,
-            dateFrom: from,
-            dateTo: to,
-          })
-        );
+
+        const transformed = transformOccupancyGuest(res.data, {
+          resolvedGranularity,
+          viewBy,
+          dateFrom: from,
+          dateTo: to,
+        });
+
+        // รวมห้อง-คืนทั้งช่วงที่เลือก (สำหรับ tooltip) — สอดคล้องกับ: ผลรวมห้องที่เข้าพักรายวัน / (วัน×ห้องทั้งหมด)
+        const series = transformed.occupancySeries ?? [];
+        if (series.length > 0 && from && to) {
+          const fromDay = startOfDay(from);
+          const toDay = startOfDay(to);
+          const tr = Number(series[0]?.totalRooms) || 0;
+          const rangeDays =
+            toDay >= fromDay ? differenceInDays(toDay, fromDay) + 1 : 0;
+          const rangeCapacityRoomNights =
+            tr > 0 && rangeDays > 0 ? rangeDays * tr : 0;
+          const rangeOccupiedRoomNights = series.reduce(
+            (sum, p) => sum + (Number(p.occupiedRoomNights) || 0),
+            0
+          );
+          const maxBucketCapacityRoomNights = series.length
+            ? Math.max(
+                ...series.map((p) => Number(p.capacityRoomNights) || 0),
+                0
+              )
+            : 0;
+
+          transformed.occupancySeries = series.map((p) => ({
+            ...p,
+            rangeDays,
+            rangeOccupiedRoomNights,
+            rangeCapacityRoomNights,
+            maxBucketCapacityRoomNights,
+          }));
+        }
+
+        setData(transformed);
       } catch {
         if (cancelled) return;
         setMeta({

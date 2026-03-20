@@ -1,4 +1,10 @@
-import { format } from "date-fns";
+import {
+  format,
+  differenceInDays,
+  startOfDay,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
 import { ROOM_AVAILABILITY_UI, DAY_LABELS } from "./mockData";
 
 export function transformRoomAvailability(apiResponse) {
@@ -51,26 +57,40 @@ function quarterStartDate(year, quarter) {
   return new Date(year, startMonth, 1);
 }
 
+/**
+ * จำนวนวันในช่วงที่เลือกที่ตกในเดือนของจุดข้อมูล (สำหรับ monthly / pre-quarter rows)
+ */
+function occupancyDaysInMonthSlice(pointDateStr, dateFrom, dateTo) {
+  const d = new Date(pointDateStr);
+  if (Number.isNaN(d.getTime())) return 0;
+  const monthStart = startOfMonth(d);
+  const monthEnd = endOfMonth(d);
+  const fromDay = dateFrom ? startOfDay(dateFrom) : null;
+  const toDay = dateTo ? startOfDay(dateTo) : null;
+  const rangeStart = fromDay && fromDay > monthStart ? fromDay : monthStart;
+  const rangeEnd = toDay && toDay < monthEnd ? toDay : monthEnd;
+  if (!rangeStart || !rangeEnd || rangeEnd < rangeStart) return 0;
+  return differenceInDays(rangeEnd, rangeStart) + 1;
+}
+
 function groupOccupancySeriesToQuarter(series) {
   if (!Array.isArray(series) || series.length === 0) return [];
 
-  const buckets = new Map(); // key -> { year, quarter, sumPercent, sumOccupiedRooms, count, totalRooms }
+  const buckets = new Map(); // key -> sums for room-nights
   for (const row of series) {
     const q = getQuarterKey(row?.date);
     if (!q) continue;
     const prev = buckets.get(q.key) || {
       year: q.year,
       quarter: q.quarter,
-      sumPercent: 0,
-      sumOccupiedRooms: 0,
-      count: 0,
+      sumOccupiedRoomNights: 0,
+      sumCapacityRoomNights: 0,
+      sumDays: 0,
       totalRooms: Number(row?.totalRooms) || 0,
     };
-    const percent = Number(row?.percent) || 0;
-    prev.sumPercent += percent;
-    prev.sumOccupiedRooms += Number(row?.occupiedRooms) || 0;
-    prev.count += 1;
-    // keep max totalRooms if it changes
+    prev.sumOccupiedRoomNights += Number(row?.occupiedRoomNights) || 0;
+    prev.sumCapacityRoomNights += Number(row?.capacityRoomNights) || 0;
+    prev.sumDays += Number(row?.daysInPeriod) || 0;
     const tr = Number(row?.totalRooms) || 0;
     if (tr > prev.totalRooms) prev.totalRooms = tr;
     buckets.set(q.key, prev);
@@ -79,11 +99,26 @@ function groupOccupancySeriesToQuarter(series) {
   return Array.from(buckets.values())
     .sort((a, b) => (a.year - b.year) || (a.quarter - b.quarter))
     .map((b) => {
-      const percent = b.count > 0 ? b.sumPercent / b.count : 0;
       const date = quarterStartDate(b.year, b.quarter).toISOString();
       const totalRooms = b.totalRooms || 0;
-      const occupiedRooms = b.count > 0 ? b.sumOccupiedRooms / b.count : 0;
-      return { date, percent, occupiedRooms, totalRooms };
+      const occupiedRoomNights = b.sumOccupiedRoomNights;
+      const capacityRoomNights = b.sumCapacityRoomNights;
+      const daysInPeriod = b.sumDays;
+      const percent =
+        capacityRoomNights > 0
+          ? Math.min(100, (occupiedRoomNights / capacityRoomNights) * 100)
+          : 0;
+      const occupiedRooms =
+        daysInPeriod > 0 ? occupiedRoomNights / daysInPeriod : 0;
+      return {
+        date,
+        percent,
+        occupiedRooms,
+        totalRooms,
+        daysInPeriod,
+        occupiedRoomNights,
+        capacityRoomNights,
+      };
     });
 }
 
@@ -124,6 +159,10 @@ function groupRoomTypeSeriesToQuarter(monthlySeries, roomTypes) {
 
 export function transformOccupancyGuest(apiResponse, options = {}) {
   const totalRooms = apiResponse?.occupancy?.totalRooms ?? 0;
+  const resolvedGranularity = options?.resolvedGranularity ?? "month";
+  const bucketMode =
+    resolvedGranularity === "day" ? "day" : "month";
+
   let occupancySeries = (apiResponse?.occupancy?.points ?? []).map((p) => {
     const percent = p.occupancyPercent;
     const occupiedRoomsRaw = p.occupiedRooms;
@@ -131,7 +170,41 @@ export function transformOccupancyGuest(apiResponse, options = {}) {
       typeof occupiedRoomsRaw === "number"
         ? occupiedRoomsRaw
         : (totalRooms > 0 ? ((Number(percent) || 0) * totalRooms) / 100 : 0);
-    return { date: p.date, percent, occupiedRooms, totalRooms };
+
+    const daysInPeriod =
+      typeof p.daysInPeriod === "number" && p.daysInPeriod > 0
+        ? p.daysInPeriod
+        : bucketMode === "day"
+          ? 1
+          : occupancyDaysInMonthSlice(
+              p.date,
+              options.dateFrom,
+              options.dateTo
+            );
+
+    let occupiedRoomNights =
+      typeof p.occupiedRoomNights === "number" ? p.occupiedRoomNights : NaN;
+    if (!Number.isFinite(occupiedRoomNights)) {
+      occupiedRoomNights =
+        daysInPeriod > 0 ? Number(occupiedRooms) * daysInPeriod : 0;
+    }
+
+    let capacityRoomNights =
+      typeof p.capacityRoomNights === "number" ? p.capacityRoomNights : NaN;
+    if (!Number.isFinite(capacityRoomNights)) {
+      capacityRoomNights =
+        totalRooms > 0 && daysInPeriod > 0 ? daysInPeriod * totalRooms : 0;
+    }
+
+    return {
+      date: p.date,
+      percent,
+      occupiedRooms,
+      totalRooms,
+      daysInPeriod,
+      occupiedRoomNights,
+      capacityRoomNights,
+    };
   });
 
   // room type bar (หนึ่ง record ต่อเดือน, key = roomType.id)
