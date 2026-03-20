@@ -396,7 +396,7 @@ export default function Navbar() {
                       className="w-9 h-9 rounded-full object-cover border border-gray-200"
                     />
                   ) : (
-                    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-semibold">
+                    <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-semibold">
                       {(user?.username || user?.first_name || "U").charAt(0).toUpperCase()}
                     </div>
                   )}
