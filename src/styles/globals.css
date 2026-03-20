@@ -539,8 +539,7 @@ div[class*="stripe-devtools"] {
 
 /*
  * Stripe PaymentElement sizing
- * Set min-height on wrapper + iframe so content doesn't clip at the bottom.
- * Never force a fixed height — let Stripe auto-expand above the floor.
+ * Let Stripe auto-size the iframe; use overflow:visible to prevent clipping.
  */
 .stripe-payment-element--payment-method,
 .stripe-payment-element--checkout {
@@ -551,34 +550,12 @@ div[class*="stripe-devtools"] {
 .stripe-payment-element--payment-method .__PrivateStripeElement,
 .stripe-payment-element--checkout .__PrivateStripeElement {
   overflow: visible !important;
+  height: auto !important;
 }
 
 .stripe-payment-element--payment-method .__PrivateStripeElement iframe,
 .stripe-payment-element--checkout .__PrivateStripeElement iframe {
-  min-height: 550px !important;
-}
-
-.stripe-payment-element--payment-method {
-  min-height: 550px;
-}
-
-.stripe-payment-element--checkout {
-  min-height: 550px;
-}
-
-@media (min-width: 1024px) {
-  .stripe-payment-element--payment-method .__PrivateStripeElement iframe,
-  .stripe-payment-element--checkout .__PrivateStripeElement iframe {
-    min-height: 480px !important;
-  }
-
-  .stripe-payment-element--payment-method {
-    min-height: 480px;
-  }
-
-  .stripe-payment-element--checkout {
-    min-height: 480px;
-  }
+  overflow: visible !important;
 }
 
 /* Custom DatePicker Styles */
