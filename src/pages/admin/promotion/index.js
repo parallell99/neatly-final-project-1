@@ -343,10 +343,9 @@ export default function PromotionPage() {
                         <tr className="text-[15px] text-gray-800 h-[41px]">
                       <th className="px-3 py-2 font-medium w-[150px] whitespace-normal leading-tight">Code</th>
                       <th className="px-3 py-2 font-medium w-[140px] whitespace-normal leading-tight">Name</th>
-                      <th className="px-3 py-2 font-medium w-[80px] whitespace-normal leading-tight">Discount</th>
-                      <th className="px-3 py-2 font-medium w-[100px] whitespace-normal leading-tight">Min Spend</th>
-                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">Start</th>
-                      <th className="px-3 py-2 font-medium w-[90px] whitespace-normal leading-tight">End</th>
+                      <th className="px-3 py-2 font-medium w-[100px] whitespace-normal leading-tight">Discount</th>
+                      <th className="px-3 py-2 font-medium w-[95px] whitespace-normal leading-tight">Start</th>
+                      <th className="px-3 py-2 font-medium w-[95px] whitespace-normal leading-tight">End</th>
                       <th className="px-3 py-2 font-medium w-[60px] whitespace-normal leading-tight">Used</th>
                       <th className="px-3 py-2 font-medium w-[80px] whitespace-normal leading-tight">Per User Limit</th>
                       <th className="px-3 py-2 font-medium w-[70px] whitespace-normal leading-tight">Global Limit</th>
@@ -357,7 +356,7 @@ export default function PromotionPage() {
                       <tbody className="text-xs">
                       {rows.length === 0 ? (
                         <tr>
-                          <td colSpan={11} className="p-8 text-center text-gray-500">
+                          <td colSpan={10} className="p-8 text-center text-gray-500">
                             No promotions found.
                           </td>
                         </tr>
@@ -386,9 +385,6 @@ export default function PromotionPage() {
                             </td>
                             <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDiscount(p)}
-                            </td>
-                            <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
-                              {p.min_spend ? `${Number(p.min_spend).toLocaleString()} THB` : "0"}
                             </td>
                             <td className={`px-3 py-2 align-center ${unusable ? "text-gray-400" : "text-gray-700"}`}>
                               {formatDate(p.start_date)}

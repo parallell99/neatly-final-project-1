@@ -53,7 +53,14 @@ export default function PaymentMethodForm({
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [useNewCard, setUseNewCard] = useState(false);
-  const [isLg, setIsLg] = useState(false);
+  const [isLg, setIsLg] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.matchMedia("(min-width: 1024px)").matches;
+    } catch {
+      return false;
+    }
+  });
 
   const hasCreatedPI = useRef(false);
   const lastTotalRef = useRef(null);
@@ -61,7 +68,6 @@ export default function PaymentMethodForm({
     if (typeof window === "undefined") return;
     const media = window.matchMedia("(min-width: 1024px)");
     const update = () => setIsLg(!!media.matches);
-    update();
     if (typeof media.addEventListener === "function") {
       media.addEventListener("change", update);
       return () => media.removeEventListener("change", update);
