@@ -50,7 +50,14 @@ export default async function handler(req, res) {
      * so customerName became "—" even when guest_id was set.
      */
     let guestsMap = {};
-    const guestIds = [...new Set(orders.map((o) => o.guest_id).filter(Boolean))];
+    const guestIds = [
+      ...new Set(
+        orders
+          .map((o) => o.guest_id)
+          .filter(Boolean)
+          .map((id) => String(id).trim())
+      ),
+    ];
     if (guestIds.length > 0) {
       const guestsRes = await supabaseAdmin.from("guests").select("id, first_name, last_name").in("id", guestIds);
       if (guestsRes.error) {
@@ -59,20 +66,24 @@ export default async function handler(req, res) {
       if (guestsRes.data && guestsRes.data.length > 0) {
         (guestsRes.data || []).forEach((g) => {
           if (g.id == null) return;
-          const k = String(g.id);
+          const k = String(g.id).trim();
           guestsMap[k] = g;
           guestsMap[k.toLowerCase()] = g;
         });
       }
     }
 
-    const roomTypeIds = [...new Set(orders.map((o) => o.room_type_id).filter(Boolean))];
+    const roomTypeIds = [
+      ...new Set(orders.map((o) => o.room_type_id).filter((v) => v != null)),
+    ];
     const roomTypesRes =
       roomTypeIds.length > 0
         ? await supabaseAdmin.from("room_types").select("id, name, bed_type_id").in("id", roomTypeIds)
         : { data: [] };
 
-    const bedTypeIds = [...new Set((roomTypesRes.data || []).map((r) => r.bed_type_id).filter(Boolean))];
+    const bedTypeIds = [
+      ...new Set((roomTypesRes.data || []).map((r) => r.bed_type_id).filter((v) => v != null)),
+    ];
     let bedTypeMap = {};
     if (bedTypeIds.length > 0) {
       const { data: bedRows } = await supabaseAdmin
@@ -80,15 +91,18 @@ export default async function handler(req, res) {
         .select("id, type_name")
         .in("id", bedTypeIds);
       bedTypeMap = (bedRows || []).reduce((acc, b) => {
-        acc[b.id] = b.type_name;
+        // Normalize keys to string to avoid number/string mismatches across environments.
+        acc[String(b.id)] = b.type_name;
         return acc;
       }, {});
     }
 
     const roomTypesMap = (roomTypesRes.data || []).reduce((acc, r) => {
+      const bedTypeId = r.bed_type_id;
       acc[r.id] = {
         name: r.name || "—",
-        bedTypeName: r.bed_type_id ? bedTypeMap[r.bed_type_id] ?? "—" : "—",
+        bedTypeName:
+          bedTypeId != null ? bedTypeMap[String(bedTypeId)] ?? "—" : "—",
       };
       return acc;
     }, {});
@@ -103,9 +117,12 @@ export default async function handler(req, res) {
           last = g.last_name ?? g.lastName ?? "";
         }
       }
-      if (!String(first).trim() && o.guest_id) {
-        const gid = String(o.guest_id);
-        const g = guestsMap[gid] ?? guestsMap[gid.toLowerCase()] ?? guestsMap[o.guest_id];
+      if (!String(first).trim() && o.guest_id != null) {
+        const gid = String(o.guest_id).trim();
+        const g =
+          guestsMap[gid] ??
+          guestsMap[gid.toLowerCase()] ??
+          guestsMap[String(o.guest_id).trim()];
         if (g) {
           first = g.first_name ?? g.firstName ?? "";
           last = g.last_name ?? g.lastName ?? "";
@@ -114,7 +131,10 @@ export default async function handler(req, res) {
       const fromGuest = `${String(first).trim()} ${String(last).trim()}`.trim();
       const customerName =
         fromGuest || (o.email && String(o.email).trim()) || "—";
-      const rt = o.room_type_id ? roomTypesMap[o.room_type_id] : { name: "—", bedTypeName: "—" };
+      const rt =
+        o.room_type_id != null
+          ? roomTypesMap[o.room_type_id]
+          : { name: "—", bedTypeName: "—" };
       return {
         id: o.id,
         customerName,
