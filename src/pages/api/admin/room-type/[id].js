@@ -91,6 +91,7 @@ export default async function handler(req, res) {
       roomType,
       roomSize,
       bedType,
+      bedTypeId: bedTypeIdFromClient,
       adults,
       kids,
       totalRooms,
@@ -110,12 +111,12 @@ export default async function handler(req, res) {
         return Number.isNaN(n) ? null : n;
       };
 
-      let bedTypeId = null;
-      if (bedType) {
+      let bedTypeId = bedTypeIdFromClient || null;
+      if (!bedTypeId && bedType) {
         const { data: bedRow } = await supabaseAdmin
           .from("room_bed_type")
           .select("id, type_name")
-          .ilike("type_name", `%${bedType}%`)
+          .ilike("type_name", bedType)
           .maybeSingle();
         if (bedRow?.id) bedTypeId = bedRow.id;
       }
@@ -190,6 +191,43 @@ export default async function handler(req, res) {
         );
       }
 
+      // ถ้าเพิ่มจำนวนห้อง → สร้าง room_properties เพิ่มโดยต่อจาก MAX(room_number)
+      const newTotal = toNumberOrNull(totalRooms);
+      if (newTotal != null && newTotal > 0) {
+        const { data: existingRooms } = await supabaseAdmin
+          .from("room_properties")
+          .select("id")
+          .eq("room_type_id", roomTypeId);
+
+        const currentCount = (existingRooms || []).length;
+        const diff = newTotal - currentCount;
+
+        if (diff > 0) {
+          const { data: maxRow } = await supabaseAdmin
+            .from("room_properties")
+            .select("room_number")
+            .order("room_number", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          const startNumber = (maxRow?.room_number ?? 0) + 1;
+
+          const newRooms = Array.from({ length: diff }, (_, i) => ({
+            room_type_id: roomTypeId,
+            room_number: startNumber + i,
+            status_id: null,
+          }));
+
+          const { error: roomInsertError } = await supabaseAdmin
+            .from("room_properties")
+            .insert(newRooms);
+
+          if (roomInsertError) {
+            console.error("[admin/room-type] PATCH insert room_properties error:", roomInsertError);
+          }
+        }
+      }
+
       return res.status(200).json({ data: { id: roomTypeId } });
     } catch (err) {
       console.error("[admin/room-type] PATCH error:", err);
@@ -201,6 +239,7 @@ export default async function handler(req, res) {
     try {
       await supabaseAdmin.from("room_amenities").delete().eq("room_type_id", roomTypeId);
       await supabaseAdmin.from("image_gallery").delete().eq("room_type_id", roomTypeId);
+      await supabaseAdmin.from("room_properties").delete().eq("room_type_id", roomTypeId);
       const { error: delError } = await supabaseAdmin
         .from("room_types")
         .delete()
