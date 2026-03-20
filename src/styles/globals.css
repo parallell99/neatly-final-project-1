@@ -539,30 +539,30 @@ div[class*="stripe-devtools"] {
 
 /* Stripe PaymentElement: prevent country field clipping on narrow screens */
 .stripe-payment-element--payment-method .__PrivateStripeElement iframe {
-  /* Payment-method page: allow a bit more height */
-  min-height: clamp(650px, 55vh, 700px);
-  height: clamp(80px, 55vh, 700px) !important;
-  max-height: clamp(80px, 55vh, 700px) !important;
+  /* Keep a consistent height range */
+  min-height: clamp(250px, 55vh, 520px) !important;
+  height: clamp(250px, 55vh, 520px) !important;
+  max-height: clamp(250px, 55vh, 520px) !important;
 }
 
 .stripe-payment-element--checkout .__PrivateStripeElement iframe {
   /* Booking checkout: keep actions visible */
-  min-height: clamp(500px, 45vh, 350px);
+  min-height: clamp(260px, 45vh, 350px) !important;
   height: clamp(260px, 45vh, 350px) !important;
   max-height: clamp(260px, 45vh, 350px) !important;
 }
 
 @media (min-width: 1024px) {
   .stripe-payment-element--payment-method .__PrivateStripeElement iframe {
-    min-height: clamp(100px, 45vh, 250px);
+    min-height: clamp(100px, 45vh, 400px) !important;
     height: clamp(100px, 45vh, 400px) !important;
-    max-height: clamp(100px, 45vh, 500px) !important;
+    max-height: clamp(100px, 45vh, 400px) !important;
   }
 
   .stripe-payment-element--checkout .__PrivateStripeElement iframe {
-    min-height: clamp(550px, 35vh, 1000px);
-    height: clamp(100px, 35vh, 1000px) !important;
-    max-height: clamp(100px, 35vh, 900px) !important;
+    min-height: clamp(550px, 35vh, 900px) !important;
+    height: clamp(550px, 35vh, 900px) !important;
+    max-height: clamp(550px, 35vh, 900px) !important;
   }
 }
 
