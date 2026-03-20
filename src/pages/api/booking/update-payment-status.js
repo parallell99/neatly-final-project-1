@@ -1,0 +1,85 @@
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@supabase/supabase-js";
+
+export default async function handler(req, res) {
+  if (req.method !== "PATCH") {
+    return res.status(405).json({ message: "Method not allowed" });
+  }
+
+  const token = req.headers.authorization?.replace("Bearer ", "");
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser(token);
+
+  if (!user) {
+    return res.status(401).json({ message: "Invalid user" });
+  }
+
+  const { orderId, status, paymentMethod, cardLast4, cardBrand, promotionIds: promotionIdsRaw } = req.body;
+
+  const update = {
+    status,
+    payment_method: paymentMethod,
+  };
+
+  if (typeof cardLast4 === "string" && cardLast4.trim() !== "") {
+    update.card_last4 = cardLast4.trim();
+  }
+
+  if (typeof cardBrand === "string" && cardBrand.trim() !== "") {
+    update.card_brand = cardBrand.trim();
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("orders")
+    .update(update)
+    .eq("id", orderId)
+    .eq("user_id", user.id)
+    // อัปเดตได้เฉพาะ order ที่ยังไม่จ่ายสำเร็จ (pending / awaiting_payment)
+    .in("status", ["pending", "awaiting_payment"])
+    .select()
+    .maybeSingle();
+
+  if (error) {
+    return res.status(500).json({ message: "Update failed" });
+  }
+
+  if (status === "paid") {
+    const promotionIdsArray = Array.isArray(promotionIdsRaw)
+      ? promotionIdsRaw.filter((id) => id != null)
+      : [];
+
+    const promoIdsToInsert =
+      promotionIdsArray.length > 0
+        ? promotionIdsArray
+        : data?.promotion_id
+          ? [data.promotion_id]
+          : [];
+
+    if (promoIdsToInsert.length > 0) {
+    try {
+        const rows = promoIdsToInsert.map((pid) => ({
+          user_id: user.id,
+          promotion_id: pid,
+          order_id: data.id,
+          used_at: new Date().toISOString(),
+        }));
+        await supabaseAdmin.from("promotion_usages").insert(rows);
+    } catch (usageErr) {
+      console.error("Failed to record promotion usage:", usageErr);
+    }
+  }
+  }
+
+  return res.status(200).json({ order: data });
+}

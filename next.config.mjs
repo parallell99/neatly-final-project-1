@@ -3,18 +3,12 @@ const nextConfig = {
   reactCompiler: true,
   reactStrictMode: true,
   
+  // SVG as React component ใช้ได้เมื่อรันด้วย webpack เท่านั้น (npm run dev หรือ next dev --webpack)
+  // Turbopack ยังโหลด @svgr/webpack ไม่ได้ จึงไม่ตั้ง rules สำหรับ SVG ใน turbopack
   turbopack: {
-    // เพิ่มบรรทัดนี้เพื่อระบุ root directory
     root: process.cwd(),
-    
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
   },
-  
+
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

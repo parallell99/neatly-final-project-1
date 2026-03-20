@@ -1,125 +1,250 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { format, addDays } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
 import HotelBgImg from "@/assets/images/7.jpg";
 import Button from "@/components/ui/buttons/buttons";
+import RoomsGuestsSelector from "@/components/ui/RoomsGuestsSelector";
+import ChatbotButton from "@/components/layout/chatbot/ChatbotButton";
+import { Calendar } from "@/components/ui/booking/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/booking/popover";
 
-function formatDateDisplay(dateStr) {
-  if (!dateStr) return "";
-  const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+function getToday() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
-export default function HeroSearch() {
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [roomsGuests, setRoomsGuests] = useState("1 room, 2 guests");
+function getTomorrow() {
+  return addDays(getToday(), 1);
+}
 
-  const checkInMin = new Date().toISOString().slice(0, 10);
-  const checkOutMin = checkIn || checkInMin;
+const defaultBg = HotelBgImg?.src ?? HotelBgImg;
+
+export default function HeroSearch() {
+  const router = useRouter();
+  const today = getToday();
+  const [heroBgUrl, setHeroBgUrl] = useState(null);
+  /** ข้อความ Hero — จากตาราง hotel_information column hotel_main_text (API ส่งเป็น hotelMainText) */
+  const [heroText, setHeroText] = useState("");
+
+  useEffect(() => {
+    fetch("/api/hotel-information")
+      .then((res) => res.json())
+      .then((json) => {
+        const d = json?.data;
+        if (d) {
+          setHeroBgUrl(d.hotelBgUrl ?? null);
+          const t =
+            d.hotelMainText != null ? String(d.hotelMainText).trim() : "";
+          setHeroText(t);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const [date, setDate] = useState(() => ({
+    from: getToday(),
+    to: getTomorrow(),
+  }));
+  const [openCheckIn, setOpenCheckIn] = useState(false);
+  const [openCheckOut, setOpenCheckOut] = useState(false);
+  const [numRooms, setNumRooms] = useState(1);
+  const [numAdults, setNumAdults] = useState(2);
+  const [numKids, setNumKids] = useState(0);
+
+  const checkIn = date?.from ? format(date.from, "yyyy-MM-dd") : "";
+  const checkOut = date?.to ? format(date.to, "yyyy-MM-dd") : "";
+
+  const handleSearch = () => {
+    if (!checkIn || !checkOut) return;
+    const params = new URLSearchParams({
+      checkIn,
+      checkOut,
+      rooms: String(numRooms),
+      adults: String(numAdults),
+      kids: String(numKids),
+    });
+    router.push(`/search-rooms?${params.toString()}`);
+  };
 
   return (
-    <section className="relative w-full min-h-[764px] lg:min-h-[700px] flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 z-0 overflow-hidden">
-        <div 
-          className="w-full h-full bg-no-repeat"
-          style={{
-            backgroundImage: `url(${HotelBgImg?.src ?? HotelBgImg})`,
-            backgroundPosition: 'center center',
-            backgroundSize: '320%',
-          }}
-        >
+    <>
+      <ChatbotButton />
+
+      <section className="relative w-full min-h-[764px] lg:h-[900px] flex items-center justify-center overflow-hidden">
+        {/* รูปพื้นหลังอย่างเดียว */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute inset-0 w-full h-full bg-no-repeat bg-center bg-[length:320%] lg:bg-cover"
+            style={{
+              backgroundImage: `url(${heroBgUrl || defaultBg})`,
+            }}
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/10" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/10"></div>
-      </div>
 
-      {/* Content */}
-      <div className="relative z-10 top-10 w-full max-w-[1200px] mx-auto px-4 lg:px-8">
-        {/* Title */}
-        <h1 className="font-serif headline-3 text-white text-center mb-8 lg:mb-12 leading-tight">
-          A Best Place <br  /> for Your
-          Neatly Experience
-        </h1>
+        {/* กล่องข้อความ + กล่อง Search เรียงกัน, justify-start ขยับขึ้นให้อยู่กลางจอ */}
+        <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 lg:px-8 pt-28 pb-12 flex flex-col items-center justify-start gap-8 lg:gap-10 -mt-16 lg:-mt-24">
+          {/* ข้อความจากตาราง hotel_information column hotel_main_text (API ส่งเป็น hotelMainText → state heroText) */}
+          <h1 className="font-serif text-white text-center leading-normal pb-8  select-none">
+            <span className="lg:hidden block headline-3">
+              {heroText
+                ? heroText
+                    .split("\n")
+                    .slice(0, 3)
+                    .map((line, i) => (
+                      <span key={i} className="block w-[325px]">
+                        {line || "\u00A0"}
+                      </span>
+                    ))
+                : ""}
+            </span>
+            <span className="hidden lg:block headline-1">
+              {heroText
+                ? heroText
+                    .split("\n")
+                    .slice(0, 3)
+                    .map((line, i) => (
+                      <span key={i} className="block w-[900px]">
+                        {line || "\u00A0"}
+                      </span>
+                    ))
+                : ""}
+            </span>
+          </h1>
 
-        {/* Search Form */}
-        <div className="bg-white rounded-lg shadow-xl p-6 lg:p-8 max-w-2xl mx-auto">
-          <div className="space-y-6">
-            {/* Check In */}
-            <div>
-              <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
-                Check In
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={checkIn}
-                  min={checkInMin}
-                  onChange={(e) => setCheckIn(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md font-sans text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent [color-scheme:light]"
-                  placeholder="June 01, 2025"
-                  title={formatDateDisplay(checkIn) || "Select date"}
-                />
-              </div>
-            </div>
+          {/* กล่อง Search */}
+          <div className="w-full max-w-[1120px]">
+            <div className="bg-white rounded-lg shadow-xl p-6 lg:p-8 min-w-[343px] w-full mx-auto lg:h-[138px] flex flex-col lg:items-center lg:justify-center">
+              <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_auto_1fr_1fr_auto] lg:items-end lg:gap-4 w-full">
+                {/* Check In */}
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
+                    Check In
+                  </label>
+                  <Popover open={openCheckIn} onOpenChange={setOpenCheckIn}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-md font-sans text-gray-700 bg-white text-left flex items-center justify-between hover:border-orange-500 transition [color-scheme:light]"
+                      >
+                        <span>
+                          {date?.from
+                            ? format(date.from, "MMM d, yyyy")
+                            : "Select date"}
+                        </span>
+                        <CalendarIcon className="h-5 w-5 text-gray-400 shrink-0" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        defaultMonth={date?.from ?? today}
+                        selected={date?.from}
+                        onSelect={(d) => {
+                          if (!d) return;
+                          setDate((prev) => {
+                            const to =
+                              prev?.to && d > prev.to ? d : (prev?.to ?? d);
+                            return { from: d, to };
+                          });
+                          setOpenCheckIn(false);
+                          setOpenCheckOut(true);
+                        }}
+                        disabled={{ before: today }}
+                        className="p-6 bg-white border border-gray-300 rounded-md font-sans text-gray-700"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-            {/* Check Out */}
-            <div>
-              <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
-                Check Out
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={checkOut}
-                  min={checkOutMin}
-                  onChange={(e) => setCheckOut(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md font-sans text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent [color-scheme:light]"
-                  placeholder="June 01, 2025"
-                  title={formatDateDisplay(checkOut) || "Select date"}
-                />
-              </div>
-            </div>
-
-            {/* Rooms & Guests */}
-            <div>
-              <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
-                Rooms & Guests
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={roomsGuests}
-                  onChange={(e) => setRoomsGuests(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md font-sans text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent pr-10"
-                  placeholder="Select rooms and guests"
-                />
-                <svg
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                {/* Separator (desktop only) – ความสูงเท่าปุ่มวันที่ แล้วจัด "–" กลางแนวตั้ง */}
+                <div
+                  className="hidden lg:flex lg:items-center lg:justify-center lg:h-12 text-gray-400"
+                  aria-hidden
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
+                  –
+                </div>
+
+                {/* Check Out */}
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
+                    Check Out
+                  </label>
+                  <Popover open={openCheckOut} onOpenChange={setOpenCheckOut}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        disabled={!date?.from}
+                        className={`w-full px-4 py-3 border rounded-md font-sans text-left flex items-center justify-between transition [color-scheme:light] ${
+                          date?.from
+                            ? "border-gray-300 text-gray-700 bg-white hover:border-orange-500"
+                            : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+                        }`}
+                      >
+                        <span>
+                          {date?.to
+                            ? format(date.to, "MMM d, yyyy")
+                            : "Select date"}
+                        </span>
+                        <CalendarIcon
+                          className={`h-5 w-5 shrink-0 ${date?.from ? "text-gray-400" : "text-gray-400"}`}
+                        />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        defaultMonth={date?.to ?? date?.from ?? today}
+                        selected={date?.to}
+                        onSelect={(d) => {
+                          if (!d) return;
+                          setDate((prev) => ({ ...prev, to: d }));
+                          setOpenCheckOut(false);
+                        }}
+                        disabled={{ before: date?.from ?? today }}
+                        className="p-6 bg-white border border-gray-300 rounded-md font-sans text-gray-700"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Rooms & Guests */}
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-sans text-sm font-medium mb-2">
+                    Rooms & Guests
+                  </label>
+                  <RoomsGuestsSelector
+                    numRooms={numRooms}
+                    numAdults={numAdults}
+                    numKids={numKids}
+                    onRoomsChange={setNumRooms}
+                    onAdultsChange={setNumAdults}
+                    onKidsChange={setNumKids}
                   />
-                </svg>
+                </div>
+
+                {/* Search Button */}
+                <Button
+                  type="button"
+                  buttonStyle="primary"
+                  buttonText="Search"
+                  className="w-full lg:w-auto lg:shrink-0 lg:px-8 lg:h-[50px] lg:flex lg:items-center"
+                  onClick={handleSearch}
+                />
               </div>
             </div>
-
-            {/* Search Button */}
-            <Button
-              type="button"
-              buttonStyle="primary"
-              buttonText="Search"
-              className="w-full"
-            />
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

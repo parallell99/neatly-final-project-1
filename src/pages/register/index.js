@@ -1,29 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/router";
 import Navbar from "@/components/layout/navbar";
-import Input from "@/components/ui/Input/Input";
-import DatePicker from "@/components/ui/DatePicker/DatePicker";
+import Input from "@/components/ui/AuthInput/AuthInput";
 import { useRegisterForm } from "@/hooks/useRegisterForm";
-import { useImageUpload } from "@/hooks/useImageUpload";
 import Button from "@/components/ui/buttons/buttons";
-import { thaiProvinces } from "@/data/thaiProvinces";
-import ExclamationCircle from "@/assets/icons/exclamation-circle.svg";
 import axios from "axios";
+import CountrySelector from "@/components/ui/CountrySelector/CountrySelector";
+import PhoneInput from "@/components/ui/PhoneInput/PhoneInput";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/authentication";
+import RegisterImage from "@/assets/images/9.jpg"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/booking/popover";
+import { CalendarIcon, Info } from "lucide-react";
+import { ButtonCalendar } from "@/components/ui/booking/calendar-button";
+import { Calendar } from "@/components/ui/booking/calendar";
+import { cn } from "@/lib/utils";
+import { format, subYears, startOfDay } from "date-fns";
 
 export default function Register() {
+  const { fetchUser } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [date, setDate] = useState(undefined);
+  const fileInputRef = useRef(null);
 
   const {
     register,
@@ -31,37 +38,61 @@ export default function Register() {
     formState: { errors },
     setValue,
     watch,
+    control,
+    setError,
   } = useRegisterForm();
-  
-  const { uploadImage, uploading } = useImageUpload();
+
 
   const profilePicture = watch("profilePicture");
 
   // Handle image preview
-  React.useEffect(() => {
-    if (profilePicture && profilePicture.length > 0) {
-      const file = profilePicture[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    } else {
+  useEffect(() => {
+    if (!profilePicture) {
       setPreviewImage(null);
+      return;
     }
+
+    const objectUrl = URL.createObjectURL(profilePicture);
+    setPreviewImage(objectUrl);
+
+    return () => URL.revokeObjectURL(objectUrl);
   }, [profilePicture]);
+
+  // เพิ่ม useEffect เพื่อ sync date state จาก watch
+  const dateOfBirth = watch("dateOfBirth");
+
+  useEffect(() => {
+    if (dateOfBirth) {
+      setDate(new Date(dateOfBirth));
+    } else {
+      setDate(undefined);
+    }
+  }, [dateOfBirth]);
+
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setValue("profilePicture", file, { shouldValidate: true });
+  };
+
+  const handleRemoveImage = () => {
+    setPreviewImage(null);
+    setValue("profilePicture", undefined, { shouldValidate: true });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const onSubmit = async (data) => {
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      let profilePictureUrl = null;
-      if (data.profilePicture && data.profilePicture.length > 0) {
-        profilePictureUrl = await uploadImage(data.profilePicture[0]);
-      }
-
-      const { status } = await axios.post("/api/auth/register", {
+      // 1️.สมัครสมาชิกก่อน
+      const response = await axios.post("/api/auth/register", {
         firstName: data.firstName,
         lastName: data.lastName,
         username: data.username,
@@ -69,237 +100,329 @@ export default function Register() {
         password: data.password,
         phoneNumber: data.phoneNumber,
         dateOfBirth: data.dateOfBirth,
-        province: data.province,
-        profilePictureUrl,
+        country: data.country,
       });
 
-      if (status === 201) {
-        alert("Register Successfully");
-        router.push("/login");
+      const { userId, token } = response.data.data;
+
+      if (token) {
+        localStorage.setItem("token", token);
+        await fetchUser();
       }
+
+      let publicUrl = null;
+
+      // 2️.ถ้ามีรูป → upload ไป Supabase Storage
+      if (data.profilePicture) {
+        const file = data.profilePicture;
+
+        const fileExt = file.name.split(".").pop();
+        const filePath = `users/${userId}/avatar.${fileExt}?v=${Date.now()}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("nealty-profile-image")
+          .upload(filePath, file, {
+            upsert: true,
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        // 3️. เอา public URL
+        const { data: publicData } = supabase.storage
+          .from("nealty-profile-image")
+          .getPublicUrl(filePath);
+
+        publicUrl = publicData.publicUrl;
+
+        // 4️. ส่ง URL ไป backend เพื่อ update database
+        await axios.patch("/api/users/avatar", {
+          avatarUrl: publicUrl,
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        // รีเฟรช user ใน context หลังอัปเดตรูป เพื่อให้ Navbar เห็นรูปทันที
+        await fetchUser();
+      }
+
+      router.push("/");
+
     } catch (error) {
+      const apiError = error.response?.data?.error;
+
+      if (apiError === "Username already in use") {
+        setError("username", {
+          type: "manual",
+          message: "Username already in use",
+        });
+        // ไม่ต้องโชว์ generic submit error ซ้ำ
+        setSubmitError(null);
+        return;
+      }
+
+      if (apiError === "Email already in use") {
+        setError("email", {
+          type: "manual",
+          message: "Email already in use",
+        });
+        setSubmitError(null);
+        return;
+      }
+
+      // กรณีอื่น ๆ ใช้ข้อความรวมด้านบนเหมือนเดิม
       const message =
-        error.response?.data?.error ||
+        apiError ||
         error.message ||
         "Register failed";
+
       setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files;
-    if (file && file.length > 0) {
-      setValue("profilePicture", file, { shouldValidate: true });
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen relative">
       <Navbar />
+      <div className="lg:relative lg:px-[174px] lg:pt-[60px] lg:pb-[100px] overflow-hidden">
+        <img
+          src={RegisterImage?.src || RegisterImage || ''}
+          alt="Outdoor lounge area with pool"
+          className="hidden lg:block w-full h-[269px] lg:h-full object-cover lg:scale-125 absolute  left-0 right-0 top-0"
+        />
+        <div className="hidden lg:block lg:absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.6)_19.66%,rgba(0,0,0,0)_100%)]"></div>
 
-      <main className="flex flex-col w-full px-[16px] py-[40px] gap-[40px] bg-bg">
-        <h3 className="headline-3 text-green-800">Register</h3>
+        <main className="flex flex-col lg:justify-center lg:items-center w-full px-[16px] py-[40px] gap-[40px] lg:gap-[60px] bg-bg lg:relative lg:px-[60px] lg:pt-[80px] lg:z-50">
+          <h3 className="lg:hidden self-start headline-3 text-green-800  ">Register</h3>
+          <h2 className="hidden lg:flex self-start headline-2 text-green-800  ">Register</h2>
 
-        <form className="flex flex-col gap-[40px]" onSubmit={handleSubmit(onSubmit)}>
-          {/* Basic Information Section */}
-          <section className="flex flex-col w-full gap-[24px]">
-            <h5 className="headline-5 text-gray-600 ">Basic Information</h5>
+          <form className="flex flex-col w-full lg:w-min-[1092px] gap-[40px]" onSubmit={handleSubmit(onSubmit)}>
+            {/* Basic Information Section */}
+            <section className="flex flex-col w-full gap-[24px] pb-[40px] border-b">
+              <h5 className="headline-5 text-gray-600 pb-[16px] ">Basic Information</h5>
+              <div className="contents lg:grid lg:grid-cols-2  lg:gap-[40px] lg:w-full">
+                <Input
+                  label="First name"
+                  name="firstName"
+                  placeholder="Enter your first name"
+                  register={register}
+                  error={errors.firstName}
+                />
 
-            <Input
-              label="First name"
-              name="firstName"
-              placeholder="Enter your first name"
-              register={register}
-              error={errors.firstName}
-              required
-            />
+                <Input
+                  label="Last name"
+                  name="lastName"
+                  placeholder="Enter your last name"
+                  register={register}
+                  error={errors.lastName}
+                />
 
-            <Input
-              label="Last name"
-              name="lastName"
-              placeholder="Enter your last name"
-              register={register}
-              error={errors.lastName}
-              required
-            />
+                <Input
+                  label="Username"
+                  name="username"
+                  placeholder="Enter your username"
+                  register={register}
+                  error={errors.username}
+                  onBlur={(e) => {
+                    const lower = e.target.value.toLowerCase();
+                    setValue("username", lower, { shouldValidate: true });
+                    register("username").onBlur(e);
+                  }}
+                />
 
-            <Input
-              label="Username"
-              name="username"
-              placeholder="Enter your username"
-              register={register}
-              error={errors.username}
-              required
-            />
+                <Input
+                  label="Email"
+                  name="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  register={register}
+                  error={errors.email}
+                />
 
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              register={register}
-              error={errors.email}
-              required
-            />
+                <Input
+                  label="Password"
+                  name="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  register={register}
+                  error={errors.password}
+                />
 
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              register={register}
-              error={errors.password}
-              required
-            />
+                <Input
+                  label="Confirm password"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Confirm your password"
+                  register={register}
+                  error={errors.confirmPassword}
+                />
 
-            <Input
-              label="Confirm password"
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm your password"
-              register={register}
-              error={errors.confirmPassword}
-              required
-            />
-
-            <Input
-              label="Phone number"
-              name="phoneNumber"
-              type="tel"
-              placeholder="Enter your phone number"
-              register={register}
-              error={errors.phoneNumber}
-              required
-            />
+                <PhoneInput
+                  label="Phone number"
+                  name="phoneNumber"
+                  control={control}
+                  placeholder="Enter your phone number"
+                  error={errors.phoneNumber}
+                  disableSearchIcon={true}
+                  searchStyle={{ width: '100%', boxSizing: 'border-box' }}
+                  country="th"
+                />
 
 
-            {/* Date and Location Section */}
+                {/* Date of Birth - Popover + Calendar */}
+                <div className="flex flex-col w-full gap-[4px]">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <label
+                      htmlFor="dateOfBirth"
+                      className="font-normal text-[16px] text-gray-900"
+                    >
+                      Date of Birth
+                    </label>
+                    <span
+                      className="inline-flex items-center gap-1.5 text-sm text-gray-500"
+                      role="note"
+                    >
+                      <Info className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                      Minimum age 12 years.
+                    </span>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <ButtonCalendar
+                        id="dateOfBirth"
+                        variant="outline"
+                        className={cn(
+                          "w-full h-[50px] justify-between text-left text-[16px] font-normal shadow-none text-gray-900 rounded-[4px] hover:bg-white hover:cursor-pointer focus:ring-1 focus:ring-orange-500",
+                          "data-[state=open]:ring-1 data-[state=open]:ring-orange-500 data-[state=open]:ring-offset-0 ",
+                          !date && "text-muted-foreground",
+                          errors.dateOfBirth && "border-red"
+                        )}
+                      >
 
-            <DatePicker
-              label="Date of Birth"
-              name="dateOfBirth"
-              placeholder="Select your date of birth"
-              register={register}
-              error={errors.dateOfBirth}
-              setValue={setValue}
-              watch={watch}
-              required
-            />
-            {/* Country selection */}
-            <div className="flex flex-col w-full gap-[4px]">
-              <label htmlFor="province" className="font-normal text-[16px]">
-                Country
-              </label>
-              <div className="relative w-full">
-                <Select
-                  value={watch("province") || undefined}
-                  onValueChange={(value) => setValue("province", value, { shouldValidate: true })}
+                        {date ? format(date, "PPP") : <label className="text-gray-600">Select your date of birth</label>}<CalendarIcon className="h-4 w-4 text-gray-500" />
+                      </ButtonCalendar>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-white shadow-md border ">
+                      <Calendar
+                        mode="single"
+                        defaultMonth={date ?? subYears(new Date(), 12)}
+                        selected={date}
+                        onSelect={(selectedDate) => {
+                          setDate(selectedDate);
+                          setValue(
+                            "dateOfBirth",
+                            selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
+                            { shouldValidate: true }
+                          );
+                        }}
+                        disabled={(day) => {
+                          const today = startOfDay(new Date());
+                          const maxBirth = subYears(today, 12);
+                          return day > today || day > maxBirth;
+                        }}
+                        initialFocus
+                        classNames={{ day: "focus:outline-none focus:ring-0" }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  {errors.dateOfBirth && (
+                    <p className="mt-1 text-sm text-red">{errors.dateOfBirth.message}</p>
+                  )}
+                </div>
+
+
+
+                {/* Country selection */}
+                <CountrySelector
+                  label="Country"
+                  placeholder="Select your country"
+                  name="country"
+                  value={watch("country")}
+                  onChange={(value) => setValue("country", value, { shouldValidate: true })}
+                  error={errors.country}
+                />
+              </div>
+            </section>
+
+
+            {/* Profile Picture Section */}
+            <section className=" lg:gap-[10px] flex flex-col justify-center items-center lg:items-start lg-justify-start">
+              <h5 className="text-[20px] font-medium lg:pl-4  text-gray-600">Profile Picture</h5>
+              <div className="flex flex-col items-start w-[167px] h-[167px] ">
+
+                <label
+                  htmlFor="profilePicture"
+                  className={`
+                  relative w-full max-w-xs aspect-square 
+                   rounded-[4px] 
+                  flex flex-col items-center justify-center cursor-pointer
+                  transition-all duration-200 overflow-hidden 
+                  ${errors.profilePicture
+                      ? 'border-red bg-red-50'
+                      : 'bg-gray-200 hover:border-gray-400'
+                    }
+                `}
                 >
-                  <SelectTrigger
-                    id="province"
-                    className={`w-full px-[12px] py-[12px] h-auto min-h-[48px] border rounded-[4px] focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-transparent transition-all duration-200 text-base
-                      ${errors.province
-                        ? "border-red"
-                        : "border-gray-300 bg-white hover:border-gray-400"
-                      }
-                      text-black data-[placeholder]:text-gray-600 [&>span]:text-left
-                    `}
-                  >
-                    <SelectValue placeholder="Select your country" />
-                  </SelectTrigger>
-                  <SelectContent position="popper">
-                    {thaiProvinces.map((province) => (
-                      <SelectItem key={province} value={province}>
-                        {province}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.province && (
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center">
-                    <ExclamationCircle />
-                  </span>
+                  {previewImage ? (
+                    <>
+                      <img
+                        src={previewImage}
+                        alt="Profile preview"
+                        className="w-full h-full object-cover"
+                      />
+                      {/* ปุ่มกากบาท */}
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white shadow-lg hover:bg-red hover:cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95
+  "                 >
+                        ✕
+                      </button>
+                      <div className="absolute inset-0 border-2 border-dashed border-gray-300 rounded-lg pointer-events-none" />
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative z-10 text-[30px] text-orange-500 flex flex-col items-center ">
+                        +
+                        <span className="text-orange-500 font-medium text-base">Upload photo</span>
+                      </div>
+                    </>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    id="profilePicture"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </label>
+                {errors.profilePicture && (
+                  <p className="mt-2 text-sm text-red">{errors.profilePicture.message}</p>
                 )}
               </div>
-              {errors.province && (
-                <p className="text-[14px] text-red">{errors.province.message}</p>
-              )}
-            </div>
-          </section>
-          {/* Profile Picture Section */}
-          <section>
-            <div className="flex flex-col items-center">
-              <label
-                htmlFor="profilePicture"
-                className={`
-                  relative w-full max-w-xs aspect-square 
-                  border border-gray-300 rounded-lg
-                  flex flex-col items-center justify-center cursor-pointer
-                  transition-all duration-200 overflow-hidden
-                  ${errors.profilePicture
-                    ? 'border-red-500 bg-red-50'
-                    : 'bg-white hover:border-gray-400'
-                  }
-                `}
-              >
-                {previewImage ? (
-                  <>
-                    <img
-                      src={previewImage}
-                      alt="Profile preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 border-2 border-dashed border-gray-300 rounded-lg pointer-events-none" />
-                  </>
-                ) : (
-                  <>
-                    <div className="absolute inset-0 border-2 border-dashed border-gray-300 rounded-lg m-2" />
-                    <div className="relative z-10 flex flex-col items-center">
-                      <svg
-                        className="w-16 h-16 text-orange-500 mb-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      <span className="text-orange-500 font-medium text-base">Upload photo</span>
-                    </div>
-                  </>
-                )}
-                <input
-                  id="profilePicture"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  {...register("profilePicture")}
-                  onChange={handleImageChange}
-                />
-              </label>
-              {errors.profilePicture && (
-                <p className="mt-2 text-sm text-red-500">{errors.profilePicture.message}</p>
-              )}
-            </div>
-          </section>
+            </section>
 
-          {/* Submit Error */}
-          {submitError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-sm text-red-600">{submitError}</p>
-            </div>
-          )}
+            {/* Submit Error */}
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red">{submitError}</p>
+              </div>
+            )}
 
-          {/* Submit Button */}
-          <Button buttonStyle="primary" buttonText={isSubmitting || uploading ? "Register..." : "Register"} type="submit" disabled={isSubmitting || uploading} />
-        </form>
-      </main>
-    </div>
+            {/* Submit Button */}
+            <div className="contents ">
+              <Button buttonStyle="primary" buttonText={isSubmitting ? "Register..." : "Register"} type="submit" disabled={isSubmitting} className="lg:w-[167px]" />
+            </div>
+          </form>
+        </main>
+      </div>
+    </div >
   );
 }

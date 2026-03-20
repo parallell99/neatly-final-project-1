@@ -1,4 +1,9 @@
-import { useState } from "react"
+"use client"
+
+import React, { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/router"
+import { useAuth } from "@/contexts/authentication"
 import Logo from "@/assets/logo/logo-foot.svg?url"
 import CustomerBookingLogo from "@/assets/icons/cs_booking.svg"
 import RoomManagementLogo from "@/assets/icons/manage.svg"
@@ -7,41 +12,70 @@ import RoomNPropertyLogo from "@/assets/icons/room.svg"
 import AnalyticDashboard from "@/assets/icons/analytic.svg"
 import ChatbotSetupLogo from "@/assets/icons/chat.svg"
 import LogoutLogo from "@/assets/icons/logout.svg"
+import PromotionIcon from "@/assets/icons/ticket-percent.svg"
 
 const menuItems = [
-  { id: "customer-booking", label: "Customer Booking", Icon: CustomerBookingLogo },
-  { id: "room-management", label: "Room Management", Icon: RoomManagementLogo },
-  { id: "hotel-information", label: "Hotel Infomation", Icon: HotelInformationLogo },
-  { id: "room-property", label: "Room & Property", Icon: RoomNPropertyLogo },
-  { id: "analytics", label: "Analytics Dashboard", Icon: AnalyticDashboard },
-  { id: "chatbot", label: "Chatbot Setup", Icon: ChatbotSetupLogo },
+  { id: "customer-booking", label: "Customer Booking", icon: CustomerBookingLogo, href: "/admin/customer-booking" },
+  { id: "room-management", label: "Room Management", icon: RoomManagementLogo, href: "/admin/room-management" },
+  { id: "hotel-information", label: "Hotel Infomation", icon: HotelInformationLogo, href: "/admin/hotel-information" },
+  { id: "room-property", label: "Room & Property", icon: RoomNPropertyLogo, href: "/admin/room-property" },
+  { id: "promotions", label: "Promotions", icon: PromotionIcon, href: "/admin/promotion" },
+  { id: "analytics", label: "Analytics Dashboard", icon: AnalyticDashboard, href: "/admin/analytics" },
+  { id: "chatbot", label: "Chatbot Setup", icon: ChatbotSetupLogo, href: "/admin/chatbot" },
 ]
 
 export default function SideBarAdmin() {
-  const [selected, setSelected] = useState(null)
+  const router = useRouter()
+  const { logout } = useAuth()
+  const pathname = router?.pathname ?? ""
+  const [sidebarLogoUrl, setSidebarLogoUrl] = useState(null)
+
+  useEffect(() => {
+    fetch("/api/hotel-information")
+      .then((res) => res.json())
+      .then((json) => {
+        const url = json?.data?.hotelLogoFooterUrl ?? null
+        setSidebarLogoUrl(url || null)
+      })
+      .catch(() => {})
+  }, [])
+
+  const logoSrc = sidebarLogoUrl || (typeof Logo === "string" ? Logo : Logo?.src) || Logo
 
   return (
     <>
-      <div className="bg-green-800 h-dvh w-[240px] flex flex-col gap-[40px]">
-        <div className="h-[153px] flex flex-col justify-center items-center gap-4">
-          <img src={Logo} className="w-[120px]"/>
-          <span className="body-1 text-green-400">Admin Panel Control</span>
-        </div>
-        <div className="flex flex-col">
-          {menuItems.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setSelected(id)}
-              className={`flex items-center gap-4 body-1 p-6 cursor-pointer w-full hover:bg-green-700 hover:text-green-100 ${selected === id ? "bg-green-600 text-green-100" : ""}`}
-            >
-              <Icon className="text-green-500" />
-              <span className="text-green-300">{label}</span>
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-4 border-t border-green-700 p-6 mt-auto mb-[210px]">
-          <LogoutLogo className="w-[24px] h-[24px] text-green-500"/>
-          <span className="text-green-300">Log Out</span>
+      {/* Reserve layout space, keep sidebar always visible */}
+      <div className="w-[240px] shrink-0">
+        <div className="fixed top-0 left-0 z-40 h-dvh w-[240px] bg-green-800 flex flex-col gap-[40px] overflow-y-auto">
+          <div className="h-[153px] flex flex-col justify-center items-center gap-4">
+            <Link href="/" className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded">
+              <img src={logoSrc} className="w-[120px] h-auto object-contain" alt="Neatly logo" />
+            </Link>
+            <span className="body-1 text-green-400">Admin Panel Control</span>
+          </div>
+          <div className="flex flex-col">
+            {menuItems.map(({ id, label, icon, href }) => {
+              const isActive = pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "-")
+              return (
+                <Link
+                  key={id}
+                  href={href}
+                  className={`flex items-center gap-4 body-1 p-6 cursor-pointer w-full text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 ${isActive ? "bg-green-600 text-green-100" : ""}`}
+                >
+                  {React.createElement(icon, { className: "w-6 h-6 shrink-0 text-green-500", "aria-hidden": true })}
+                  <span className="text-inherit">{label}</span>
+                </Link>
+              )
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex gap-4 border-t border-green-700 p-6 mt-auto w-full text-left bg-transparent text-green-300 hover:bg-green-700 hover:text-green-100 active:bg-green-600 active:text-green-100 cursor-pointer"
+          >
+            <LogoutLogo className="w-6 h-6 shrink-0 text-green-500" aria-hidden />
+            <span>Log Out</span>
+          </button>
         </div>
       </div>
     </>

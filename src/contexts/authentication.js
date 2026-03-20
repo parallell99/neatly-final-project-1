@@ -31,7 +31,7 @@ function AuthProvider({ children }) {
     try {
       setState((prev) => ({ ...prev, getUserLoading: true }));
 
-      const response = await axios.get("/api/auth/me", {
+      const response = await axios.get("/api/auth/user", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -47,18 +47,14 @@ function AuthProvider({ children }) {
         getUserLoading: false,
         error: error.response?.data?.error ?? error.message,
       }));
-      if (error.response?.status === 401) {
+      const status = error.response?.status;
+      if (status === 401 || status === 403) {
         localStorage.removeItem("token");
       }
     }
   }, []);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
-      setState((prev) => ({ ...prev, getUserLoading: false }));
-      return;
-    }
     fetchUser();
   }, [fetchUser]);
 
@@ -68,14 +64,14 @@ function AuthProvider({ children }) {
 
       const response = await axios.post("/api/auth/login", { email, password });
 
-      const token = response.data?.data;
+      const token = response.data?.data.token;
       if (!token || typeof token !== "string") {
         setState((prev) => ({
           ...prev,
           loading: false,
           error: "Invalid login response: no token",
         }));
-        return { error: "Invalid login response: no token" };
+        return { error: "Invalid login response: no token" };  
       }
 
       localStorage.setItem("token", token);
@@ -118,6 +114,9 @@ function AuthProvider({ children }) {
   const logout = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("token");
+      window.location.href = "/";
+    } else {
+      router.push("/");
     }
     setState((prev) => ({
       ...prev,
@@ -125,7 +124,6 @@ function AuthProvider({ children }) {
       loading: false,
       error: null,
     }));
-    router.push("/login");
   };
 
   const value = {
