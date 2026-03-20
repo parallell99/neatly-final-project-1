@@ -743,8 +743,14 @@ export default function PaymentMethodForm({
               locale: "en",
               appearance: {
                 variables: {
-                  fontSizeBase: isLg ? "30px" : "16px",
-                  fontSizeSm: isLg ? "30px" : "14px",
+                  colorPrimary: "#E76B39",
+                  colorBackground: "#ffffff",
+                  colorText: "#2A2E3F",
+                  colorDanger: "#ef4444",
+                  fontSizeBase: isLg ? "16px" : "14px",
+                  fontSizeSm: isLg ? "14px" : "13px",
+                  spacingUnit: isLg ? "4px" : "3px",
+                  borderRadius: "8px",
                 },
               },
             }}

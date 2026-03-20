@@ -537,32 +537,47 @@ div[class*="stripe-devtools"] {
   display: none !important;
 }
 
-/* Stripe PaymentElement: prevent country field clipping on narrow screens */
-.stripe-payment-element--payment-method .__PrivateStripeElement iframe {
-  /* Keep a consistent height range */
-  min-height: clamp(250px, 55vh, 520px) !important;
-  height: clamp(250px, 55vh, 520px) !important;
-  max-height: clamp(250px, 55vh, 520px) !important;
+/*
+ * Stripe PaymentElement sizing
+ * Set min-height on wrapper + iframe so content doesn't clip at the bottom.
+ * Never force a fixed height — let Stripe auto-expand above the floor.
+ */
+.stripe-payment-element--payment-method,
+.stripe-payment-element--checkout {
+  overflow: visible !important;
+  width: 100%;
 }
 
+.stripe-payment-element--payment-method .__PrivateStripeElement,
+.stripe-payment-element--checkout .__PrivateStripeElement {
+  overflow: visible !important;
+}
+
+.stripe-payment-element--payment-method .__PrivateStripeElement iframe,
 .stripe-payment-element--checkout .__PrivateStripeElement iframe {
-  /* Booking checkout: keep actions visible */
-  min-height: clamp(260px, 45vh, 350px) !important;
-  height: clamp(260px, 45vh, 350px) !important;
-  max-height: clamp(260px, 45vh, 350px) !important;
+  min-height: 400px !important;
+}
+
+.stripe-payment-element--payment-method {
+  min-height: 400px;
+}
+
+.stripe-payment-element--checkout {
+  min-height: 400px;
 }
 
 @media (min-width: 1024px) {
-  .stripe-payment-element--payment-method .__PrivateStripeElement iframe {
-    min-height: clamp(100px, 45vh, 400px) !important;
-    height: clamp(100px, 45vh, 400px) !important;
-    max-height: clamp(100px, 45vh, 400px) !important;
+  .stripe-payment-element--payment-method .__PrivateStripeElement iframe,
+  .stripe-payment-element--checkout .__PrivateStripeElement iframe {
+    min-height: 480px !important;
   }
 
-  .stripe-payment-element--checkout .__PrivateStripeElement iframe {
-    min-height: clamp(550px, 35vh, 900px) !important;
-    height: clamp(550px, 35vh, 900px) !important;
-    max-height: clamp(550px, 35vh, 900px) !important;
+  .stripe-payment-element--payment-method {
+    min-height: 480px;
+  }
+
+  .stripe-payment-element--checkout {
+    min-height: 480px;
   }
 }
 
