@@ -21,7 +21,6 @@ const getImageSrc = (img) => {
   if (typeof img === 'string') return img;
   return img?.src ?? String(img);
 };
-//special
 
 export default function Navbar() {
   const router = useRouter();
@@ -29,7 +28,6 @@ export default function Navbar() {
   const { isAuthenticated, user, userRole, logout } = useAuth();
   const isAgent = userRole === "agent";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [navbarHeight, setNavbarHeight] = useState(0);
   const [navLogoUrl, setNavLogoUrl] = useState(null);
   const navRef = useRef(null);
 
@@ -62,12 +60,6 @@ export default function Navbar() {
     }
   };
 
-  // คำนวณความสูงของ navbar
-  useEffect(() => {
-    if (navRef.current) {
-      setNavbarHeight(navRef.current.offsetHeight);
-    }
-  }, []);
 
   // จัดการ body scroll เมื่อเปิด/ปิด menu
   useEffect(() => {
@@ -454,15 +446,6 @@ export default function Navbar() {
                 )}
                 {isAgent && (
                   <>
-                    <Link
-                      href="/admin/customer-booking"
-                      className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
-                      onClick={toggleMenu}
-                    >
-                      <img src={adminIcon?.src || adminIcon || ''} alt="Admin panel" className="w-5 h-5 brightness-0 opacity-60" />
-                      Admin Panel
-                    </Link>
-
                     <Link
                       href="/special-offers"
                       className="flex items-center pl-3 gap-5 text-gray-600 font-sans text-base hover:text-[#4A6D6C] transition-colors"
