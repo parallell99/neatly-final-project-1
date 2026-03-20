@@ -34,6 +34,9 @@ export default function BasicInformationForm({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("");
+  const today = startOfDay(new Date());
+  const maxBirth = subYears(today, 12);
+  const maxBirthYear = maxBirth.getFullYear();
 
   const handleNext = () => {
     const phone = getValues("phoneNumber") ?? "";
@@ -176,12 +179,11 @@ export default function BasicInformationForm({
             <PopoverContent className="w-auto p-0 bg-white shadow-md border">
               <Calendar
                 mode="single"
-                defaultMonth={date ?? subYears(new Date(), 12)}
+                defaultMonth={date ?? subYears(today, 12)}
                 selected={date}
+                toYear={maxBirthYear}
                 onSelect={setDate}
                 disabled={(day) => {
-                  const today = startOfDay(new Date());
-                  const maxBirth = subYears(today, 12);
                   return day > today || day > maxBirth;
                 }}
                 initialFocus
