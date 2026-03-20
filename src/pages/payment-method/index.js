@@ -71,13 +71,19 @@ export default function PaymentMethodPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
-  const [isLg, setIsLg] = useState(false);
+  const [isLg, setIsLg] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.matchMedia("(min-width: 1024px)").matches;
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const media = window.matchMedia("(min-width: 1024px)");
     const update = () => setIsLg(!!media.matches);
-    update();
     if (typeof media.addEventListener === "function") {
       media.addEventListener("change", update);
       return () => media.removeEventListener("change", update);
@@ -176,7 +182,7 @@ export default function PaymentMethodPage() {
               </h1>
             </header>
 
-            <div className="bg-[#F1F2F6] rounded-lg px-6 py-8 lg:px-10 lg:py-12 shadow-sm">
+            <div className="bg-[#F1F2F6] rounded-lg px-3 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-12 shadow-sm">
               <div className="w-full max-w-[980px] mx-auto">
                 <h2 className="font-sans text-lg font-semibold text-[#7C8194] mb-6 lg:pl-20">
                   Credit Card
@@ -256,8 +262,14 @@ export default function PaymentMethodPage() {
                       locale: "en",
                       appearance: {
                         variables: {
+                          colorPrimary: "#E76B39",
+                          colorBackground: "#ffffff",
+                          colorText: "#2A2E3F",
+                          colorDanger: "#ef4444",
                           fontSizeBase: isLg ? "16px" : "14px",
-                          fontSizeSm: isLg ? "16px" : "14px",
+                          fontSizeSm: isLg ? "14px" : "13px",
+                          spacingUnit: isLg ? "4px" : "3px",
+                          borderRadius: "8px",
                         },
                       },
                     }}
