@@ -555,15 +555,15 @@ div[class*="stripe-devtools"] {
 
 .stripe-payment-element--payment-method .__PrivateStripeElement iframe,
 .stripe-payment-element--checkout .__PrivateStripeElement iframe {
-  min-height: 400px !important;
+  min-height: 550px !important;
 }
 
 .stripe-payment-element--payment-method {
-  min-height: 400px;
+  min-height: 550px;
 }
 
 .stripe-payment-element--checkout {
-  min-height: 400px;
+  min-height: 550px;
 }
 
 @media (min-width: 1024px) {

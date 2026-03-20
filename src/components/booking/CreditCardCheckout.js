@@ -37,29 +37,9 @@ export default function CreditCardCheckout({
   const stripe = useStripe();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLg, setIsLg] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.matchMedia("(min-width: 1024px)").matches;
-    } catch {
-      return false;
-    }
-  });
   const [showReauth, setShowReauth] = useState(false);
   const [password, setPassword] = useState("");
   const [reauthError, setReauthError] = useState(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsLg(!!media.matches);
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", update);
-      return () => media.removeEventListener("change", update);
-    }
-    media.addListener(update);
-    return () => media.removeListener(update);
-  }, []);
 
   const handleConfirmSavedCard = () => {
     setShowReauth(true);
@@ -269,7 +249,6 @@ export default function CreditCardCheckout({
       <div className="flex flex-col gap-10 mt-4">
       {(useNewCard || savedCards.length === 0) && clientSecret ? (
         <Elements
-          key={isLg ? "lg" : "mobile"}
           stripe={stripePromise}
           options={{
             clientSecret,
@@ -280,9 +259,9 @@ export default function CreditCardCheckout({
                 colorBackground: "#ffffff",
                 colorText: "#2A2E3F",
                 colorDanger: "#ef4444",
-                fontSizeBase: isLg ? "16px" : "14px",
-                fontSizeSm: isLg ? "14px" : "13px",
-                spacingUnit: isLg ? "4px" : "3px",
+                fontSizeBase: "16px",
+                fontSizeSm: "14px",
+                spacingUnit: "4px",
                 borderRadius: "8px",
               },
             },
