@@ -57,10 +57,10 @@ export default function Login() {
                             onSubmit={handleSubmit(onSubmit)}
                         >
                             <Input
-                                label="Username or Email"
+                                label="Email"
                                 name="email"
                                 type="text"
-                                placeholder="Enter your username or email"
+                                placeholder="Enter your email"
                                 register={register}
                                 error={errors.email}
                                 required
