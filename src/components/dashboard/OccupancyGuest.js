@@ -102,6 +102,24 @@ function formatRoomNights(value) {
   }).format(Math.round(n));
 }
 
+/** X-axis tick: month label + date range (room types bar chart) */
+function RoomTypesBarChartXAxisTick({ x, y, payload, index, chartData = [] }) {
+  const date = payload?.value ?? "";
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        textAnchor="middle"
+        fill="var(--gray-700)"
+        fontSize={11}
+      >
+        <tspan x={0} dy={0}>
+          {date}
+        </tspan>
+      </text>
+    </g>
+  );
+}
+
 const GRANULARITY_OPTIONS = [
   { id: "day", label: "Day" },
   { id: "month", label: "Month" },
@@ -213,7 +231,8 @@ function OccupancyGuestCard({
         if (dateFrom && rangeStart < dateFrom) rangeStart = dateFrom;
         if (dateTo && rangeEnd > dateTo) rangeEnd = dateTo;
         const rangeText = `${format(rangeStart, "d MMM yyyy")} - ${format(rangeEnd, "d MMM yyyy")}`;
-        return { ...row, rangeText };
+        const xAxisDateRange = `${format(rangeStart, "d MMM")} – ${format(rangeEnd, "d MMM yyyy")}`;
+        return { ...row, rangeText, xAxisDateRange };
       }
 
       // month
@@ -222,7 +241,8 @@ function OccupancyGuestCard({
       if (dateFrom && rangeStart < dateFrom) rangeStart = dateFrom;
       if (dateTo && rangeEnd > dateTo) rangeEnd = dateTo;
       const rangeText = `${format(rangeStart, "d MMM yyyy")} - ${format(rangeEnd, "d MMM yyyy")}`;
-      return { ...row, rangeText };
+      const xAxisDateRange = `${format(rangeStart, "d MMM")} – ${format(rangeEnd, "d MMM yyyy")}`;
+      return { ...row, rangeText, xAxisDateRange };
     });
   }, [data.occupancyByRoomTypeSeries, effectiveGranularity, dateFrom, dateTo]);
 
@@ -585,8 +605,15 @@ function OccupancyGuestCard({
                         dataKey="monthLabel"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: "var(--gray-700)", fontSize: 12 }}
-                        tickMargin={8}
+                        interval={0}
+                        tickMargin={10}
+                        height={52}
+                        tick={(tickProps) => (
+                          <RoomTypesBarChartXAxisTick
+                            {...tickProps}
+                            chartData={occupancyByRoomTypeChartData}
+                          />
+                        )}
                       />
                       <YAxis
                         domain={[0, 100]}
@@ -598,6 +625,8 @@ function OccupancyGuestCard({
                         tickMargin={8}
                       />
                       <Tooltip
+                        isAnimationActive={false}
+                        wrapperStyle={{ zIndex: 50, pointerEvents: "none" }}
                         content={
                           <OccupancyByRoomTypeTooltip
                             roomTypes={data.roomTypes}
@@ -630,7 +659,6 @@ function OccupancyGuestCard({
                       ))}
                     </BarChart>
                   </ResponsiveContainer>
-
                 </div>
               )}
             </div>
@@ -897,6 +925,9 @@ function OccupancyGuestSkeleton() {
   );
 }
 
+/** Max room-type rows in bar chart tooltip; remainder summarized to avoid layout shift. */
+const OCC_ROOM_TYPE_TOOLTIP_MAX = 8;
+
 const OCC_TOOLTIP_BOX =
   "rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm shadow-md";
 const OCC_TOOLTIP_TITLE = "font-semibold text-gray-900";
@@ -1039,32 +1070,49 @@ function OccupancyTooltip({ active, payload, granularity = "month" }) {
 function OccupancyByRoomTypeTooltip({ active, payload, roomTypes = [], colors = [] }) {
   if (!active || !payload?.length) return null;
   const { monthLabel, rangeText } = payload[0].payload;
+
+  const sorted = [...payload].sort(
+    (a, b) => (Number(b.value) || 0) - (Number(a.value) || 0),
+  );
+  const visibleEntries = sorted.slice(0, OCC_ROOM_TYPE_TOOLTIP_MAX);
+  const hiddenCount = sorted.length - visibleEntries.length;
+
   return (
     <aside
       role="tooltip"
       aria-label="Occupancy by room type tooltip"
       className={OCC_TOOLTIP_BOX}
+      style={{
+        maxHeight: 220,
+        display: "flex",
+        flexDirection: "column",
+        /* Recharts Tooltip wrapper uses pointerEvents: "none"; re-enable on content so the list can scroll. */
+        pointerEvents: "auto",
+      }}
     >
       <p className={OCC_TOOLTIP_TITLE}>{monthLabel}</p>
       {rangeText && (
         <p className={`mt-1 ${OCC_TOOLTIP_MUTED}`}>{rangeText}</p>
       )}
-      <ul className="mt-2 flex flex-col gap-1" role="list">
-        {payload.map((entry, i) => {
+      <ul
+        className="mt-2 flex flex-col gap-1 overflow-y-auto"
+        role="list"
+        style={{ maxHeight: 140 }}
+      >
+        {visibleEntries.map((entry, i) => {
           const roomType = roomTypes.find((rt) => rt.id === entry.name)?.label ?? entry.name;
           const color = entry.color ?? colors[i % colors.length];
           return (
-            <li
-              key={entry.name}
-              className="flex items-center justify-between gap-4"
-            >
+            <li key={entry.name} className="flex items-center justify-between gap-4">
               <span className={`flex min-w-0 items-center gap-2 ${OCC_TOOLTIP_MUTED}`}>
                 <span
                   className="h-2 w-2 shrink-0 rounded-full"
                   style={{ backgroundColor: color }}
                   aria-hidden
                 />
-                <span className="truncate">{roomType}</span>
+                <span className="truncate" title={roomType}>
+                  {roomType}
+                </span>
               </span>
               <span className={`shrink-0 tabular-nums ${OCC_TOOLTIP_VALUE}`}>
                 {formatPercent(entry.value)}%
@@ -1072,6 +1120,11 @@ function OccupancyByRoomTypeTooltip({ active, payload, roomTypes = [], colors = 
             </li>
           );
         })}
+        {hiddenCount > 0 && (
+          <li className={`pt-0.5 text-xs ${OCC_TOOLTIP_MUTED}`}>
+            +{hiddenCount} more room type{hiddenCount === 1 ? "" : "s"}
+          </li>
+        )}
       </ul>
     </aside>
   );
