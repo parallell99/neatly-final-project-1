@@ -9,6 +9,7 @@ import { useAmenitiesModal } from "@/hooks/useAmenitiesModal";
 import { useMainImage } from "@/hooks/useMainImage";
 import { useGalleryNewFiles } from "@/hooks/useGalleryNewFiles";
 import AmenitiesModal from "@/components/admin/AmenitiesModal";
+import Button from "@/components/ui/buttons/buttons";
 
 const BED_OPTIONS = [
   { value: "single", label: "Single bed" },
@@ -17,8 +18,7 @@ const BED_OPTIONS = [
   { value: "twin", label: "Twin bed" },
 ];
 
-const GUEST_OPTIONS = [2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: String(n) }));
-const KID_OPTIONS = [0, 1, 2, 3, 4, 5, 6].map((n) => ({ value: String(n), label: String(n) }));
+
 function formatPriceInput(value) {
   if (value == null || value === "") return "";
   const n = Number(value);
@@ -39,6 +39,7 @@ export default function EditRoom() {
   const [notFound, setNotFound] = useState(false);
   const [amenitiesList, setAmenitiesList] = useState([]);
   const [initialTotalRooms, setInitialTotalRooms] = useState(1);
+  const [bedTypeId, setBedTypeId] = useState(null);
   const [form, setForm] = useState({
     roomType: "",
     roomSize: "",
@@ -61,12 +62,73 @@ export default function EditRoom() {
   const [amenityDropTargetIndex, setAmenityDropTargetIndex] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [errors, setErrors] = useState({});
   const [deleting, setDeleting] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const amenitiesModal = useAmenitiesModal(setAmenitiesList);
   const mainImage = useMainImage({ initialUrl: mainImageUrl, setInitialUrl: setMainImageUrl });
   const galleryNew = useGalleryNewFiles();
+
+  const clearError = (key) => {
+    setErrors((prev) => {
+      if (!prev || !prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const clearAmenityError = (index) => {
+    setErrors((prev) => {
+      const map = prev?.amenities;
+      if (!map || !map[index]) return prev;
+      const nextAmenities = { ...map };
+      delete nextAmenities[index];
+      const next = { ...prev, amenities: nextAmenities };
+      if (Object.keys(nextAmenities).length === 0) delete next.amenities;
+      return next;
+    });
+  };
+
+  const validate = () => {
+    const next = {};
+
+    if (!form.roomType?.trim()) next.roomType = true;
+    if (!form.roomSize?.trim() || !/^\d+$/.test(form.roomSize.trim()) || Number(form.roomSize) <= 0) next.roomSize = true;
+    if (!form.bedType?.trim()) next.bedType = true;
+    if (!form.guests?.trim() || !/^\d+$/.test(form.guests.trim()) || Number(form.guests) <= 0) next.guests = true;
+    if (!form.kids?.trim() || !/^-?\d+$/.test(form.kids.trim()) || !Number.isInteger(Number(form.kids)) || Number(form.kids) < 0) next.kids = true;
+    if (!form.totalRooms?.trim() || !/^\d+$/.test(form.totalRooms.trim()) || Number(form.totalRooms) < initialTotalRooms) next.totalRooms = true;
+
+    const priceNum = parsePriceString(form.pricePerNight);
+    if (!form.pricePerNight?.trim() || priceNum === null || priceNum <= 0) next.pricePerNight = true;
+    if (form.promotionChecked) {
+      const promoNum = parsePriceString(form.promotionPrice);
+      if (!form.promotionPrice?.trim() || promoNum === null || promoNum <= 0) {
+        next.promotionPrice = true;
+      } else if (!next.pricePerNight && priceNum !== null && promoNum >= priceNum) {
+        next.promotionPrice = true;
+      }
+    }
+
+    if (!form.description?.trim()) next.description = true;
+
+    if (!mainImageUrl && !mainImage.file) next.mainImage = true;
+
+    const existingCount = galleryExisting.filter((g) => !galleryRemoveIds.includes(g.id)).length;
+    const newCount = galleryNew.files?.length ?? 0;
+    if (existingCount + newCount < 4) next.gallery = true;
+
+    const amenityErrors = {};
+    (form.amenities ?? []).forEach((a, idx) => {
+      if (!String(a ?? "").trim()) amenityErrors[idx] = true;
+    });
+    if (Object.keys(amenityErrors).length > 0) next.amenities = amenityErrors;
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -86,12 +148,15 @@ export default function EditRoom() {
           return;
         }
         const r = json.data;
+        // Check "king" before "double" to avoid "Double Bed (king size)" matching "double" first
+        const BED_OPTIONS_ORDERED = ["king", "single", "twin", "double"];
         const bedValue =
-          BED_OPTIONS.find(
-            (o) =>
+          BED_OPTIONS_ORDERED.find(
+            (v) =>
               r.bed_type?.name &&
-              r.bed_type.name.toLowerCase().includes(o.value.toLowerCase())
-          )?.value || "double";
+              r.bed_type.name.toLowerCase().includes(v.toLowerCase())
+          ) || "double";
+        setBedTypeId(r.bed_type_id || null);
         setForm({
           roomType: r.name || "",
           roomSize: r.room_size != null ? String(r.room_size) : "",
@@ -137,6 +202,7 @@ export default function EditRoom() {
   }, []);
 
   const handleAmenityChange = (index, value) => {
+    clearAmenityError(index);
     setForm((f) => ({
       ...f,
       amenities: f.amenities.map((item, i) => (i === index ? value : item)),
@@ -262,30 +328,7 @@ export default function EditRoom() {
 
   const handleUpdate = async () => {
     if (!id) return;
-    if (!form.roomType.trim()) {
-      alert("Please fill in Room Type.");
-      return;
-    }
-    if (!form.pricePerNight.trim()) {
-      alert("Please fill in Price per Night.");
-      return;
-    }
-    const priceNum = parsePriceString(form.pricePerNight);
-    if (priceNum !== null && priceNum < 0) {
-      alert("Price per Night cannot be negative.");
-      return;
-    }
-    if (form.promotionChecked && form.promotionPrice.trim()) {
-      const promoNum = parsePriceString(form.promotionPrice);
-      if (promoNum !== null && promoNum < 0) {
-        alert("Promotion price cannot be negative.");
-        return;
-      }
-      if (promoNum !== null && priceNum !== null && promoNum > priceNum) {
-        alert("Promotion price must not be higher than Price per Night.");
-        return;
-      }
-    }
+    if (!validate()) return;
     setSaving(true);
     setSaveError(null);
     try {
@@ -332,6 +375,7 @@ export default function EditRoom() {
         roomType: form.roomType,
         roomSize: form.roomSize,
         bedType: bedLabel,
+        bedTypeId: bedTypeId,
         adults: form.guests,
         kids: form.kids,
         totalRooms:
@@ -427,17 +471,17 @@ export default function EditRoom() {
                   {form.roomType || "Edit Room"}
                 </h2>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={handleUpdate}
                 disabled={saving}
-                className="px-4 py-2 rounded bg-orange-600 text-white font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed w-[121px] h-[48px]"
-              >
-                {saving ? "Updating..." : "Update"}
-              </button>
+                buttonStyle="primary"
+                buttonText={saving ? "Updating..." : "Update"}
+                className="w-[121px] h-[48px] cursor-pointer items-center gap-2 rounded-[4px] !p-2"
+              />
             </div>
 
-            <form className="p-6 space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="px-[60px] py-[48px] space-y-6" onSubmit={(e) => e.preventDefault()}>
               {saveError && (
                 <p className="mb-4 text-sm text-red-600">{saveError}</p>
               )}
@@ -451,10 +495,20 @@ export default function EditRoom() {
                     <input
                       type="text"
                       value={form.roomType}
-                      onChange={(e) => setForm((f) => ({ ...f, roomType: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      onChange={(e) => {
+                        clearError("roomType");
+                        setForm((f) => ({ ...f, roomType: e.target.value }));
+                      }}
+                      className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                        errors.roomType
+                          ? "border-red-500 focus:ring-red-400"
+                          : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                      }`}
                       placeholder="e.g. Superior Garden View"
                     />
+                    {errors.roomType && (
+                      <p className="mt-1 text-sm text-red-600">Please fill form</p>
+                    )}
                   </div>
                   <div className="flex gap-4">
                     <div className="flex-1">
@@ -463,63 +517,133 @@ export default function EditRoom() {
                         type="text"
                         inputMode="numeric"
                         value={form.roomSize}
-                        onChange={(e) => setForm((f) => ({ ...f, roomSize: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        onChange={(e) => {
+                          clearError("roomSize");
+                          setForm((f) => ({ ...f, roomSize: e.target.value }));
+                        }}
+                        className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                          errors.roomSize
+                            ? "border-red-500 focus:ring-red-400"
+                            : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        }`}
                         placeholder="e.g. 32"
                       />
+                      {errors.roomSize && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {!form.roomSize?.trim()
+                            ? "Please fill form"
+                            : !/^\d+$/.test(form.roomSize.trim())
+                            ? "Must be a integer number at least 1"
+                            : "Must be at least 1"}
+                        </p>
+                      )}
                     </div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Bed type *</label>
                       <select
                         value={form.bedType}
-                        onChange={(e) => setForm((f) => ({ ...f, bedType: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        onChange={(e) => {
+                          clearError("bedType");
+                          setForm((f) => ({ ...f, bedType: e.target.value }));
+                          setBedTypeId(null);
+                        }}
+                        className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                          errors.bedType
+                            ? "border-red-500 focus:ring-red-400"
+                            : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        }`}
                       >
                         {BED_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
                         ))}
                       </select>
+                      {errors.bedType && (
+                        <p className="mt-1 text-sm text-red-600">Please fill form</p>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-4">
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Adult *</label>
-                      <select
+                      <input
+                        type="text"
+                        inputMode="numeric"
                         value={form.guests}
-                        onChange={(e) => setForm((f) => ({ ...f, guests: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      >
-                        {GUEST_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
+                        onChange={(e) => {
+                          clearError("guests");
+                          setForm((f) => ({ ...f, guests: e.target.value }));
+                        }}
+                        className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                          errors.guests
+                            ? "border-red-500 focus:ring-red-400"
+                            : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        }`}
+                      />
+                      {errors.guests && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {!form.guests?.trim()
+                            ? "Please fill form"
+                            : !/^\d+$/.test(form.guests.trim())
+                            ? "Must be a integer number at least 1"
+                            : "Must be at least 1"}
+                        </p>
+                      )}
                     </div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Kid(s)</label>
-                      <select
+                      <input
+                        type="text"
+                        inputMode="numeric"
                         value={form.kids}
-                        onChange={(e) => setForm((f) => ({ ...f, kids: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      >
-                        {KID_OPTIONS.map((o) => (
-                          <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                      </select>
+                        onChange={(e) => {
+                          clearError("kids");
+                          setForm((f) => ({ ...f, kids: e.target.value }));
+                        }}
+                        className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                          errors.kids
+                            ? "border-red-500 focus:ring-red-400"
+                            : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        }`}
+                      />
+                      {errors.kids && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {!form.kids?.trim()
+                            ? "Please fill form"
+                            : !/^-?\d+$/.test(form.kids.trim())
+                            ? "Must be a integer number at least 1"
+                            : "Cannot be negative"}
+                        </p>
+                      )}
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of rooms</label>
-                      <input
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Number of rooms *<span className="text-[12px] pl-3">(cannot be less than before)</span></label>
+                        <input
                         type="number"
+                        inputMode="numeric"
                         min={initialTotalRooms}
                         value={form.totalRooms}
                         onChange={(e) => {
-                          const v = e.target.value;
-                          if (v === "" || (Number(v) >= initialTotalRooms && Number(v) <= 999)) {
-                            setForm((f) => ({ ...f, totalRooms: v }));
+                          const val = e.target.value;
+                          if (val === "" || Number(val) >= initialTotalRooms) {
+                            clearError("totalRooms");
+                            setForm((f) => ({ ...f, totalRooms: val }));
                           }
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                          errors.totalRooms
+                            ? "border-red-500 focus:ring-red-400"
+                            : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        }`}
                       />
+                      {errors.totalRooms && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {!form.totalRooms?.trim()
+                            ? "Please fill form"
+                            : !/^\d+$/.test(form.totalRooms.trim())
+                            ? "Must be a integer number at least 1"
+                            : "Must be at least 1"}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-4">
@@ -534,11 +658,21 @@ export default function EditRoom() {
                           const cleaned = raw.replace(/[^\d.,]/g, "");
                           const num = parsePriceString(cleaned);
                           if (num !== null && num < 0) return;
+                          clearError("pricePerNight");
                           setForm((f) => ({ ...f, pricePerNight: cleaned }));
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                          errors.pricePerNight
+                            ? "border-red-500 focus:ring-red-400"
+                            : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        }`}
                         placeholder="e.g. 3,000.00"
                       />
+                      {errors.pricePerNight && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {!form.pricePerNight?.trim() ? "Please fill form" : "Must be a valid number greater than 0"}
+                        </p>
+                      )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -562,39 +696,47 @@ export default function EditRoom() {
                           const cleaned = raw.replace(/[^\d.,]/g, "");
                           const num = parsePriceString(cleaned);
                           if (num !== null && num < 0) return;
-                          setForm((f) => {
-                            const priceNum = parsePriceString(f.pricePerNight);
-                            if (num !== null && priceNum !== null && num > priceNum) return f;
-                            return { ...f, promotionPrice: cleaned };
-                          });
+                          clearError("promotionPrice");
+                          setForm((f) => ({ ...f, promotionPrice: cleaned }));
                         }}
                         disabled={!form.promotionChecked}
-                        className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-100 disabled:text-gray-500"
+                        className={`w-full px-3 py-2 border rounded focus:outline-none  disabled:bg-gray-100 disabled:text-gray-500 ${
+                          errors.promotionPrice
+                            ? "border-red-500 focus:ring-red-400"
+                            : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                        }`}
                         placeholder="e.g. 2,500.00"
                       />
-                      {form.promotionChecked && form.promotionPrice && (() => {
-                        const promoNum = parsePriceString(form.promotionPrice);
-                        const priceNum = parsePriceString(form.pricePerNight);
-                        if (promoNum != null && priceNum != null && promoNum > priceNum) {
-                          return (
-                            <p className="mt-1 text-sm text-red-600">
-                              Promotion price must not be higher than Price per Night.
-                            </p>
-                          );
-                        }
-                        return null;
-                      })()}
+                      {errors.promotionPrice && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {!form.promotionPrice?.trim()
+                            ? "Please fill form"
+                            : parsePriceString(form.promotionPrice) === null || parsePriceString(form.promotionPrice) <= 0
+                            ? "Must be a valid number greater than 0"
+                            : "Must be less than price per night"}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Room Description *</label>
                     <textarea
                       value={form.description}
-                      onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                      onChange={(e) => {
+                        clearError("description");
+                        setForm((f) => ({ ...f, description: e.target.value }));
+                      }}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      className={`w-full px-3 py-2 border rounded focus:outline-none  ${
+                        errors.description
+                          ? "border-red-500 focus:ring-red-400"
+                          : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                      }`}
                       placeholder="Describe the room..."
                     />
+                    {errors.description && (
+                      <p className="mt-1 text-sm text-red-600">Please fill form</p>
+                    )}
                   </div>
                 </div>
               </section>
@@ -605,7 +747,7 @@ export default function EditRoom() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Main Image *</label>
-                    <div className="relative w-[240px] h-[240px] rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300">
+                    <div className={`relative w-[240px] h-[240px] rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-gray-300 hover:border-orange-400 ${errors.mainImage? "border-red-600" : "border-gray-300"}`}>
                       <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:border-orange-400 transition-colors">
                         <input
                           ref={mainImage.inputRef}
@@ -633,6 +775,7 @@ export default function EditRoom() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
+                            setErrors((prev) => ({ ...prev, mainImage: true }));
                             mainImage.handleRemove(e);
                           }}
                           className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-red-500 z-10"
@@ -642,6 +785,9 @@ export default function EditRoom() {
                         </button>
                       )}
                     </div>
+                    {errors.mainImage && (
+                      <p className="mt-1 text-sm text-red-600">Please upload picture</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -718,7 +864,7 @@ export default function EditRoom() {
                         </div>
                       ))}
                       <label
-                        className={`w-[100px] h-[100px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-gray-500 transition-colors cursor-pointer bg-gray-50 ${
+                        className={`w-[100px] h-[100px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-gray-500 transition-colors cursor-pointer bg-gray-50 ${errors.gallery? "border-red-600" : "border-gray-300"} ${
                           galleryNew.dragActive
                             ? "border-orange-500 bg-orange-50"
                             : "border-gray-300 hover:border-orange-400"
@@ -730,11 +876,17 @@ export default function EditRoom() {
                           accept="image/*"
                           multiple
                           className="hidden"
-                          onChange={galleryNew.handleChange}
+                          onChange={(e) => {
+                            clearError("gallery");
+                            galleryNew.handleChange(e);
+                          }}
                         />
                         <span className="text-xl text-orange-500">+</span>
                         <span className="text-xs text-orange-500">Upload photo</span>
                       </label>
+                      {errors.gallery && (
+                        <p className="w-full mt-1 text-sm text-red-600">Please upload pitcures (at least 4 pictures)</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -783,7 +935,11 @@ export default function EditRoom() {
                           type="text"
                           value={amenity}
                           onChange={(e) => handleAmenityChange(index, e.target.value)}
-                          className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                          className={`flex-1 min-w-0 px-3 py-2 border rounded focus:outline-none  ${
+                            errors?.amenities?.[index]
+                              ? "border-red-500 focus:ring-red-400"
+                              : "border-gray-300 focus:ring-orange-500 focus:border-orange-500"
+                          }`}
                         />
                         <button
                           type="button"
@@ -803,7 +959,6 @@ export default function EditRoom() {
                                   typeof n === "string" ? n.trim().toLowerCase() : ""
                                 )
                                 .filter(Boolean);
-                              // ถ้าใช้ชื่อนี้อยู่แล้วในช่องไหนก็ตาม ไม่ต้องโชว์ใน suggestion
                               if (usedNames.includes(base)) return false;
                               if (amenity) {
                                 const current = amenity.toLowerCase().trim();
@@ -823,6 +978,9 @@ export default function EditRoom() {
                               </button>
                             ))}
                         </div>
+                      )}
+                      {errors?.amenities?.[index] && (
+                        <p className="ml-8 mt-1 text-sm text-red-600">Please fill form</p>
                       )}
                     </div>
                   ))}
@@ -861,7 +1019,7 @@ export default function EditRoom() {
                   type="button"
                   onClick={() => setDeleteModalOpen(true)}
                   disabled={deleting}
-                  className="text-sm text-red-600 hover:text-red-700 hover:underline disabled:opacity-50"
+                  className="text-sm text-red-600 hover:text-red-700 hover:underline disabled:opacity-50 cursor-pointer"
                 >
                   Delete Room
                 </button>

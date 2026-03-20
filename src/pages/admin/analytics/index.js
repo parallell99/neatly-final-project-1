@@ -109,7 +109,11 @@ function AnalyticDashboard() {
     const [occFrom, setOccFrom] = useState(
         () => new Date(currentYear, 0, 1)
     );
-    const [occTo, setOccTo] = useState(() => new Date());
+    const [occTo, setOccTo] = useState(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    });
     const [occViewBy, setOccViewBy] = useState("overall");
     const [occGranularity, setOccGranularity] = useState("month");
     const [occUseLive, setOccUseLive] = useState(false);

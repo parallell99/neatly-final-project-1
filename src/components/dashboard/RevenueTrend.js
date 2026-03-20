@@ -180,9 +180,15 @@ function RevenueTrendCard({
       ? `${format(dateFrom, "yyyy-MM-dd")}_${format(dateTo, "yyyy-MM-dd")}`
       : "revenue";
     const modeLabel = mode === "stay_date" ? "Stay Date" : "Booking Date";
+    const metricLabel = "Revenue (THB)";
     const csv =
-      `Period (${granularity} by ${modeLabel}),Revenue (THB)\n` +
-      chartData.map((d) => `${d.label},${d.revenue}`).join("\n");
+      `Period (${granularity} by ${modeLabel}),${metricLabel}\n` +
+      chartData
+        .map((d) => {
+          const v = Math.round(Number(d.revenue) || 0);
+          return `${d.label},${v}`;
+        })
+        .join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -413,9 +419,10 @@ function RevenueTrendCard({
                 tickLine={false}
                 tick={{ fill: "var(--gray-700)", fontSize: 12, textAnchor: "start", dx: -45,}}
                 ticks={yTicks}
-                tickFormatter={(v) =>
-                  v >= 1000 ? `${v / 1000},000` : String(v)
-                }
+                tickFormatter={(v) => {
+                  const n = Math.max(0, Number(v) || 0);
+                  return Math.round(n).toLocaleString();
+                }}
                 tickMargin={8}
               />
               <Tooltip
@@ -477,7 +484,7 @@ function RevenueTrendSkeleton() {
             tickLine={false}
             tick={{ fill: "var(--gray-700)", fontSize: 12, textAnchor: "start", dx: -45,}}
             tickFormatter={(v) =>
-              v >= 1000 ? `${v / 1000},000` : String(v)
+              Math.round(Math.max(0, Number(v) || 0)).toLocaleString()
             }
             tickMargin={8}
           />
@@ -499,13 +506,14 @@ function RevenueTrendTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
   const { label, revenue, rangeText } = payload[0].payload;
   const header = rangeText || label;
+  const amount = Math.max(0, Math.round(Number(revenue) || 0));
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-md px-3 py-2">
       <span className="body-2 font-medium text-gray-700">{header}</span>
       <p className="body-2 text-gray-600">
         Revenue:{" "}
         <span className="font-medium text-gray-900">
-          ฿{revenue.toLocaleString()}
+          ฿{amount.toLocaleString()}
         </span>
       </p>
     </div>

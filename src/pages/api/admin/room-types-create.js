@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     bedType,
     adults,
     kids,
-    roomCount, // ยังไม่ได้ใช้ แต่เก็บไว้เผื่ออนาคต
+    roomCount,
     pricePerNight,
     promotionChecked,
     promotionPrice,
@@ -63,6 +63,7 @@ export default async function handler(req, res) {
         bed_type_id: bedTypeId,
         room_guest_adult: toNumberOrNull(adults),
         room_guest_kid: toNumberOrNull(kids),
+        total_rooms: toNumberOrNull(roomCount),
         price_per_night: toNumberOrNull(pricePerNight),
         promotion_price_per_night:
           promotionChecked && promotionPrice
@@ -163,6 +164,36 @@ export default async function handler(req, res) {
             );
           }
         }
+      }
+    }
+
+    // สร้าง room_properties ตามจำนวนห้อง โดยเลขห้องต่อจาก MAX(room_number) ที่มีอยู่
+    const count = toNumberOrNull(roomCount) || 1;
+    if (count > 0) {
+      const { data: maxRow } = await supabaseAdmin
+        .from("room_properties")
+        .select("room_number")
+        .order("room_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const startNumber = (maxRow?.room_number ?? 0) + 1;
+
+      const roomRows = Array.from({ length: count }, (_, i) => ({
+        room_type_id: roomTypeId,
+        room_number: startNumber + i,
+        status_id: null,
+      }));
+
+      const { error: roomPropsError } = await supabaseAdmin
+        .from("room_properties")
+        .insert(roomRows);
+
+      if (roomPropsError) {
+        console.error(
+          "[admin/room-types-create] insert room_properties error:",
+          roomPropsError
+        );
       }
     }
 

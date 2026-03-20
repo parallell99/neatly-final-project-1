@@ -96,7 +96,7 @@ async function handleGet(req, res) {
       FROM public.room_types rt
       LEFT JOIN room_bed_type       rbt ON rbt.id = rt.bed_type_id
       JOIN  public.room_properties  rp  ON rp.room_type_id = rt.id
-      JOIN  public.room_status      rs  ON rs.id = rp.status_id
+      LEFT JOIN public.room_status  rs  ON rs.id = rp.status_id
       LEFT JOIN booked_counts       bc  ON bc.room_type_id = rt.id
       LEFT JOIN unavailable_counts  uc  ON uc.room_type_id = rt.id
 
