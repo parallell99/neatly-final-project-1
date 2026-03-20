@@ -71,26 +71,6 @@ export default function PaymentMethodPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
-  const [isLg, setIsLg] = useState(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.matchMedia("(min-width: 1024px)").matches;
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsLg(!!media.matches);
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", update);
-      return () => media.removeEventListener("change", update);
-    }
-    media.addListener(update);
-    return () => media.removeListener(update);
-  }, []);
 
   useEffect(() => {
     if (!user?.stripe_customer_id) return;
@@ -255,7 +235,6 @@ export default function PaymentMethodPage() {
               {user && !error && clientSecret && (
                 <div className="w-full max-w-[820px] mx-auto">
                   <Elements
-                    key={isLg ? "lg" : "mobile"}
                     stripe={stripePromise}
                     options={{
                       clientSecret,
@@ -266,9 +245,9 @@ export default function PaymentMethodPage() {
                           colorBackground: "#ffffff",
                           colorText: "#2A2E3F",
                           colorDanger: "#ef4444",
-                          fontSizeBase: isLg ? "16px" : "14px",
-                          fontSizeSm: isLg ? "14px" : "13px",
-                          spacingUnit: isLg ? "4px" : "3px",
+                          fontSizeBase: "16px",
+                          fontSizeSm: "14px",
+                          spacingUnit: "4px",
                           borderRadius: "8px",
                         },
                       },
