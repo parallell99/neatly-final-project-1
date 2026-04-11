@@ -6,6 +6,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("[promotion] Missing env vars: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    return res.status(500).json({ message: "Server configuration error" });
+  }
+
   const { code, subtotal, appliedPromotionIds } = req.query ?? {};
 
   if (!code || typeof code !== "string") {
@@ -36,7 +45,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (error) {
-      console.error("Fetch promotion failed:", error);
+      console.error("[promotion] Fetch promotion failed. code:", trimmedCode, "| error:", error.message ?? error);
       return res.status(500).json({ message: "Failed to load promotion" });
     }
 
@@ -104,10 +113,9 @@ export default async function handler(req, res) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      if (!supabaseUrl || !supabaseAnonKey) {
-        return res.status(500).json({ message: "Missing Supabase env vars" });
+      if (!supabaseAnonKey) {
+        console.error("[promotion] Missing env var: NEXT_PUBLIC_SUPABASE_ANON_KEY");
+        return res.status(500).json({ message: "Server configuration error" });
       }
 
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
