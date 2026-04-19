@@ -76,6 +76,9 @@ export default function UserProfile() {
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateError, setUpdateError] = useState(null);
   const fileInputRef = useRef(/** @type {HTMLInputElement | null} */(null));
+  const today = startOfDay(new Date());
+  const maxBirth = subYears(today, MINIMUM_AGE);
+  const maxBirthYear = maxBirth.getFullYear();
 
   const {
     register,
@@ -299,6 +302,7 @@ export default function UserProfile() {
               placeholder="Email"
               register={register}
               error={errors.email}
+              disabled
             />
             <PhoneInput
               label="Phone number"
@@ -335,8 +339,9 @@ export default function UserProfile() {
                 <PopoverContent className="w-auto p-0 bg-white shadow-md border">
                   <CalendarComponent
                     mode="single"
-                    defaultMonth={dateOfBirth ?? subYears(new Date(), 12)}
+                    defaultMonth={dateOfBirth ?? subYears(today, MINIMUM_AGE)}
                     selected={dateOfBirth ?? undefined}
+                    toYear={maxBirthYear}
                     onSelect={(d) => {
                       setDateOfBirth(d ?? null);
                       setValue("dateOfBirth", d ? format(d, "yyyy-MM-dd") : "", {
@@ -344,8 +349,6 @@ export default function UserProfile() {
                       });
                     }}
                     disabled={(day) => {
-                      const today = startOfDay(new Date());
-                      const maxBirth = subYears(today, MINIMUM_AGE);
                       return day > today || day > maxBirth;
                     }}
                     initialFocus

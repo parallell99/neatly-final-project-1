@@ -185,6 +185,10 @@ export default function Register() {
     }
   };
 
+  // Birthdate constraint: hide "years" that would make user younger than 12.
+  const today = startOfDay(new Date());
+  const maxBirth = subYears(today, 12);
+  const maxBirthYear = maxBirth.getFullYear();
 
   return (
     <div className="min-h-screen relative">
@@ -312,6 +316,7 @@ export default function Register() {
                         mode="single"
                         defaultMonth={date ?? subYears(new Date(), 12)}
                         selected={date}
+                      toYear={maxBirthYear}
                         onSelect={(selectedDate) => {
                           setDate(selectedDate);
                           setValue(
@@ -321,8 +326,6 @@ export default function Register() {
                           );
                         }}
                         disabled={(day) => {
-                          const today = startOfDay(new Date());
-                          const maxBirth = subYears(today, 12);
                           return day > today || day > maxBirth;
                         }}
                         initialFocus

@@ -53,22 +53,8 @@ export default function PaymentMethodForm({
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [useNewCard, setUseNewCard] = useState(false);
-  const [isLg, setIsLg] = useState(false);
-
   const hasCreatedPI = useRef(false);
   const lastTotalRef = useRef(null);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsLg(!!media.matches);
-    update();
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", update);
-      return () => media.removeEventListener("change", update);
-    }
-    media.addListener(update);
-    return () => media.removeListener(update);
-  }, []);
 
   const [order, setOrder] = useState(null);
   const [room, setRoom] = useState(null);
@@ -730,15 +716,20 @@ export default function PaymentMethodForm({
       {method === "credit-card" && clientSecret && (
         <div className="w-full max-w-[820px] mx-auto">
           <Elements
-            key={isLg ? "lg" : "mobile"}
             stripe={stripePromise}
             options={{
               clientSecret,
               locale: "en",
               appearance: {
                 variables: {
-                  fontSizeBase: isLg ? "30px" : "16px",
-                  fontSizeSm: isLg ? "30px" : "14px",
+                  colorPrimary: "#E76B39",
+                  colorBackground: "#ffffff",
+                  colorText: "#2A2E3F",
+                  colorDanger: "#ef4444",
+                  fontSizeBase: "14px",
+                  fontSizeSm: "14px",
+                  spacingUnit: "5px",
+                  borderRadius: "8px",
                 },
               },
             }}

@@ -277,11 +277,11 @@ export default function ChatbotWindow({ onClose }) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/40 z-[60] lg:hidden" onClick={onClose} />
       {/* Chat window */}
       <div
         className={[
-          "fixed bottom-0 left-0 right-0 h-[calc(831/871*100%)] rounded-t-[8px] lg:bottom-26 lg:right-6 lg:left-auto lg:w-[calc(454/1440*100%)] lg:h-[calc(625/1000*100%)] lg:max-h-[850px] lg:max-w-[600px] lg:rounded-xl bg-white flex flex-col z-50",
+          "fixed bottom-0 left-0 right-0 h-[calc(831/871*100%)] rounded-t-[8px] lg:bottom-26 lg:right-6 lg:left-auto lg:w-[calc(454/1440*100%)] lg:h-[calc(625/1000*100%)] lg:max-h-[850px] lg:max-w-[600px] lg:rounded-xl bg-white flex flex-col z-[70]",
           "transition-all duration-200 ease-out will-change-transform",
           animateIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
         ].join(" ")}
@@ -292,7 +292,7 @@ export default function ChatbotWindow({ onClose }) {
             <div className="w-[40px] h-[40px] bg-green-100 rounded-full flex justify-center items-center">
               <ChatbotLogo className="w-[32px] h-[32px]" alt="" aria-hidden />
             </div>
-            <span className="headline-5 text-gray-900">Neatly Assistant</span>
+            <span className="lg:text-[20px]! headline-5 text-[16px]! text-gray-900">Neatly Assistant</span>
           </div>
           <div className="flex items-center gap-1 pr-2">
             {/* ปุ่ม New Conversation */}

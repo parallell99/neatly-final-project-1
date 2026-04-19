@@ -71,20 +71,6 @@ export default function PaymentMethodPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [savedCards, setSavedCards] = useState([]);
   const [loadingCards, setLoadingCards] = useState(false);
-  const [isLg, setIsLg] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const media = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsLg(!!media.matches);
-    update();
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", update);
-      return () => media.removeEventListener("change", update);
-    }
-    media.addListener(update);
-    return () => media.removeListener(update);
-  }, []);
 
   useEffect(() => {
     if (!user?.stripe_customer_id) return;
@@ -176,7 +162,7 @@ export default function PaymentMethodPage() {
               </h1>
             </header>
 
-            <div className="bg-[#F1F2F6] rounded-lg px-6 py-8 lg:px-10 lg:py-12 shadow-sm">
+            <div className="bg-[#F1F2F6] rounded-lg px-3 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-12 shadow-sm">
               <div className="w-full max-w-[980px] mx-auto">
                 <h2 className="font-sans text-lg font-semibold text-[#7C8194] mb-6 lg:pl-20">
                   Credit Card
@@ -249,15 +235,20 @@ export default function PaymentMethodPage() {
               {user && !error && clientSecret && (
                 <div className="w-full max-w-[820px] mx-auto">
                   <Elements
-                    key={isLg ? "lg" : "mobile"}
                     stripe={stripePromise}
                     options={{
                       clientSecret,
                       locale: "en",
                       appearance: {
                         variables: {
-                          fontSizeBase: isLg ? "16px" : "14px",
-                          fontSizeSm: isLg ? "16px" : "14px",
+                          colorPrimary: "#E76B39",
+                          colorBackground: "#ffffff",
+                          colorText: "#2A2E3F",
+                          colorDanger: "#ef4444",
+                          fontSizeBase: "14px",
+                          fontSizeSm: "14px",
+                          spacingUnit: "5px",
+                          borderRadius: "8px",
                         },
                       },
                     }}
