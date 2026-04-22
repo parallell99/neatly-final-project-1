@@ -1,40 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Neatly Final Project
 
-## Getting Started
+Hotel booking web application with a complete user booking flow and an agent/admin dashboard for operations and analytics.
 
-First, run the development server:
+## Live Demo
+
+- Deployed on **Vercel**
+- Production URL: `https://neatly-final-project-1.vercel.app/`
+
+## Demo Accounts (2 Roles)
+
+### 1) Agent
+
+- Email: `agent1@gmail.com`
+- Password: `123456`
+- Access: admin management and analytics dashboard
+
+### 2) User
+
+- Email: `customer@gmail.com`
+- Password: `123456`
+- Access: booking flow and customer-facing features
+
+## Why This Project Stands Out
+
+- Full-stack implementation using Next.js Pages Router + API routes
+- Real business flow: room search, booking, payment, booking action, notifications
+- Dual-mode analytics (mock/live) with role-based access control
+- Integrated external services: Supabase, Stripe, Resend, OpenRouter chatbot
+- Component-driven UI with reusable dashboard and form modules
+
+## Core Features
+
+### User Side
+
+- Authentication (register/login)
+- Search rooms and room detail pages
+- Booking flow with guest info, special requests, and payment
+- Booking status pages (success/failed) and booking history
+- Promotion support and order update endpoints
+
+### Agent Side
+
+- Protected admin area (role = `agent`)
+- Room and amenity management
+- Promotion management
+- Customer booking monitoring and details
+- Analytics dashboard:
+  - Room Availability
+  - Booking Trends by Day
+  - Revenue Trend
+  - Occupancy & Guest
+  - Check-in / Check-out averages
+  - Website Traffic
+
+## Tech Stack
+
+- Frontend: Next.js 16, React 19, Tailwind CSS
+- UI/Charts: Radix UI, Recharts, Lucide icons
+- Backend: Next.js API routes
+- Database/Auth data layer: Supabase
+- Payment: Stripe
+- Email: Resend
+- Validation and form handling: Zod, React Hook Form
+
+## Project Structure (High Level)
+
+```bash
+src/
+  components/        # Reusable UI and feature components
+  features/          # Business logic modules (service/controller/repository)
+  hooks/             # Frontend data-fetching and state hooks
+  lib/               # Shared libraries (fetchers, transformers, integrations)
+  pages/             # Next.js pages + API routes
+  utils/             # Utility helpers and mock data
+```
+
+## Environment Variables
+
+Create `.env.local` and configure:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+RESEND_API_KEY=
+OPENROUTER_API_KEY=
+CONNECTION_STRING=
+```
+
+## Getting Started (Local)
+
+### Prerequisites
+
+- Node.js 18+ (recommended LTS)
+- npm
+
+### Installation
+
+```bash
+npm install
+```
+
+### Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+### Build for Production
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+```bash
+npm run build
+npm run start
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+### Lint
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+```
 
-## Learn More
+## API Overview
 
-To learn more about Next.js, take a look at the following resources:
+Representative endpoints:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+- Auth: `/api/auth/login`, `/api/auth/register`, `/api/auth/user`
+- Booking: `/api/booking/create-order`, `/api/booking/update-payment-status`
+- Admin analytics: `/api/admin/analytics/booking-trends`, `/api/admin/analytics/revenue-trend`, `/api/admin/analytics/occupancy-guest`
+- Payments: `/api/stripe/create-payment-intent`, `/api/stripe/webhook`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Notes for Reviewers / HR
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+- This project demonstrates both product thinking (end-to-end booking experience) and engineering depth (feature modularization, third-party integrations, and analytics data pipeline).
+- Role-based access and separated feature modules make the codebase easier to scale and maintain.
