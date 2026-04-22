@@ -5,7 +5,7 @@ Hotel booking web application with a complete user booking flow and an agent/adm
 ## Live Demo
 
 - Deployed on **Vercel**
-- Production URL: `https://neatly-final-project-1.vercel.app/`
+- Production URL: [https://neatly-final-project-1.vercel.app/](https://neatly-final-project-1.vercel.app/)
 
 ## Demo Accounts (2 Roles)
 
