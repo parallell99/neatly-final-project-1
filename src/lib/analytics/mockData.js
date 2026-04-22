@@ -44,6 +44,7 @@ export const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export const BOOKING_TRENDS_MOCK = {
   month: {
     period: "month",
+    totalRooms: 50,
     byDayOfWeek: [
       { dayOfWeek: 0, avgOccupancyPercent: 72, sampleCount: 3 },
       { dayOfWeek: 1, avgOccupancyPercent: 68, sampleCount: 2 },
@@ -56,6 +57,7 @@ export const BOOKING_TRENDS_MOCK = {
   },
   last_month: {
     period: "last_month",
+    totalRooms: 50,
     byDayOfWeek: [
       { dayOfWeek: 0, avgOccupancyPercent: 62, sampleCount: 4 },
       { dayOfWeek: 1, avgOccupancyPercent: 53, sampleCount: 4 },
@@ -68,6 +70,7 @@ export const BOOKING_TRENDS_MOCK = {
   },
   last_2_month: {
     period: "last_2_month",
+    totalRooms: 50,
     byDayOfWeek: [
       { dayOfWeek: 0, avgOccupancyPercent: 53, sampleCount: 4 },
       { dayOfWeek: 1, avgOccupancyPercent: 50, sampleCount: 5 },

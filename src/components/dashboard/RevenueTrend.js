@@ -10,7 +10,14 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
-import { format, startOfMonth, endOfMonth, addMonths, differenceInDays } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  addMonths,
+  differenceInDays,
+  parseISO,
+} from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import {
   Select,
@@ -45,9 +52,10 @@ import Button from "@/components/ui/buttons/buttons";
  */
 
 function formatChartLabel(isoDate, granularity) {
-  const date = new Date(isoDate);
-  if (granularity === "day") return format(date, "d MMM ");
-  if (granularity === "month") return format(date, "MMM Y");
+  const date = parseISO(String(isoDate));
+  // Include year to prevent duplicate labels in long date ranges.
+  if (granularity === "day") return format(date, "d MMM yyyy");
+  if (granularity === "month") return format(date, "MMM yyyy");
   return isoDate;
 }
 
@@ -91,7 +99,7 @@ function RevenueTrendCard({
   const formattedData = React.useMemo(() => {
     if (effectiveGranularity === "day") {
       return data.map((item) => {
-        const baseDate = new Date(item.label);
+        const baseDate = parseISO(String(item.label));
         const rangeText = format(baseDate, "d MMM yyyy");
         return {
           ...item,
@@ -103,7 +111,7 @@ function RevenueTrendCard({
     // month: รวมรายวันเป็นรายเดือน แล้ว clamp ช่วงใน tooltip
     const monthMap = new Map();
     for (const item of data) {
-      const d = new Date(item.label);
+      const d = parseISO(String(item.label));
       const key = format(startOfMonth(d), "yyyy-MM-dd");
       const prev = monthMap.get(key);
       monthMap.set(key, (prev ?? 0) + (item.revenue ?? 0));
