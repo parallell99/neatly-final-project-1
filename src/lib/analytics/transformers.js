@@ -21,8 +21,11 @@ export function transformBookingTrends(apiResponse) {
   const totalRooms = apiResponse?.totalRooms ?? 0;
   return apiResponse.byDayOfWeek.map((item) => {
     const percent = item.avgOccupancyPercent;
-    const rooms =
-      totalRooms > 0 ? Math.round((percent / 100) * totalRooms) : 0;
+    const rooms = Number.isFinite(Number(item?.avgOccupiedRooms))
+      ? Number(item.avgOccupiedRooms)
+      : totalRooms > 0
+        ? Math.round((percent / 100) * totalRooms)
+        : 0;
     return {
       day: DAY_LABELS[item.dayOfWeek],
       percent,

@@ -21,6 +21,7 @@ import {
   startOfQuarter,
   endOfQuarter,
   differenceInDays,
+  parseISO,
 } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import {
@@ -65,8 +66,8 @@ import CreditCard from "@/assets/icons/credit.svg"
  * @param {() => void} [props.onToggleLive]
  */
 function formatOccupancyChartLabel(isoDate, granularity) {
-  const date = new Date(isoDate);
-  if (granularity === "day") return format(date, "d MMM ");
+  const date = parseISO(String(isoDate));
+  if (granularity === "day") return format(date, "d MMM yyyy");
   if (granularity === "month") return format(date, "MMM yyyy");
   if (granularity === "quarter") {
     const q = Math.floor(date.getMonth() / 3) + 1;
@@ -176,7 +177,7 @@ function OccupancyGuestCard({
     const series = data.occupancySeries ?? [];
     if (effectiveGranularity === "day") {
       return series.map((item) => {
-        const baseDate = new Date(item.date);
+        const baseDate = parseISO(String(item.date));
         return {
           ...item,
           label: formatOccupancyChartLabel(item.date, "day"),
@@ -186,7 +187,7 @@ function OccupancyGuestCard({
     }
     if (effectiveGranularity === "quarter") {
       return series.map((item) => {
-        const d = new Date(item.date);
+        const d = parseISO(String(item.date));
         let rangeStart = startOfQuarter(d);
         let rangeEnd = endOfQuarter(d);
         if (dateFrom && rangeStart < dateFrom) rangeStart = dateFrom;
@@ -202,7 +203,7 @@ function OccupancyGuestCard({
 
     // month: API ส่ง monthly มาแล้ว - เพิ่ม label และ rangeText
     return series.map((item) => {
-      const d = new Date(item.date);
+      const d = parseISO(String(item.date));
       let rangeStart = startOfMonth(d);
       let rangeEnd = endOfMonth(d);
       if (dateFrom && rangeStart < dateFrom) rangeStart = dateFrom;
@@ -222,7 +223,7 @@ function OccupancyGuestCard({
     if (!Array.isArray(series) || series.length === 0) return [];
 
     return series.map((row) => {
-      const baseDate = new Date(row.month);
+      const baseDate = parseISO(String(row.month));
       if (Number.isNaN(baseDate.getTime())) return row;
 
       if (effectiveGranularity === "quarter") {
